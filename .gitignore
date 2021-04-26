@@ -1,0 +1,9 @@
+out/**
+!out/deploy.sh
+!out/upload.tmpl.sql
+!out/compile.sql
+
+dist
+node_modules
+.vscode-test/
+*.vsix
