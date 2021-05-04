@@ -20,7 +20,7 @@ export class Uglifyer {
       const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile);
       const inFileNameMin = changeExtension(inFileName, 'min.css');
 
-      const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "out", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
+      const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
       const content = {
         "inAppID": inAppID,
         "files": [  {

@@ -1,13 +1,5 @@
 #!/bin/bash
 
-connectionTns=$1
-connectionUser=$2
-connectionPass=$3
-targetfile=$4
-wspathrelative=$5
-sqlexec=$6
-moveYESNO=$7
-
 # Reset
 NC="\033[0m"       # Text Reset
 
@@ -31,22 +23,22 @@ export NLS_LANG="GERMAN_GERMANY.AL32UTF8"
 export NLS_DATE_FORMAT="DD.MM.YYYY HH24:MI:SS"
 export LANG="de_DE.utf8"
 
-if [[ ${sqlexec} == "sql" ]]; then
+if [[ ${DBFLOW_SQLCLI} == "sql" ]]; then
   export CUSTOM_JDBC="-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none"
   export JAVA_TOOL_OPTIONS="-Duser.language=en -Duser.region=US -Dfile.encoding=UTF-8"
 fi
 
 
-basefl=$(basename -- "${targetfile}")
+basefl=$(basename -- "${DBFLOW_FILE}")
 extension="${basefl##*.}"
 
 
-echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${connectionTns}${NC}"
-echo -e "${BYELLOW}Schema:${NC}      ${WHITE}${connectionUser}${NC}"
-echo -e "${BYELLOW}Sourcefile:${NC}  ${WHITE}${wspathrelative}${NC}"
+echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
+echo -e "${BYELLOW}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
+echo -e "${BYELLOW}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC}"
 
 
-${sqlexec} -s -l ${connectionUser}/${connectionPass}@${connectionTns} <<!
+${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
 set linesize 2500
 set tab off
 set serveroutput on
@@ -68,7 +60,7 @@ Rem enable some PL/SQL Warnings
 ALTER SESSION SET PLSQL_WARNINGS = 'ENABLE:ALL', 'DISABLE:(5018, 7203, 6009)';
 
 Rem Run the Sublime File
-@"${targetfile}"
+@"${DBFLOW_FILE}"
 
 Rem show errors for easy correction
 Rem prompt Errors
@@ -77,9 +69,7 @@ select user_errors
   from (
             select chr(27) || case when attribute = 'WARNING' then '[33m' else '[1;31m' end || attribute || chr(27) || '[0m' -- error or warning
               || ' ' ||chr(27)||case when attribute = 'WARNING' then '[33m' else '[31m' end
-              || line || '/' || position -- line and column
-              || ' '
-              || '${wspathrelative}' -- file name
+              || '${DBFLOW_WSPACE}' -- file name
               || ':'||line || ':' || position -- line and column
               || ' '
               || replace(text, chr(10), ' ') -- remove line breaks from error text
@@ -94,9 +84,10 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
   from dual
  where not exists (select 1
                      from user_errors
-                    where attribute in ('ERROR', 'WARNING') ) ;
+                    where attribute in ('ERROR', 'WARNING')
+                      and lower(name||'.${extension}') = lower('${basefl}')) ;
 !
 
-if [[ ${moveYESNO} == "YES" ]]; then
-  mv ${targetfile} ${targetfile/\/src\//\/dist\/}
+if [[ ${DBFLOW_MOVEYN} == "YES" ]]; then
+  mv ${DBFLOW_FILE} ${DBFLOW_FILE/\/src\//\/dist\/}
 fi

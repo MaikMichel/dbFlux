@@ -1,13 +1,22 @@
 {
 	"name": "dbflow",
 	"publisher" : "MaikMichel",
-	"repository": "https://github.com/MaikMichel/dbFlow-vsce.git",
-	"displayName": "dbFlow",
-	"description": "muss ich noch erfassen",
-	"version": "0.0.2",
+	"icon": "images/icon.png",
+	"license": "SEE LICENSE IN LICENSE.md",
+	"repository": {
+			"type": "git",
+			"url": "https://github.com/MaikMichel/dbFlow-vsce"
+	},
+  "bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
+	"displayName": "dbFlow-vsce",
+	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
+	"version": "0.0.7",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
+  "author": {
+    "name": "Maik Michel"
+  },
 	"categories": [
 		"Other"
 	],
@@ -24,7 +33,7 @@
 		],
 		"problemMatchers": [
 			{
-				"name": "oracle-plsql",
+				"name": "dbflow-plsql",
 				"owner": "external",
 				"fileLocation": [
 					"relative",
@@ -32,12 +41,12 @@
 				],
 				"pattern": [
 					{
-						"regexp": "(.*) (\\d*)/(\\d*) (.*?):(\\d+):(\\d+) (.*)",
+						"regexp": "(.*) (.*?):(\\d+):(\\d+) (.*)",
 						"severity": 1,
-						"line": 2,
-						"column": 3,
-						"file": 4,
-						"message": 7,
+						"line": 3,
+						"column": 4,
+						"file": 2,
+						"message": 5,
 						"loop": true
 					}
 				]
@@ -46,14 +55,15 @@
 		"commands": [
 			{
 				"command": "dbFlow.compileFile",
-				"title": "Compile",
+				"title": "Compile current File",
 				"category": "dbFlow",
 				"when": "inDbFlowProject && resourceExtname =~ /.sql|.SQL|.pks|.PKS|.pkb|.PKB/"
 			},
 			{
-				"command": "dbFlow.test",
-				"title": "test",
-				"category": "dbFlow"
+				"command": "dbFlow.exportAPEX",
+				"title": "Export APEX Application",
+				"category": "dbFlow",
+				"when": "inDbFlowProject"
 			}
 		],
 		"keybindings": [

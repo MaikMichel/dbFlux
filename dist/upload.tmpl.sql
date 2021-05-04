@@ -48,7 +48,7 @@ begin
   dbms_lob.createtemporary(v_b64, true, dbms_lob.session);
 
   {{#each this.inFileContent}}
-  dbms_lob.append(v_b64, '{{this}}');
+  dbms_lob.append(v_b64, '{{{this}}}');
   {{/each}}
 
   --

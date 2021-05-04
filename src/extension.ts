@@ -1,13 +1,12 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
+import {existsSync} from "fs";
 import * as path from "path";
-import * as ChildProcess from "child_process";
-import * as Handlebars from "handlebars";
 import { OraTaskProvider } from "./OraTaskProvider";
-import * as dotenv from "dotenv";
+
 import { Terserer } from "./Terserer";
 import { matchRuleShort } from "./utilities";
 import { Uglifyer } from "./Uglifyer";
+
 
 
 
@@ -23,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
     let wf = vscode.workspace.workspaceFolders[0].uri.path;
     let f = vscode.workspace.workspaceFolders[0].uri.fsPath;
     let buildFile = path.join(f, buildFileCheck);
-    if (!fs.existsSync(buildFile)) {
+    if (!existsSync(buildFile)) {
       vscode.window.showWarningMessage(`dbFlow: file not found: ${buildFile}`);
       return;
     } else {
@@ -38,12 +37,12 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
 
+  // Compile
   let sqlPlusCommand = vscode.commands.registerCommand("dbFlow.compileFile", () => {
 
     const langId = vscode.window.activeTextEditor?.document.languageId!;
     const fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join('/')!;
     const insideStatics = matchRuleShort(fileName, '*/static/f*/src*');
-    // console.log(fileName, insideStatics);
 
     if (['sql', 'plsql'].includes(langId)) {
       vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
@@ -66,30 +65,21 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(sqlPlusCommand);
 
-  let taskProvider: OraTaskProvider;
-  taskProvider = new OraTaskProvider();
-  let taskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", taskProvider);
-  context.subscriptions.push(taskProviderDisposable);
+  const oraTaskProvider: OraTaskProvider = new OraTaskProvider();
+  const oraTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", oraTaskProvider);
+  context.subscriptions.push(oraTaskProviderDisposable);
 
-  let disposable = vscode.commands.registerCommand("dbFlow.test", () => {
-    vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "hello" }, (p) => {
-      return new Promise<void>((resolve, reject) => {
-        p.report({ message: "Start working..." });
-        let count = 0;
-        let handle = setInterval(() => {
-          count++;
-          p.report({ message: "Worked " + count + " steps" });
-          if (count >= 10) {
-            clearInterval(handle);
-            resolve();
-          }
-        }, 1000);
-      });
-    });
+
+  // Export APEX
+  const exportCommand = vscode.commands.registerCommand("dbFlow.exportAPEX", () => {
+    console.log('AAAAAA');
+    vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportAPEX");
   });
+  context.subscriptions.push(exportCommand);
 
-  context.subscriptions.push(disposable);
-
+  // const expTaskProvider: ExpTaskProvider = new ExpTaskProvider();
+  // const expTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", expTaskProvider);
+  // context.subscriptions.push(expTaskProviderDisposable);
 
 
 }

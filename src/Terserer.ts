@@ -20,7 +20,9 @@ export class Terserer {
       const inFileNameMin = changeExtension(inFileName, 'min.js');
       const inFileNameMap = changeExtension(inFileName, 'js.map');
 
-      const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "out", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
+
+
+      const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
       const content = {
         "inAppID": inAppID,
         "files": [  {
@@ -37,8 +39,8 @@ export class Terserer {
                     }
                  ]
       };
-      fs.writeFileSync(uploadSQLFile, template(content)
-      );
+      console.log('DDD', template(content));
+      fs.writeFileSync(uploadSQLFile, template(content));
     } else {
       console.log('nothing to upload');
     }
