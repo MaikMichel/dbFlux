@@ -2,7 +2,7 @@
 	"name": "dbflow",
 	"publisher" : "MaikMichel",
 	"icon": "images/icon.png",
-	"license": "SEE LICENSE IN LICENSE.md",
+	"license": "LICENSE",
 	"repository": {
 			"type": "git",
 			"url": "https://github.com/MaikMichel/dbFlow-vsce"
@@ -10,10 +10,11 @@
   "bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
 	"displayName": "dbFlow-vsce",
 	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
+	"preview": true,
   "author": {
     "name": "Maik Michel"
   },
