@@ -1,11 +1,15 @@
 import * as vscode from "vscode";
 import {existsSync} from "fs";
 import * as path from "path";
-import { OraTaskProvider } from "./OraTaskProvider";
+import { CompileTaskProvider } from "./CompileTaskProvider";
 
 import { Terserer } from "./Terserer";
 import { matchRuleShort } from "./utilities";
 import { Uglifyer } from "./Uglifyer";
+import { ExportTaskProvider } from "./ExportTaskProvider";
+import { ExportTaskStore } from "./ExportTaskStore";
+import { RestTaskStore } from "./RestTaskStore";
+import { RestTaskProvider } from "./RestTaskProvider";
 
 
 
@@ -19,7 +23,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   let message;
   if (vscode.workspace.workspaceFolders !== undefined) {
-    let wf = vscode.workspace.workspaceFolders[0].uri.path;
     let f = vscode.workspace.workspaceFolders[0].uri.fsPath;
     let buildFile = path.join(f, buildFileCheck);
     if (!existsSync(buildFile)) {
@@ -65,23 +68,50 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(sqlPlusCommand);
 
-  const oraTaskProvider: OraTaskProvider = new OraTaskProvider();
+  const oraTaskProvider: CompileTaskProvider = new CompileTaskProvider();
   const oraTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", oraTaskProvider);
   context.subscriptions.push(oraTaskProviderDisposable);
 
 
   // Export APEX
-  const exportCommand = vscode.commands.registerCommand("dbFlow.exportAPEX", () => {
-    console.log('AAAAAA');
-    vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportAPEX");
+  const exportCommand = vscode.commands.registerCommand("dbFlow.exportAPEX", async () => {
+    ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID();
+
+    await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportAPEX");
   });
   context.subscriptions.push(exportCommand);
 
-  // const expTaskProvider: ExpTaskProvider = new ExpTaskProvider();
-  // const expTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", expTaskProvider);
-  // context.subscriptions.push(expTaskProviderDisposable);
+  const expTaskProvider: ExportTaskProvider = new ExportTaskProvider();
+  const expTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", expTaskProvider);
+  context.subscriptions.push(expTaskProviderDisposable);
+
+  // Add REST Modul
+  const addApplicationCommand = vscode.commands.registerCommand("dbFlow.addAPP", async () => {
+    ExportTaskStore.getInstance().addApplication(await ExportTaskStore.getInstance().getNewApplication());
+
+  });
+  context.subscriptions.push(addApplicationCommand);
 
 
+  // Export REST
+  const restCommand = vscode.commands.registerCommand("dbFlow.exportREST", async () => {
+    RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule();
+
+    await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportREST");
+  });
+  context.subscriptions.push(restCommand);
+
+  const restTaskProvider: RestTaskProvider = new RestTaskProvider();
+  const restTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", restTaskProvider);
+  context.subscriptions.push(restTaskProviderDisposable);
+
+
+  // Add REST Modul
+  const addRestModulCommand = vscode.commands.registerCommand("dbFlow.addREST", async () => {
+    RestTaskStore.getInstance().addRestModul(await RestTaskStore.getInstance().getNewRestModule());
+
+  });
+  context.subscriptions.push(addRestModulCommand);
 }
 
 // this method is called when your extension is deactivated

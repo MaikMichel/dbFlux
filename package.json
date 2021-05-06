@@ -65,6 +65,24 @@
 				"title": "Export APEX Application",
 				"category": "dbFlow",
 				"when": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.exportREST",
+				"title": "Export REST Module",
+				"category": "dbFlow",
+				"when": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.addREST",
+				"title": "Add REST Module to export",
+				"category": "dbFlow",
+				"when": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.addAPP",
+				"title": "Add APEX Application to export",
+				"category": "dbFlow",
+				"when": "inDbFlowProject"
 			}
 		],
 		"keybindings": [
@@ -72,6 +90,16 @@
 				"command": "dbFlow.compileFile",
 				"key": "ctrl+alt+b",
 				"mac": "ctrl+alt+b"
+			},
+			{
+				"command": "dbFlow.exportAPEX",
+				"key": "ctrl+alt+e",
+				"mac": "ctrl+alt+e"
+			},
+			{
+				"command": "dbFlow.exportREST",
+				"key": "ctrl+alt+r",
+				"mac": "ctrl+alt+r"
 			}
 		],
 		"configuration": [
