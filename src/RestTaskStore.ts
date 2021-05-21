@@ -4,12 +4,12 @@ import { PathLike, readdirSync, mkdirSync, existsSync } from "fs";
 
 export class RestTaskStore {
   private static _instance: RestTaskStore;
-  private _restModul: string = "";
+  private _restModul: string|undefined;
 
-  public get restModule(): string {
+  public get restModule(): string|undefined {
     return this._restModul;
   }
-  public set restModule(value: string) {
+  public set restModule(value: string|undefined) {
     this._restModul = value;
   }
 
@@ -25,7 +25,8 @@ export class RestTaskStore {
   }
 
 
-  async getRestModule():Promise<string> {
+  async getRestModule():Promise<string|undefined> {
+    let value:string|undefined;
     if (workspace.workspaceFolders !== undefined) {
       const source = path.join(workspace.workspaceFolders[0].uri.fsPath, "rest/modules");
 
@@ -34,12 +35,11 @@ export class RestTaskStore {
           .filter((dirent) => dirent.isDirectory() )
           .map((dirent) => dirent.name);
       const modules = getDirectories(source);
-      const value = await window.showQuickPick(modules, { placeHolder: "Select Application to export" });
 
-      return value!;
-    } else {
-      return "";
+      value = await window.showQuickPick(modules, { placeHolder: "Select Application to export" });
     }
+
+    return value;
   }
 
 

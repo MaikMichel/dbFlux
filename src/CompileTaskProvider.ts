@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationManager } from "./ConfigurationManager";
-import { matchRuleShort } from "./utilities";
+import { getActiveFileUri, groupByKey, matchRuleShort } from "./utilities";
 import { AbstractBashTaskProvider, IBashInfos } from "./AbstractBashTaskProvider";
+
 
 interface OraTaskDefinition extends vscode.TaskDefinition {
   name:   string;
@@ -13,14 +13,21 @@ interface OraTaskDefinition extends vscode.TaskDefinition {
 }
 
 interface ICompileInfos extends IBashInfos {
-  activeFile:     string;
-  relativeWSPath: string;
-  executableCli:  string;
-  moveYesNo:      string;
+  activeFile:         string;
+  relativeWSPath:     string;
+  executableCli:      string;
+  moveYesNo:          string;
+  enableWarnings:     string;
+  dataConn:           string;
+  dataFile:           string;
+  logicConn:          string;
+  logicFile:          string;
+  appConn:            string;
+  appFile:            string;
 }
 
 export class CompileTaskProvider extends AbstractBashTaskProvider implements vscode.TaskProvider {
-  static dbFlowType: string = "dbFlow";
+
 
   provideTasks(): Thenable<vscode.Task[]> | undefined {
     return this.getCompileTasks();
@@ -33,7 +40,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
   async getCompileTasks(): Promise<vscode.Task[]> {
     const result: vscode.Task[] = [];
 
-    const compileTask: ICompileInfos = this.prepCompInfos();
+    const compileTask: ICompileInfos = await this.prepCompInfos();
 
     if (compileTask.activeFile) {
       result.push(this.createOraTask(this.createOraTaskDefinition("compileFile", compileTask)));
@@ -58,13 +65,22 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
       CompileTaskProvider.dbFlowType,
       new vscode.ShellExecution(definition.runner.runFile, {
         env: {
-          DBFLOW_DBTNS: definition.runner.connectionTns,
-          DBFLOW_DBUSER: definition.runner.connectionUser,
-          DBFLOW_DBPASS: definition.runner.connectionPass,
-          DBFLOW_FILE: definition.runner.activeFile,
-          DBFLOW_WSPACE: definition.runner.relativeWSPath,
-          DBFLOW_SQLCLI: definition.runner.executableCli,
-          DBFLOW_MOVEYN: definition.runner.moveYesNo,
+          DBFLOW_DBTNS:           definition.runner.connectionTns,
+          DBFLOW_DBUSER:          definition.runner.connectionUser,
+          DBFLOW_DBPASS:          definition.runner.connectionPass,
+          DBFLOW_FILE:            definition.runner.activeFile,
+          DBFLOW_WSPACE:          definition.runner.relativeWSPath,
+          DBFLOW_SQLCLI:          definition.runner.executableCli,
+          DBFLOW_MOVEYN:          definition.runner.moveYesNo,
+          DBFLOW_ENABLE_WARNINGS: definition.runner.enableWarnings,
+
+          DBFLOW_CONN_DATA:       definition.runner.dataConn,
+          DBFLOW_CONN_LOGIC:      definition.runner.logicConn,
+          DBFLOW_CONN_APP:        definition.runner.appConn,
+
+          DBFLOW_FILE_DATA:       definition.runner.dataFile,
+          DBFLOW_FILE_LOGIC:      definition.runner.logicFile,
+          DBFLOW_FILE_APP:        definition.runner.appFile
         },
       }),
       ["$dbflow-plsql"]
@@ -74,17 +90,26 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
   }
 
 
-  prepCompInfos(): ICompileInfos {
+  async prepCompInfos(): Promise<ICompileInfos> {
     let runner: ICompileInfos = {} as ICompileInfos;
+    let fileUri:vscode.Uri|undefined = await getActiveFileUri();
 
-    if (vscode.window.activeTextEditor !== undefined) {
+    if (fileUri !== undefined) {
+      this.setInitialCompileInfo("deploy.sh", fileUri, runner);
 
-      runner.runFile        = path.resolve(__dirname, "..", "dist", "deploy.sh").split(path.sep).join("/");
-      runner.activeFile     = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join("/");
-      runner.cwd            = path.dirname(vscode.window.activeTextEditor?.document.fileName);
-      runner.relativeWSPath = vscode.workspace.asRelativePath(vscode.window.activeTextEditor?.document.uri!);
-      runner.executableCli  = ConfigurationManager.getInstance().sqlExecutable;
-      runner.moveYesNo      = "NO";
+
+      runner.activeFile         = fileUri.fsPath.split(path.sep).join(path.posix.sep);
+      runner.relativeWSPath     = vscode.workspace.asRelativePath(runner.activeFile);
+      runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
+      runner.moveYesNo          = "NO";
+
+
+      if (ConfigurationManager.getShowWarningMessages()) {
+        const excluding = ConfigurationManager.getWarningsToExclude().join(", ");
+        runner.enableWarnings = `ALTER SESSION SET PLSQL_WARNINGS = 'ENABLE:ALL', 'DISABLE:(${excluding})';`;
+      } else {
+        runner.enableWarnings = "";
+      }
 
       // if we are on static and a file with runner.activeFile.sql exists then we are uploading to
       // apex and hopefully build the sql file ...
@@ -93,24 +118,56 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
         runner.moveYesNo = "YES";
       }
 
-      const applyEnv = dotenv.config({ path: this.findClosestEnvFile(runner.cwd, "apply.env") });
-      const buildEnv = dotenv.config({ path: this.findClosestEnvFile(runner.cwd, "build.env") });
 
-      if (applyEnv.parsed !== undefined) {
-        runner.connectionTns = applyEnv.parsed.DB_TNS.length > 0 ? applyEnv.parsed.DB_TNS : "not_set";
-        runner.connectionUser = this.buildConnectionUser(applyEnv, buildEnv, runner.cwd);
-        runner.connectionPass = applyEnv.parsed.DB_APP_PWD.length > 0 ? applyEnv.parsed.DB_APP_PWD : "not_set";
 
-        if (matchRuleShort(runner.connectionPass, "${*}") || matchRuleShort(runner.connectionUser, "${*}") || matchRuleShort(runner.connectionPass, "${*}")) {
-          vscode.window.showErrorMessage("dbFlow: Sourcing or parameters not supported");
-          throw new Error("dbFlow: Sourcing or parameters not supported");
-        }
-      } else {
-        vscode.window.showErrorMessage("dbFlow: Could not parse apply.env");
-        throw new Error("dbFlow: Could not parse apply.env");
+      if (matchRuleShort(runner.connectionPass, "${*}") || matchRuleShort(runner.connectionUser, "${*}") || matchRuleShort(runner.connectionPass, "${*}")) {
+        vscode.window.showErrorMessage("dbFlow: Sourcing or parameters not supported");
+        throw new Error("dbFlow: Sourcing or parameters not supported");
       }
+
+      // Trigger?
+      this.setCustomTriggerRuns(runner);
+
     }
 
     return runner;
   }
+
+  setCustomTriggerRuns(compInfos: ICompileInfos): void {
+    let myList:any[] = [];
+
+    ConfigurationManager.getCustomTriggerRuns().forEach((runner)=>{
+      if (compInfos.activeFile.match(runner.triggeringExpression)) {
+        const obj = {
+          "connection": this.getConnection(compInfos.projectInfos, runner.runFile),
+          "file": '@' + runner.runFile + ((runner.runFileParameters) ? " " + runner.runFileParameters.map((item)=>`"${item}"`) .join(" ") : "")
+        };
+        myList.push(obj);
+      }
+    });
+
+    const myGroupedList = groupByKey(myList, "connection");
+
+
+    Object.keys(myGroupedList).forEach((key: any) => {
+      const connType = this.getConnectionType(key, compInfos);
+
+      // const files = myGroupedList[key].map((obj: { file: string; }) => obj.file).join(` "${compInfos.relativeWSPath}",`) + ` "${compInfos.relativeWSPath}"`;
+      const files = myGroupedList[key].map((obj: { file: string; }) => obj.file).join(",");
+      if ( connType === CompileTaskProvider.CONN_DATA) {
+        compInfos.dataConn = key;
+        compInfos.dataFile = files;
+      } else if ( connType === CompileTaskProvider.CONN_LOGIC) {
+        compInfos.logicConn = key;
+        compInfos.logicFile = files;
+      } else if ( connType === CompileTaskProvider.CONN_APP) {
+        compInfos.appConn = key;
+        compInfos.appFile = files;
+      }
+
+    });
+
+  }
+
+
 }

@@ -34,7 +34,6 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements vscode
 
     const runTask: IRESTExportInfos = this.prepExportInfos();
     runTask.restModule = RestTaskStore.getInstance().restModule;
-
     result.push(this.createRestTask(this.createRestTaskDefinition("exportREST", runTask)));
 
     return Promise.resolve(result);
@@ -59,7 +58,7 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements vscode
           DBFLOW_DBTNS:      definition.runner.connectionTns,
           DBFLOW_DBUSER:     definition.runner.connectionUser,
           DBFLOW_DBPASS:     definition.runner.connectionPass,
-          DBFLOW_RESTMODULE: definition.runner.restModule!,
+          DBFLOW_RESTMODULE: definition.runner.restModule?definition.runner.restModule:"NULL",
         },
       })
 
@@ -73,25 +72,12 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements vscode
   prepExportInfos(): IRESTExportInfos {
     let runner: IRESTExportInfos = {} as IRESTExportInfos;
 
-    if (vscode.workspace.workspaceFolders !== undefined) {
-      runner.cwd = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    if (vscode.workspace.workspaceFolders) {
+      let fileUri:vscode.Uri = vscode.workspace.workspaceFolders[0].uri;
+      let restUri:vscode.Uri = vscode.Uri.file(path.join(fileUri.fsPath, 'rest/modules/0000.sql'));
 
-      const applyEnv = dotenv.config({ path: this.findClosestEnvFile(runner.cwd, "apply.env") });
-      const buildEnv = dotenv.config({ path: this.findClosestEnvFile(runner.cwd, "build.env") });
-
-      if (applyEnv.parsed !== undefined) {
-        runner.runFile = path.resolve(__dirname, "..", "dist", "export_rest.sh").split(path.sep).join("/");
-        runner.connectionTns = applyEnv.parsed.DB_TNS.length > 0 ? applyEnv.parsed.DB_TNS : "not_set";
-        runner.connectionUser = this.getAppConnection(applyEnv, buildEnv);
-        runner.connectionPass = applyEnv.parsed.DB_APP_PWD.length > 0 ? applyEnv.parsed.DB_APP_PWD : "not_set";
-
-        if (matchRuleShort(runner.connectionPass, "${*}") || matchRuleShort(runner.connectionUser, "${*}") || matchRuleShort(runner.connectionPass, "${*}")) {
-          vscode.window.showErrorMessage("dbFlow: Sourcing or parameters not supported");
-          throw new Error("dbFlow: Sourcing or parameters not supported");
-        }
-      } else {
-        vscode.window.showErrorMessage("dbFlow: Could not parse apply.env");
-        throw new Error("dbFlow: Could not parse apply.env");
+      if (restUri !== undefined) {
+        this.setInitialCompileInfo("export_rest.sh", restUri, runner);
       }
     }
 

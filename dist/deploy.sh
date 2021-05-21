@@ -39,6 +39,7 @@ echo -e "${BYELLOW}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC}"
 
 
 ${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
+WHENEVER SQLERROR EXIT SQL.SQLCODE
 set linesize 2500
 set tab off
 set serveroutput on
@@ -56,8 +57,9 @@ Begin
 End;
 /
 
+
 Rem enable some PL/SQL Warnings
-ALTER SESSION SET PLSQL_WARNINGS = 'ENABLE:ALL', 'DISABLE:(5018, 7203, 6009)';
+${DBFLOW_ENABLE_WARNINGS}
 
 Rem Run the Sublime File
 @"${DBFLOW_FILE}"
@@ -67,12 +69,12 @@ Rem prompt Errors
 
 select user_errors
   from (
-            select chr(27) || case when attribute = 'WARNING' then '[33m' else '[1;31m' end || attribute || chr(27) || '[0m' -- error or warning
+            select chr(27) || case when attribute = 'WARNING' then '[1;33m' else '[1;31m' end || attribute || chr(27) || '[0m' -- error or warning
               || ' ' ||chr(27)||case when attribute = 'WARNING' then '[33m' else '[31m' end
+              || ' ' ||substr(text, 1, instr(text, ':', 1, 1) -1)||chr(10) -- code
               || '${DBFLOW_WSPACE}' -- file name
-              || ':'||line || ':' || position -- line and column
-              || ' '
-              || replace(text, chr(10), ' ') -- remove line breaks from error text
+              || ':'||line || ':' || position ||chr(10) -- line and column
+              || replace(substr(text, instr(text, ': ', 1, 1) + 2), chr(10), ' ') -- remove line breaks from error text
               || chr(27) || '[0m'
               as user_errors
             from user_errors
@@ -88,6 +90,75 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
                       and lower(name||'.${extension}') = lower('${basefl}')) ;
 !
 
-if [[ ${DBFLOW_MOVEYN} == "YES" ]]; then
-  mv ${DBFLOW_FILE} ${DBFLOW_FILE/\/src\//\/dist\/}
-fi
+# if [ $? -ne 0 ]
+# then
+#   echo -e "${BRED}Error when executing ${DBFLOW_FILE} ${NC}"
+#   echo
+# else
+
+  if [[ ${DBFLOW_MOVEYN} == "YES" ]]; then
+    mv ${DBFLOW_FILE} ${DBFLOW_FILE/\/src\//\/dist\/}
+  fi
+
+  if [[ -n ${DBFLOW_CONN_DATA} ]]; then
+    echo
+    echo -e "${BCYAN}Running additional files in DATA-SCHEMA${NC}"
+
+    IFS=',' read -r -a array <<< "${DBFLOW_FILE_DATA}"
+
+    ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_DATA} <<!
+    $(
+      for element in "${array[@]}"
+      do
+        echo "$element"
+      done
+    )
+!
+
+    echo
+  fi
+
+  if [[ -n ${DBFLOW_CONN_LOGIC} ]]; then
+    echo
+    echo -e "${BCYAN}Running additional files in LOGIC-SCHEMA${NC}"
+
+    IFS=',' read -r -a array <<< "${DBFLOW_FILE_LOGIC}"
+
+    ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_LOGIC} <<!
+    $(
+      for element in "${array[@]}"
+      do
+        echo "$element"
+      done
+    )
+!
+
+    echo
+  fi
+
+  if [[ -n ${DBFLOW_CONN_APP} ]]; then
+    echo
+    echo -e "${BCYAN}Running additional files in APP-SCHEMA${NC}"
+
+    IFS=',' read -r -a array <<< "${DBFLOW_FILE_APP}"
+    # debug
+    for element in "${array[@]}"
+    do
+      echo -e "${BCYAN}$element${NC}"
+    done
+
+    ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_APP} << !
+    $(
+      for element in "${array[@]}"
+      do
+        echo "$element"
+      done
+    )
+!
+
+    echo
+  fi
+  echo -e "-----------------------------------------------------"
+  echo
+
+# fi

@@ -4,12 +4,12 @@ import { mkdirSync, PathLike, readdirSync, existsSync } from "fs";
 
 export class ExportTaskStore {
   private static _instance: ExportTaskStore;
-  private _expID: string = "";
+  private _expID: string|undefined;
 
-  public get expID(): string {
+  public get expID(): string|undefined{
     return this._expID;
   }
-  public set expID(value: string) {
+  public set expID(value: string|undefined) {
     this._expID = value;
   }
 
@@ -25,7 +25,8 @@ export class ExportTaskStore {
   }
 
 
-  async getAppID():Promise<string> {
+  async getAppID():Promise<string|undefined> {
+    let value:string|undefined;
     if (workspace.workspaceFolders !== undefined) {
       const source = path.join(workspace.workspaceFolders[0].uri.fsPath, "apex");
 
@@ -34,12 +35,12 @@ export class ExportTaskStore {
           .filter((dirent) => dirent.isDirectory() && dirent.name.toLowerCase().startsWith("f"))
           .map((dirent) => dirent.name);
       const apps = getDirectories(source);
-      const value = await window.showQuickPick(apps, { placeHolder: "Select Application to export" });
+      value = await window.showQuickPick(apps, { placeHolder: "Select Application to export" });
 
-      return value?.substring(1) + "";
-    } else {
-      return "";
+      value = value?.substring(1);
     }
+
+    return value;
   }
 
   addApplication(appID: string) {

@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [[ ${DBFLOW_APPID} == "NULL" ]]
+then
+  echo "Export canceled"
+  exit 0
+fi
+
+
 # Reset
 NC="\033[0m"       # Text Reset
 

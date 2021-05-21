@@ -1,26 +1,47 @@
 import { workspace } from "vscode";
 
+interface ICustomTriggerRuns {
+  triggeringExpression: string,
+  runFile: string
+  runFileParameters: string[];
+}
 export class ConfigurationManager {
-  public sqlExecutable: string;
+  static dbFlow:string = "dbFlow";
 
-  private static _instance: ConfigurationManager;
+  static get<T>(confPath:string):T {
+    const myValue:T | undefined = workspace.getConfiguration(ConfigurationManager.dbFlow).get(confPath);
+    const myDefault = workspace.getConfiguration(ConfigurationManager.dbFlow).inspect(confPath)?.defaultValue;
 
-  public static getInstance(): ConfigurationManager {
-    if (!ConfigurationManager._instance) {
-      ConfigurationManager._instance = new ConfigurationManager();
-    }
-
-    return ConfigurationManager._instance;
+    // console.log(confPath, (myValue === undefined ? <T>myDefault : myValue));
+    return (myValue === undefined ? <T>myDefault : myValue);
   }
 
-  private constructor() {
-    // Read Configuration
-    const extensionConfiguration = workspace.getConfiguration("dbFlow");
-
-    this.sqlExecutable = extensionConfiguration.get("cliToUseForCompilation")!;
-    this.sqlExecutable = this.sqlExecutable === "SQL*Plus" ? "sqlplus" : "sql";
-
+  static getCreateAndUploadJavaScriptMinifiedVersion():boolean {
+    return this.get<boolean>("javaScriptModification.createAndUploadJavascriptMinifiedVersion");
   }
 
+  static getCreateAndUploadJavaScriptSourceMap():boolean {
+    return this.get<boolean>("javaScriptModification.createAndUploadJavascriptSourceMap");
+  }
 
+  static getCreateAndUploadCSSMinifiedVersion():boolean {
+    return this.get<boolean>("cssModification.createAndUploadCSSMinifiedVersion");
+  }
+
+  static getCliToUseForCompilation():string {
+    const cli = this.get<string>("cliToUseForCompilation");
+    return (cli === "SQL*Plus" ? "sqlplus" : "sql");
+  }
+
+  static getShowWarningMessages():boolean {
+    return this.get<boolean>("showWarningMessages.AfterCompilation");
+  }
+
+  static getWarningsToExclude():string[] {
+    return this.get<string[]>("showWarningMessages.AfterCompilationExcludingFollowingCodes");
+  }
+
+  static getCustomTriggerRuns():ICustomTriggerRuns[] {
+    return this.get<ICustomTriggerRuns[]>("customTriggerRuns");
+  }
 }

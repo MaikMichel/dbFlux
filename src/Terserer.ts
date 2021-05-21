@@ -2,6 +2,8 @@ import { minify } from "terser";
 import * as fs from "fs";
 import * as path from "path";
 import * as Handlebars from "handlebars";
+import { ConfigurationManager } from "./ConfigurationManager";
+import { changeExtension, getApplicationIdFromPath, getTargetPathFromFileName } from "./utilities";
 
 export class Terserer {
   private sourceContent: string;
@@ -11,54 +13,41 @@ export class Terserer {
 
 
   async genFile() {
-    var result = await minify(this.sourceContent, { sourceMap: true });
 
-    if (result.code !== undefined && result.map !== undefined) {
-      const uploadSQLFile = this.sourceFile + '.sql';
-      const inAppID = getApplicationIdFromPath(this.sourceFile);
-      const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile);
-      const inFileNameMin = changeExtension(inFileName, 'min.js');
-      const inFileNameMap = changeExtension(inFileName, 'js.map');
+    const uploadSQLFile = this.sourceFile + '.sql';
+    const inAppID = getApplicationIdFromPath(this.sourceFile);
+    const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile);
+
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
+    const content = {
+      "inAppID": inAppID,
+      "files": [{
+          "inFileName": inFileName,
+          "inFileContent": Buffer.from(this.sourceContent, 'utf8').toString('base64').match(/.{1,200}/g),
+      }]
+    };
+
+    if (ConfigurationManager.getCreateAndUploadJavaScriptMinifiedVersion()) {
+      var result = await minify(this.sourceContent, { sourceMap: ConfigurationManager.getCreateAndUploadJavaScriptSourceMap() });
+
+      if (result.code !== undefined) {
+        const inFileNameMin = changeExtension(inFileName, 'min.js');
+        content.files.push({
+          "inFileName": inFileNameMin,
+          "inFileContent" : Buffer.from(result.code, 'utf8').toString('base64').match(/.{1,200}/g),
+        });
 
 
-
-      const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
-      const content = {
-        "inAppID": inAppID,
-        "files": [  {
-                      "inFileName": inFileName,
-                      "inFileContent": Buffer.from(this.sourceContent, 'utf8').toString('base64').match(/.{1,200}/g),
-                    },
-                    {
-                      "inFileName": inFileNameMin,
-                      "inFileContent" : Buffer.from(result.code, 'utf8').toString('base64').match(/.{1,200}/g),
-                    },
-                    {
-                      "inFileName" : inFileNameMap,
-                      "inFileContent" : Buffer.from(result.map?.toString()!, 'utf8').toString('base64').match(/.{1,200}/g)
-                    }
-                 ]
-      };
-      console.log('DDD', template(content));
-      fs.writeFileSync(uploadSQLFile, template(content));
-    } else {
-      console.log('nothing to upload');
+        if (ConfigurationManager.getCreateAndUploadJavaScriptSourceMap() && result.map !== undefined) {
+          const inFileNameMap = changeExtension(inFileName, 'js.map');
+          content.files.push({
+            "inFileName" : inFileNameMap,
+            "inFileContent" : Buffer.from(result.map?.toString()!, 'utf8').toString('base64').match(/.{1,200}/g)
+          });
+        }
+      }
     }
+
+    fs.writeFileSync(uploadSQLFile, template(content));
   }
-
-}
-
-export function changeExtension(filename: string, extension: string): string {
-  let ext: string = path.extname(filename);
-  let root: string = filename.substring(0, filename.length - ext.length);
-
-  ext = extension.startsWith('.') ? extension : extension.length > 0 ? `.${extension}` : '';
-  return `${root}${ext}`;
-}
-
-function getApplicationIdFromPath(sourceFile: string) {
-  return sourceFile.split('static/f')[1].split('/src/')[0];
-}
-function getTargetPathFromFileName(inAppID: string, sourceFile: string) {
-  return sourceFile.split('static/f'+inAppID+'/src/')[1];
 }
