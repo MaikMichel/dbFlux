@@ -1,29 +1,29 @@
 {
 	"name": "dbflow",
-	"publisher" : "MaikMichel",
+	"publisher": "MaikMichel",
 	"icon": "images/icon.png",
 	"license": "LICENSE",
 	"repository": {
-			"type": "git",
-			"url": "https://github.com/MaikMichel/dbFlow-vsce"
+		"type": "git",
+		"url": "https://github.com/MaikMichel/dbFlow-vsce"
 	},
-  "bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
+	"bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
 	"displayName": "dbFlow-vsce",
 	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
 	"preview": true,
-  "author": {
-    "name": "Maik Michel"
-  },
+	"author": {
+		"name": "Maik Michel"
+	},
 	"categories": [
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:dbFlow.*",
-		"workspaceContains:apply.env"
+		"workspaceContains:apply.env",
+		"workspaceContains:xcl.yml"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -42,12 +42,19 @@
 				],
 				"pattern": [
 					{
-						"regexp": "(.*) (.*?):(\\d+):(\\d+) (.*)",
+						"regexp": "(WARNING|ERROR) (.*)",
 						"severity": 1,
-						"line": 3,
-						"column": 4,
-						"file": 2,
-						"message": 5,
+						"code": 2
+					},
+					{
+						"regexp": "(.*?):(\\d+):(\\d+)",
+						"file": 1,
+						"line": 2,
+						"column": 3
+					},
+					{
+						"regexp": "(.*)",
+						"message": 1,
 						"loop": true
 					}
 				]
@@ -58,20 +65,58 @@
 				"command": "dbFlow.compileFile",
 				"title": "Compile current File",
 				"category": "dbFlow",
-				"when": "inDbFlowProject && resourceExtname =~ /.sql|.SQL|.pks|.PKS|.pkb|.PKB/"
+				"enablement": "inDbFlowProject"
 			},
 			{
 				"command": "dbFlow.exportAPEX",
 				"title": "Export APEX Application",
 				"category": "dbFlow",
-				"when": "inDbFlowProject"
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.exportREST",
+				"title": "Export REST Module",
+				"category": "dbFlow",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.addREST",
+				"title": "Add REST Module",
+				"category": "dbFlow",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.addAPP",
+				"title": "Add APEX Application",
+				"category": "dbFlow",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.executeTests",
+				"title": "Execute utPLSQL tests",
+				"category": "dbFlow",
+				"enablement": "inDbFlowProject"
 			}
 		],
 		"keybindings": [
 			{
 				"command": "dbFlow.compileFile",
 				"key": "ctrl+alt+b",
-				"mac": "ctrl+alt+b"
+				"mac": "ctrl+alt+b",
+				"when": "inDbFlowProject"
+
+			},
+			{
+				"command": "dbFlow.exportAPEX",
+				"key": "ctrl+alt+e",
+				"mac": "ctrl+alt+e",
+				"when": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.exportREST",
+				"key": "ctrl+alt+r",
+				"mac": "ctrl+alt+r",
+				"when": "inDbFlowProject"
 			}
 		],
 		"configuration": [
@@ -87,6 +132,66 @@
 							"SQLcl"
 						],
 						"description": "Which CLI should be used to compile your source to specified database. Please make sure to set binaries to path",
+						"scope": "window"
+					},
+					"dbFlow.showWarningMessages.AfterCompilation": {
+						"type": "boolean",
+						"default": false,
+						"description": "If set to true additional output concerning warning messages is rendered to output",
+						"scope": "window"
+					},
+					"dbFlow.showWarningMessages.AfterCompilationExcludingFollowingCodes": {
+						"type": "array",
+						"default": [
+							"5018",
+							"7203",
+							"6009",
+							"6010",
+							"7204",
+							"6023"
+						],
+						"description": "Warning Codes to exclude. These values will have an effect only when Show Warning Messages is set to true",
+						"scope": "window"
+					},
+					"dbFlow.customTriggerRuns": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"title": "run config",
+							"properties": {
+								"triggeringExpression": {
+									"type": "string",
+									"description": "whenever a file is compile matching that regex"
+								},
+								"runFile": {
+									"type": "string",
+									"description": "SQL/PLSQL file to run. the triggering file will be the first parameter"
+								},
+								"runFileParameters": {
+									"type": "array",
+									"description": "Parameters to pass to SQL/PLSQL file"
+								}
+							}
+						},
+						"description": "Define regex to run files after you compile a file",
+						"scope": "window"
+					},
+					"dbFlow.javaScriptModification.createAndUploadJavascriptMinifiedVersion": {
+						"type": "boolean",
+						"default": true,
+						"description": "Create a minified version or your JavaScript file",
+						"scope": "window"
+					},
+					"dbFlow.javaScriptModification.createAndUploadJavascriptSourceMap": {
+						"type": "boolean",
+						"default": true,
+						"description": "Create a source map of your minified JavaScript file",
+						"scope": "window"
+					},
+					"dbFlow.cssModification.createAndUploadCSSMinifiedVersion": {
+						"type": "boolean",
+						"default": true,
+						"description": "Create a minified version or your CSS file",
 						"scope": "window"
 					}
 				}
@@ -119,6 +224,7 @@
 		"dotenv": "^8.2.0",
 		"handlebars": "^4.7.7",
 		"terser": "^5.6.1",
-		"uglifycss": "0.0.29"
+		"uglifycss": "0.0.29",
+		"yaml": "^1.10.2"
 	}
 }

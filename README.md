@@ -2,9 +2,13 @@
 
 Using this extension enables you to develop Oracle APEX applications in a simple flow
 
-- Compile your PL/SQL Object to a specified connection
+- Compile your PL/SQL Object to a folder specific connection
 - Minify and upload your JavaScript Files to your APEX Application
 - Minify and upload your Cascading Stylesheets to your APEX Application
+- Upload any file to your APEX Application
+- Run utPLSQL Test
+- Runs with dbFlow and XCL configuration
+
 
 #### Demo - Compiling PL/SQL Package
 ![Compile PL/SQL Demo](images/screen-rec-vscode-compile-plsql.gif)
@@ -17,6 +21,8 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 #### Demo - Uploading CSS
 ![Minify and Upload CSS Demo](images/screen-rec-vscode-compile-css.gif)
 
+#### Demo - Running utPLSQL Tests
+![Minify and Upload CSS Demo](images/screen-rec-vscode-run-utplsql)
 
 ## Prerequisites
 
@@ -25,6 +31,7 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 ## Configuration
 
 dbFlow Extension is based on a specic file / folder structur. Either create this structure by using [dbFlow-Template](https://github.com/MaikMichel/dbFlow-template) or just make it on your own.
+Another way is to use XCL (currently in Alpha)
 
 ``` shell
 apex              - all your apex apps goes here
@@ -91,4 +98,4 @@ DB_APP_PWD=user_pwd
   - PL/SQL compile towards DB connections
   - JSS minify, map and upload to APEX - Application Static Files
   - CSS minify, map and upload to APEX - Application Static Files
-dbms_output enabled
+  - upload file to APEX - Application Static Files
