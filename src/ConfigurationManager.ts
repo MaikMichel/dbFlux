@@ -11,8 +11,6 @@ export class ConfigurationManager {
   static get<T>(confPath:string):T {
     const myValue:T | undefined = workspace.getConfiguration(ConfigurationManager.dbFlow).get(confPath);
     const myDefault = workspace.getConfiguration(ConfigurationManager.dbFlow).inspect(confPath)?.defaultValue;
-
-    // console.log(confPath, (myValue === undefined ? <T>myDefault : myValue));
     return (myValue === undefined ? <T>myDefault : myValue);
   }
 

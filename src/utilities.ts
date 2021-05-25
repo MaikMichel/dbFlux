@@ -43,7 +43,6 @@ export async function getActiveFileUri():Promise<vscode.Uri | undefined>{
     await vscode.env.clipboard.writeText(tmpClipboard);
 
     fileName = fileName.split('\n')[0];
-    console.log('fileName:', fileName);
     fileUri = vscode.Uri.file(fileName);
 
   } else {

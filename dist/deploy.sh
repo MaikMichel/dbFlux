@@ -97,7 +97,10 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
 # else
 
   if [[ ${DBFLOW_MOVEYN} == "YES" ]]; then
-    mv ${DBFLOW_FILE} ${DBFLOW_FILE/\/src\//\/dist\/}
+    target=${DBFLOW_FILE/\/src\//\/dist\/}
+    target_dir=$(dirname "${target}")
+    mkdir --parents ${target_dir}
+    mv ${DBFLOW_FILE} ${target}
   fi
 
   if [[ -n ${DBFLOW_CONN_DATA} ]]; then

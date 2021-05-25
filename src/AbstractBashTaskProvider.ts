@@ -193,7 +193,6 @@ function getProjectInfosFromXCL():IProjectInfos {
     const f = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
     const buildYml = yaml.parse(fs.readFileSync(path.join(f, "xcl.yml")).toString());
-    // console.log('buildYml:', buildYml);
 
     if (buildYml) {
       projectInfos.appSchema    = buildYml.xcl.users.schema_app;
@@ -205,7 +204,7 @@ function getProjectInfosFromXCL():IProjectInfos {
 
     const o = os.homedir + "/AppData/Roaming/xcl";
     const applyYml = yaml.parse(fs.readFileSync(path.join(o, `environment_${buildYml.xcl.project}.yml`)).toString());
-    // console.log('applyYml:', applyYml);
+
     if (applyYml) {
       projectInfos.dbAppUser = buildYml.xcl.users.user_deployment;
       projectInfos.dbAppPwd  = applyYml.password;
@@ -222,7 +221,7 @@ function getProjectInfosFromXCL():IProjectInfos {
 async function validateProjectInfos(projectInfos: IProjectInfos) {
   let dbConnMsg = "";
   let schemaMsg = "";
-  console.log('projectInfos:', projectInfos);
+
   if (
       (projectInfos.dbAppUser === undefined || !projectInfos.dbAppUser || projectInfos.dbAppUser.length === 0) ||
       (projectInfos.dbAppPwd === undefined || !projectInfos.dbAppPwd || projectInfos.dbAppPwd?.length === 0) ||
@@ -270,9 +269,6 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
   }
 
   if ((dbConnMsg.length + schemaMsg.length) > 0) {
-    console.log('schemaMsg:', schemaMsg);
-    console.log('dbConnMsg:', dbConnMsg);
-
     // throw new Error("Project configuration is invalid");
     projectInfos.isValid = false;
   } else {

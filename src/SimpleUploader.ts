@@ -24,8 +24,6 @@ export class SimpleUploader {
         "inFileContent": this.sourceContent.match(/.{1,200}/g)
       }]
     };
-
-    console.log('content:', content);
     fs.writeFileSync(uploadSQLFile, template(content));
   }
 }
