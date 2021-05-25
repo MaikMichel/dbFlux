@@ -12,7 +12,7 @@
 	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
 	"version": "0.5.0",
 	"engines": {
-		"vscode": "^1.54.0"
+		"vscode": "^1.55.0"
 	},
 	"preview": false,
 	"author": {
