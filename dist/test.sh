@@ -37,7 +37,7 @@ array+=("set serveroutput on")
 array+=("exec ut.run(a_color_console => true);")
 
 if [[ -n ${DBFLOW_CONN_DATA} ]]; then
-  echo
+  echo "${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_DATA}"
   echo -e "${BCYAN}Executing tests on DATA - Schema${NC}"
 
   ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_DATA} <<!

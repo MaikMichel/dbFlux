@@ -50,7 +50,7 @@ export class RestTaskStore {
       const dirName:string = path.join(workspace.workspaceFolders[0].uri.fsPath, "rest/modules/" + modulName);
 
       if (!existsSync(dirName)){
-        mkdirSync(dirName);
+        mkdirSync(dirName, { recursive: true });
 
         window.showInformationMessage(`Folder: rest/modules/${modulName} created. At next export you can export the module.`);
       }

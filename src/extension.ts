@@ -14,6 +14,7 @@ import { SimpleUploader } from "./SimpleUploader";
 import { getDBFlowMode, getProjectInfos } from "./AbstractBashTaskProvider";
 import * as os from 'os';
 import { TestTaskProvider } from "./TestTaskProvider";
+import { ReportTemplater } from "./ReportTemplater";
 
 
 
@@ -76,15 +77,16 @@ export function activate(context: vscode.ExtensionContext) {
 
         const langId = vscode.window.activeTextEditor?.document.languageId!;
 
-        let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join('/')!;
+        let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
         if (fileName === undefined) {
           await vscode.commands.executeCommand('copyFilePath');
           fileName = await vscode.env.clipboard.readText();
-          fileName = fileName.split('\n')[0].split(path.sep).join('/')!;
+          fileName = fileName.split('\n')[0].split(path.sep).join(path.posix.sep)!;
 
           await vscode.env.clipboard.writeText(tmpClipboard);
         }
         const insideStatics = matchRuleShort(fileName, '*/static/f*/src/*');
+        const insideReports = matchRuleShort(fileName, '*/reports/*');
 
         if (['sql', 'plsql'].includes(langId)) {
           vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
@@ -101,6 +103,10 @@ export function activate(context: vscode.ExtensionContext) {
           const simpleUploader = new SimpleUploader(fileName);
           simpleUploader.genFile();
           vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+        } else if (insideReports) {
+          const reportTemplater = new ReportTemplater(fileName);
+          reportTemplater.genFile();
+          // vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
         } else {
           vscode.window.showWarningMessage('Current filetype is not supported by dbFlow ...');
         }
@@ -129,13 +135,26 @@ export function activate(context: vscode.ExtensionContext) {
     const expTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", expTaskProvider);
     context.subscriptions.push(expTaskProviderDisposable);
 
-    // Add REST Modul
+    // Add APEX App
     const addApplicationCommand = vscode.commands.registerCommand("dbFlow.addAPP", async () => {
       ExportTaskStore.getInstance().addApplication(await ExportTaskStore.getInstance().getNewApplication());
 
     });
     context.subscriptions.push(addApplicationCommand);
 
+    // Add static app folder
+    const addStaticAppFolder = vscode.commands.registerCommand("dbFlow.addStaticFolder", async () => {
+      ExportTaskStore.getInstance().addStaticFolder(await ExportTaskStore.getInstance().getNewApplication());
+
+    });
+    context.subscriptions.push(addStaticAppFolder);
+
+    // Add report type folder
+    const addReportTypeFolder = vscode.commands.registerCommand("dbFlow.addReportFolder", async () => {
+      ExportTaskStore.getInstance().addReportTypeFolder(await ExportTaskStore.getInstance().getReportType());
+
+    });
+    context.subscriptions.push(addReportTypeFolder);
 
     // Export REST
     const restCommand = vscode.commands.registerCommand("dbFlow.exportREST", async () => {
@@ -179,10 +198,6 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand("setContext", "inDbFlowProject", false);
     return;
   }
-
-
-
-
 
 }
 

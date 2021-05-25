@@ -80,7 +80,6 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
 
       if (apexUri !== undefined) {
         this.setInitialCompileInfo("test.sh", apexUri, runner);
-        console.log('runner:', runner);
         if (runner.projectInfos.useProxy) {
           runner.dataConn = `${runner.projectInfos.dbAppUser}[${runner.projectInfos.dataSchema}]/${runner.connectionPass}@${runner.connectionTns}`;
           runner.logicConn = `${runner.projectInfos.dbAppUser}[${runner.projectInfos.logicSchema}]/${runner.connectionPass}@${runner.connectionTns}`;

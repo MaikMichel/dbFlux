@@ -1,6 +1,8 @@
-import {workspace, window} from "vscode";
+import {workspace, window, Uri} from "vscode";
+
 import * as path from "path";
-import { mkdirSync, PathLike, readdirSync, existsSync } from "fs";
+import { mkdirSync, PathLike, readdirSync, existsSync, copyFileSync } from "fs";
+
 
 export class ExportTaskStore {
   private static _instance: ExportTaskStore;
@@ -44,24 +46,61 @@ export class ExportTaskStore {
   }
 
   addApplication(appID: string) {
-    //
     if (workspace.workspaceFolders !== undefined) {
 
       const dirName:string = path.join(workspace.workspaceFolders[0].uri.fsPath, "apex/f" + appID);
 
       if (!existsSync(dirName)){
-        mkdirSync(dirName);
+        mkdirSync(dirName, { recursive: true });
 
         window.showInformationMessage(`Folder: apex/f${appID} created. At next export you can export the application.`);
       }
+    }
+  }
 
+  addStaticFolder(appID: string) {
+    if (workspace.workspaceFolders !== undefined) {
 
+      const dirName:string = path.join(workspace.workspaceFolders[0].uri.fsPath, `static/f${appID}/src`);
+
+      if (!existsSync(dirName)){
+        mkdirSync(path.join(dirName, "js"), { recursive: true });
+        mkdirSync(path.join(dirName, "css"));
+        mkdirSync(path.join(dirName, "img"));
+
+        window.showInformationMessage(`Folder: "static/f${appID}/src" created. Just place your JavaScript, CSS or any other file here, to build an upload`);
+      }
     }
   }
 
   async getNewApplication(): Promise<string> {
      const value:string | undefined = await window.showInputBox({ prompt: "dbFlow add Application", placeHolder: "Enter APP-ID" });
      return value ? value : "";
+  }
+
+  addReportTypeFolder(folderType: string) {
+    if (workspace.workspaceFolders !== undefined) {
+
+      const dirName:string = path.join(workspace.workspaceFolders[0].uri.fsPath, `reports/${folderType}`);
+
+      if (!existsSync(dirName)){
+        mkdirSync(dirName, { recursive: true });
+
+        copyFileSync(path.resolve(__dirname, "..", "dist", "template.sql"), path.resolve(dirName+'/template.sql'));
+
+        let openPath = Uri.file(dirName+'/template.sql');
+        workspace.openTextDocument(openPath).then(doc => {
+          window.showTextDocument(doc);
+        });
+
+        window.showInformationMessage(`Folder: "reports/${folderType}" created. Sample template.sql file written`);
+      }
+    }
+  }
+
+  async getReportType(): Promise<string> {
+    const value:string | undefined = await window.showInputBox({ prompt: "dbFlow add Report Type", placeHolder: "Enter type name" });
+    return value ? value : "";
   }
 
 }

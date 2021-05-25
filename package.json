@@ -10,11 +10,11 @@
 	"bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
 	"displayName": "dbFlow-vsce",
 	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
-	"version": "0.2.0",
+	"version": "0.5.0",
 	"engines": {
-		"vscode": "^1.55.0"
+		"vscode": "^1.54.0"
 	},
-	"preview": true,
+	"preview": false,
 	"author": {
 		"name": "Maik Michel"
 	},
@@ -88,6 +88,18 @@
 			{
 				"command": "dbFlow.addAPP",
 				"title": "Add APEX Application",
+				"category": "dbFlow",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.addStaticFolder",
+				"title": "Add static folder for APP",
+				"category": "dbFlow",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.addReportFolder",
+				"title": "Add report folder with prompted type",
 				"category": "dbFlow",
 				"enablement": "inDbFlowProject"
 			},
