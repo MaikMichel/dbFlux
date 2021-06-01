@@ -28,6 +28,14 @@ if [[ ${DBFLOW_SQLCLI} == "sql" ]]; then
   export JAVA_TOOL_OPTIONS="-Duser.language=en -Duser.region=US -Dfile.encoding=UTF-8"
 fi
 
+# colored output in sqlplus inside git-bash
+case $(uname | tr '[:upper:]' '[:lower:]') in
+mingw64_nt-10*)
+  chcp.com 65001
+;;
+esac
+
+
 
 basefl=$(basename -- "${DBFLOW_FILE}")
 extension="${basefl##*.}"
