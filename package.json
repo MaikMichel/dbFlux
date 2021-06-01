@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
 	"displayName": "dbFlow-vsce",
 	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
@@ -106,6 +106,12 @@
 			{
 				"command": "dbFlow.executeTests",
 				"title": "Execute utPLSQL tests",
+				"category": "dbFlow",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlow.resetPassword",
+				"title": "Reset password",
 				"category": "dbFlow",
 				"enablement": "inDbFlowProject"
 			}
