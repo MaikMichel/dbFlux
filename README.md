@@ -26,8 +26,10 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 
 ## Prerequisites
 
+- Install git-bash (included when installing git)
 - Install SQLcl
 - SQL\*Plus [optional, but *faster* way to compile your code]
+
 
 ## Configuration
 
@@ -146,3 +148,10 @@ If you want to upload file to a specific table or service, place them inside the
 
 #### Demo - Create a report type, merge with template, move to target folder and compile
 ![Create a report type, merge with template, move to target folder and compile](images/screen-rec-vscode-run-reports.gif)
+
+
+#### Execute utPLSQL Unittests
+
+To run your tests just call command: `dbFlow: Execute utPLSQL tests`. All tests found are executed. If you are using the multischema configuration you are prompted to select the schemas to run your tests.
+
+![Execute tests, enter password, choose target schemas](images/screen-rec-vscode-run-tests.gif)

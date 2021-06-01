@@ -5,6 +5,7 @@ import * as path from "path";
 import { matchRuleShort } from "./utilities";
 import { AbstractBashTaskProvider, IBashInfos } from "./AbstractBashTaskProvider";
 import { ConfigurationManager } from "./ConfigurationManager";
+import { TestTaskStore } from "./TestTaskStore";
 
 
 interface TestTaskDefinition extends vscode.TaskDefinition {
@@ -34,7 +35,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
   async getTestTasks(): Promise<vscode.Task[]> {
     const result: vscode.Task[] = [];
 
-    const runTask: ISQLTestInfos = this.prepTestInfos();
+    const runTask: ISQLTestInfos = await this.prepTestInfos();
 
     result.push(this.createTestTask(this.createTestTaskDefinition("executeTests", runTask)));
 
@@ -71,7 +72,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
     return _task;
   }
 
-  prepTestInfos(): ISQLTestInfos {
+  async prepTestInfos(): Promise<ISQLTestInfos> {
     let runner: ISQLTestInfos = {} as ISQLTestInfos;
 
     if (vscode.workspace.workspaceFolders) {
@@ -81,9 +82,20 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
       if (apexUri !== undefined) {
         this.setInitialCompileInfo("test.sh", apexUri, runner);
         if (runner.projectInfos.useProxy) {
-          runner.dataConn = `${runner.projectInfos.dbAppUser}[${runner.projectInfos.dataSchema}]/${runner.connectionPass}@${runner.connectionTns}`;
-          runner.logicConn = `${runner.projectInfos.dbAppUser}[${runner.projectInfos.logicSchema}]/${runner.connectionPass}@${runner.connectionTns}`;
-          runner.appConn = `${runner.projectInfos.dbAppUser}[${runner.projectInfos.appSchema}]/${runner.connectionPass}@${runner.connectionTns}`;
+
+
+          if (TestTaskStore.getInstance().selectedSchemas?.includes(runner.projectInfos.dataSchema)) {
+            runner.dataConn = `${runner.projectInfos.dbAppUser}[${runner.projectInfos.dataSchema}]/${runner.connectionPass}@${runner.connectionTns}`;
+          }
+
+          if (TestTaskStore.getInstance().selectedSchemas?.includes(runner.projectInfos.logicSchema)) {
+            runner.logicConn = `${runner.projectInfos.dbAppUser}[${runner.projectInfos.logicSchema}]/${runner.connectionPass}@${runner.connectionTns}`;
+          }
+
+          if (TestTaskStore.getInstance().selectedSchemas?.includes(runner.projectInfos.appSchema)) {
+            runner.appConn = `${runner.projectInfos.dbAppUser}[${runner.projectInfos.appSchema}]/${runner.connectionPass}@${runner.connectionTns}`;
+          }
+
         } else {
           runner.appConn = `${runner.projectInfos.dbAppUser}/${runner.connectionPass}@${runner.connectionTns}`;
         }
