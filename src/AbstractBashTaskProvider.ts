@@ -6,6 +6,7 @@ import { existsSync } from "fs";
 import { matchRuleShort } from "./utilities";
 import * as yaml from 'yaml';
 import * as os from 'os';
+import { CompileTaskStore } from "./CompileTaskStore";
 
 export interface IBashInfos {
   runFile:        string;
@@ -22,7 +23,7 @@ interface IProjectInfos {
   dataSchema: string;
   useProxy: boolean;
   dbAppUser: string;
-  dbAppPwd: string;
+  dbAppPwd: string|undefined;
   dbTns: string;
   isValid: boolean;
 
@@ -103,7 +104,7 @@ export abstract class AbstractBashTaskProvider {
 
     runnerInfo.connectionTns  = projectInfos.dbTns;
     runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd);
-    runnerInfo.connectionPass = projectInfos.dbAppPwd;
+    runnerInfo.connectionPass = projectInfos.dbAppPwd ? projectInfos.dbAppPwd  : CompileTaskStore.getInstance().appPwd!;
     runnerInfo.projectInfos   = projectInfos;
 
 
@@ -177,6 +178,10 @@ function getProjectInfosFromDBFlow():IProjectInfos {
       projectInfos.logicSchema  = buildEnv.parsed.LOGIC_SCHEMA;
       projectInfos.dataSchema   = buildEnv.parsed.DATA_SCHEMA;
 
+      if (buildEnv.parsed.USE_PROXY === undefined) {
+        vscode.window.showErrorMessage("Variable: USE_PROXY missing inside build.env");
+        throw new Error("Variable: USE_PROXY missing inside build.env");
+      }
       projectInfos.useProxy   = buildEnv.parsed.USE_PROXY.toUpperCase() === "TRUE";
     }
   }
@@ -207,7 +212,6 @@ function getProjectInfosFromXCL():IProjectInfos {
 
     if (applyYml) {
       projectInfos.dbAppUser = buildYml.xcl.users.user_deployment;
-      projectInfos.dbAppPwd  = applyYml.password;
       projectInfos.dbTns     = applyYml.connection;
     }
 
@@ -224,12 +228,10 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
 
   if (
       (projectInfos.dbAppUser === undefined || !projectInfos.dbAppUser || projectInfos.dbAppUser.length === 0) ||
-      (projectInfos.dbAppPwd === undefined || !projectInfos.dbAppPwd || projectInfos.dbAppPwd?.length === 0) ||
       (projectInfos.dbTns === undefined || !projectInfos.dbTns || projectInfos.dbTns?.length === 0)
   ) {
     dbConnMsg = `Connection configuration incomplete! Please check your configuration!
     (User: ${projectInfos.dbAppUser},
-    Pass: ${projectInfos.dbAppPwd?.replace(/./gi, '*')},
     Connection: ${projectInfos.dbTns})
     `;
     vscode.window.setStatusBarMessage("$(testing-error-icon) dbFlow > Connection configuration incomplete!");

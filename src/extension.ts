@@ -15,6 +15,8 @@ import { getDBFlowMode, getProjectInfos } from "./AbstractBashTaskProvider";
 import * as os from 'os';
 import { TestTaskProvider } from "./TestTaskProvider";
 import { ReportTemplater } from "./ReportTemplater";
+import { CompileTaskStore } from "./CompileTaskStore";
+import { TestTaskStore } from "./TestTaskStore";
 
 
 
@@ -72,43 +74,59 @@ export function activate(context: vscode.ExtensionContext) {
     // Compile
     let sqlPlusCommand = vscode.commands.registerCommand("dbFlow.compileFile", async () => {
       projectInfos = getProjectInfos();
+
       if (projectInfos.isValid) {
         const tmpClipboard = await vscode.env.clipboard.readText();
 
         const langId = vscode.window.activeTextEditor?.document.languageId!;
 
         let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
-        if (fileName === undefined) {
-          await vscode.commands.executeCommand('copyFilePath');
-          fileName = await vscode.env.clipboard.readText();
-          fileName = fileName.split('\n')[0].split(path.sep).join(path.posix.sep)!;
 
-          await vscode.env.clipboard.writeText(tmpClipboard);
+
+        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
+          CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlow: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
+          if (CompileTaskStore.getInstance().appPwd?.length === 0) {
+            CompileTaskStore.getInstance().appPwd = undefined;
+          }
         }
-        const insideStatics = matchRuleShort(fileName, '*/static/f*/src/*');
-        const insideReports = matchRuleShort(fileName, '*/reports/*');
 
-        if (['sql', 'plsql'].includes(langId)) {
-          vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
-        } else if (insideStatics && ['javascript'].includes(langId)) {
-          const tersered = new Terserer(fileName);
-          tersered.genFile();
-          vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
 
-        } else if (insideStatics && ['css'].includes(langId)) {
-          const uglifyer = new Uglifyer(fileName);
-          uglifyer.genFile();
-          vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
-        } else if (insideStatics) {
-          const simpleUploader = new SimpleUploader(fileName);
-          simpleUploader.genFile();
-          vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
-        } else if (insideReports) {
-          const reportTemplater = new ReportTemplater(fileName);
-          reportTemplater.genFile();
-          // vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+        if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
+            (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
+          if (fileName === undefined) {
+            await vscode.commands.executeCommand('copyFilePath');
+            fileName = await vscode.env.clipboard.readText();
+            fileName = fileName.split('\n')[0].split(path.sep).join(path.posix.sep)!;
+
+            await vscode.env.clipboard.writeText(tmpClipboard);
+          }
+          const insideStatics = matchRuleShort(fileName, '*/static/f*/src/*');
+          const insideReports = matchRuleShort(fileName, '*/reports/*');
+
+          if (['sql', 'plsql'].includes(langId)) {
+            vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+          } else if (insideStatics && ['javascript'].includes(langId)) {
+            const tersered = new Terserer(fileName);
+            tersered.genFile();
+            vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+
+          } else if (insideStatics && ['css'].includes(langId)) {
+            const uglifyer = new Uglifyer(fileName);
+            uglifyer.genFile();
+            vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+          } else if (insideStatics) {
+            const simpleUploader = new SimpleUploader(fileName);
+            simpleUploader.genFile();
+            vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+          } else if (insideReports) {
+            const reportTemplater = new ReportTemplater(fileName);
+            reportTemplater.genFile();
+            // vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+          } else {
+            vscode.window.showWarningMessage('Current filetype is not supported by dbFlow ...');
+          }
         } else {
-          vscode.window.showWarningMessage('Current filetype is not supported by dbFlow ...');
+          vscode.window.showWarningMessage('No password provided ... nothing to do ...');
         }
       }
     });
@@ -124,9 +142,22 @@ export function activate(context: vscode.ExtensionContext) {
     const exportCommand = vscode.commands.registerCommand("dbFlow.exportAPEX", async () => {
       projectInfos = getProjectInfos();
       if (projectInfos.isValid) {
-        ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID();
 
-        await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportAPEX");
+        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
+          CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlow: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
+          if (CompileTaskStore.getInstance().appPwd?.length === 0) {
+            CompileTaskStore.getInstance().appPwd = undefined;
+          }
+        }
+
+
+        if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
+            (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
+          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID();
+
+          await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportAPEX");
+
+        }
       }
     });
     context.subscriptions.push(exportCommand);
@@ -160,9 +191,22 @@ export function activate(context: vscode.ExtensionContext) {
     const restCommand = vscode.commands.registerCommand("dbFlow.exportREST", async () => {
       projectInfos = getProjectInfos();
       if (projectInfos.isValid) {
-        RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule();
 
-        await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportREST");
+        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
+          CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlow: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
+          if (CompileTaskStore.getInstance().appPwd?.length === 0) {
+            CompileTaskStore.getInstance().appPwd = undefined;
+          }
+        }
+
+
+        if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
+            (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
+
+          RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule();
+
+          await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportREST");
+        }
       }
     });
     context.subscriptions.push(restCommand);
@@ -185,7 +229,25 @@ export function activate(context: vscode.ExtensionContext) {
     const testCommand = vscode.commands.registerCommand("dbFlow.executeTests", async () => {
       projectInfos = getProjectInfos();
       if (projectInfos.isValid) {
-        await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTests");
+        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
+          CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlow: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
+          if (CompileTaskStore.getInstance().appPwd?.length === 0) {
+            CompileTaskStore.getInstance().appPwd = undefined;
+          }
+        }
+
+
+        if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
+            (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
+
+              if (projectInfos.useProxy) {
+                TestTaskStore.getInstance().selectedSchemas = await vscode.window.showQuickPick([projectInfos.dataSchema, projectInfos.logicSchema, projectInfos.appSchema], {
+                  canPickMany: true, placeHolder: 'Choose Schema to run your tests'
+                });
+              }
+
+              await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTests");
+        }
       }
     });
     context.subscriptions.push(testCommand);
@@ -193,6 +255,15 @@ export function activate(context: vscode.ExtensionContext) {
     const testTaskProvider: TestTaskProvider = new TestTaskProvider();
     const testTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", testTaskProvider);
     context.subscriptions.push(testTaskProviderDisposable);
+
+
+    // Reset Password
+    const resetPwdCommand = vscode.commands.registerCommand("dbFlow.resetPassword", async () => {
+      CompileTaskStore.getInstance().appPwd = undefined;
+      vscode.window.showInformationMessage("dbFlow: Password succefully reset");
+    });
+    context.subscriptions.push(resetPwdCommand);
+
   } else {
     vscode.window.showErrorMessage("dbFlow: Working folder not found, open a folder an try again");
     vscode.commands.executeCommand("setContext", "inDbFlowProject", false);
