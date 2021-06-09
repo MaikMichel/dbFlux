@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.7.0 - 2021-06-09]
+
+- Allow blanklines in SQLPlus
+- Allow serveroutput on triggered files
+
 ## [0.6.0 - 2021-06-01]
 
 - Support colored output on Git-Bash
