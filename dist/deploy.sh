@@ -56,6 +56,7 @@ set define off
 set pagesize 9999
 set trim on
 set heading off
+set sqlblanklines on
 
 set feedback off
 Begin
@@ -70,8 +71,9 @@ Rem enable some PL/SQL Warnings
 ${DBFLOW_ENABLE_WARNINGS}
 
 Rem Run the Sublime File
+set feedback on
 @"${DBFLOW_FILE}"
-
+set feedback off
 Rem show errors for easy correction
 Rem prompt Errors
 
@@ -118,6 +120,16 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
     IFS=',' read -r -a array <<< "${DBFLOW_FILE_DATA}"
 
     ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_DATA} <<!
+    WHENEVER SQLERROR EXIT SQL.SQLCODE
+    set linesize 2500
+    set tab off
+    set serveroutput on
+    set scan off
+    set define off
+    set pagesize 9999
+    set trim on
+    set sqlblanklines on
+
     $(
       for element in "${array[@]}"
       do
@@ -136,6 +148,16 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
     IFS=',' read -r -a array <<< "${DBFLOW_FILE_LOGIC}"
 
     ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_LOGIC} <<!
+    WHENEVER SQLERROR EXIT SQL.SQLCODE
+    set linesize 2500
+    set tab off
+    set serveroutput on
+    set scan off
+    set define off
+    set pagesize 9999
+    set trim on
+    set sqlblanklines on
+
     $(
       for element in "${array[@]}"
       do
@@ -159,6 +181,16 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
     done
 
     ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_APP} << !
+    WHENEVER SQLERROR EXIT SQL.SQLCODE
+    set linesize 2500
+    set tab off
+    set serveroutput on
+    set scan off
+    set define off
+    set pagesize 9999
+    set trim on
+    set sqlblanklines on
+
     $(
       for element in "${array[@]}"
       do
