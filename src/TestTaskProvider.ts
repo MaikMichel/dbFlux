@@ -18,10 +18,15 @@ interface ISQLTestInfos extends IBashInfos {
   logicConn:          string;
   appConn:            string;
   executableCli:      string;
+  fileToTest:         string;
 }
 
 export class TestTaskProvider extends AbstractBashTaskProvider implements vscode.TaskProvider {
   static dbFlowType: string = "dbFlow";
+
+  constructor(private mode:string){
+    super();
+  };
 
   provideTasks(): Thenable<vscode.Task[]> | undefined {
     return this.getTestTasks();
@@ -37,7 +42,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
 
     const runTask: ISQLTestInfos = await this.prepTestInfos();
 
-    result.push(this.createTestTask(this.createTestTaskDefinition("executeTests", runTask)));
+    result.push(this.createTestTask(this.createTestTaskDefinition(this.mode, runTask)));
 
     return Promise.resolve(result);
   }
@@ -61,7 +66,8 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
           DBFLOW_SQLCLI:     definition.runner.executableCli,
           DBFLOW_CONN_DATA:  definition.runner.dataConn,
           DBFLOW_CONN_LOGIC: definition.runner.logicConn,
-          DBFLOW_CONN_APP:   definition.runner.appConn
+          DBFLOW_CONN_APP:   definition.runner.appConn,
+          DBFLOW_FILE2TEST:  this.mode === "executeTests" ? "" : definition.runner.fileToTest
         },
       })
 
@@ -99,6 +105,9 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
         } else {
           runner.appConn = `${runner.projectInfos.dbAppUser}/${runner.connectionPass}@${runner.connectionTns}`;
         }
+
+
+        runner.fileToTest = "" + TestTaskStore.getInstance().fileName;
 
         runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
 
