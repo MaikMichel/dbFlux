@@ -252,9 +252,58 @@ export function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(testCommand);
 
-    const testTaskProvider: TestTaskProvider = new TestTaskProvider();
+    const testTaskProvider: TestTaskProvider = new TestTaskProvider("executeTests");
     const testTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", testTaskProvider);
     context.subscriptions.push(testTaskProviderDisposable);
+
+
+
+    // run test against package
+    const testPackageTaskProvider: TestTaskProvider = new TestTaskProvider("executeTestPackage");
+    const testPackageTaskCommand = vscode.commands.registerCommand("dbFlow.executeTestPackage", async () => {
+      projectInfos = getProjectInfos();
+      if (projectInfos.isValid) {
+
+        const tmpClipboard = await vscode.env.clipboard.readText();
+        const langId = vscode.window.activeTextEditor?.document.languageId!;
+        let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
+
+        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
+          CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlow: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
+          if (CompileTaskStore.getInstance().appPwd?.length === 0) {
+            CompileTaskStore.getInstance().appPwd = undefined;
+          }
+        }
+
+
+        if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
+            (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
+
+
+            if (fileName === undefined) {
+              await vscode.commands.executeCommand('copyFilePath');
+              fileName = await vscode.env.clipboard.readText();
+              fileName = fileName.split('\n')[0].split(path.sep).join(path.posix.sep)!;
+
+              await vscode.env.clipboard.writeText(tmpClipboard);
+            }
+            const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
+            const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
+
+            if (['sql', 'plsql'].includes(langId) && (insidePackages || insideTests)) {
+              TestTaskStore.getInstance().selectedSchemas = [testPackageTaskProvider.getDBUserFromPath(fileName, projectInfos)];
+              TestTaskStore.getInstance().fileName = fileName;
+              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTestPackage");
+            } else {
+              vscode.window.showWarningMessage('Current filetype is not supported by dbFlow ...');
+            }
+        }
+      }
+    });
+    context.subscriptions.push(testPackageTaskCommand);
+
+    const testPackageTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", testPackageTaskProvider);
+    context.subscriptions.push(testPackageTaskProviderDisposable);
 
 
     // Reset Password

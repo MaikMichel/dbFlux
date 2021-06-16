@@ -35,13 +35,28 @@ mingw64_nt-10*)
 ;;
 esac
 
+basefl=$(basename -- "${DBFLOW_FILE2TEST}")
+extension="${basefl##*.}"
+
+
 array+=("set feedback off")
 array+=("prompt compiling schema")
 array+=("exec dbms_utility.compile_schema(schema => USER, compile_all => false);")
 array+=("exec dbms_session.reset_package;")
-array+=("prompt executing Tests")
 array+=("set serveroutput on")
-array+=("exec ut.run(a_color_console => true);")
+
+
+base_package=${basefl/"test_"/}
+base_package=${base_package/\.$extension/}
+
+if [[ -n ${DBFLOW_FILE2TEST} ]]; then
+  array+=("prompt executing Tests on package: test_${base_package}")
+  array+=("exec ut.run('test_${base_package}', a_color_console => true);")
+else
+  array+=("prompt executing Tests")
+  array+=("exec ut.run(a_color_console => true);")
+fi
+
 
 if [[ -n ${DBFLOW_CONN_DATA} ]]; then
   echo -e "${BCYAN}Executing tests on DATA - Schema${NC}"

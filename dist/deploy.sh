@@ -89,7 +89,7 @@ select user_errors
               as user_errors
             from user_errors
             where attribute in ('ERROR', 'WARNING')
-              and lower(name||'.${extension}') = lower('${basefl}')
+              and lower(name||decode(type, 'PACKAGE', '.pks', 'PACKAGE BODY', '.pkb', '.${extension}')) = lower('${basefl}')
             order by type, name, line, position)
  union
 select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || '[32m' || SYSTIMESTAMP||chr(27) || '[0m'
@@ -97,7 +97,7 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
  where not exists (select 1
                      from user_errors
                     where attribute in ('ERROR', 'WARNING')
-                      and lower(name||'.${extension}') = lower('${basefl}')) ;
+                      and lower(name||decode(type, 'PACKAGE', '.pks', 'PACKAGE BODY', '.pkb', '.${extension}')) = lower('${basefl}')) ;
 !
 
 # if [ $? -ne 0 ]
