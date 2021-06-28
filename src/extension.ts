@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as which from "which";
 
 import * as path from "path";
 import { CompileTaskProvider } from "./CompileTaskProvider";
@@ -19,6 +18,9 @@ import { ReportTemplater } from "./ReportTemplater";
 import { CompileTaskStore } from "./CompileTaskStore";
 import { TestTaskStore } from "./TestTaskStore";
 import { ConfigurationManager } from "./ConfigurationManager";
+import which = require("which");
+
+
 
 
 
