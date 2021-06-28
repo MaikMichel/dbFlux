@@ -2,7 +2,7 @@
 	"name": "dbflow",
 	"publisher": "MaikMichel",
 	"icon": "images/icon.png",
-	"license": "LICENSE",
+	"license": "MIT",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/MaikMichel/dbFlow-vsce"
@@ -234,10 +234,10 @@
 		"lint": "eslint src --ext ts",
 		"test": "node ./out/test/runTest.js",
 		"vscode:prepublish": "npm run -S esbuild-base -- --minify",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "npm run -S esbuild-base -- --sourcemap",
-    "esbuild-watch": "npm run -S esbuild-base -- --sourcemap --watch",
-    "test-compile": "tsc -p ./"
+		"esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
+		"esbuild": "npm run -S esbuild-base -- --sourcemap",
+		"esbuild-watch": "npm run -S esbuild-base -- --sourcemap --watch",
+		"test-compile": "tsc -p ./"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",
@@ -254,6 +254,7 @@
 		"vscode-test": "^1.5.0"
 	},
 	"dependencies": {
+		"@types/which": "^2.0.0",
 		"dotenv": "^8.2.0",
 		"handlebars": "^4.7.7",
 		"terser": "^5.6.1",

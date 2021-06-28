@@ -1,5 +1,8 @@
 # Change Log
 
+## [0.9.0 - 2021-06-28]
+- Check if sql or sqlplus executable is on path before execution
+
 ## [0.8.0 - 2021-06-09]
 - Fix wrong error output on package spec when body has errors
 - Execute tests for current package
