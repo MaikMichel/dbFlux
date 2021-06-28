@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as which from "which";
 
 import * as path from "path";
 import { CompileTaskProvider } from "./CompileTaskProvider";
@@ -17,6 +18,7 @@ import { TestTaskProvider } from "./TestTaskProvider";
 import { ReportTemplater } from "./ReportTemplater";
 import { CompileTaskStore } from "./CompileTaskStore";
 import { TestTaskStore } from "./TestTaskStore";
+import { ConfigurationManager } from "./ConfigurationManager";
 
 
 
@@ -103,28 +105,33 @@ export function activate(context: vscode.ExtensionContext) {
           const insideStatics = matchRuleShort(fileName, '*/static/f*/src/*');
           const insideReports = matchRuleShort(fileName, '*/reports/*');
 
-          if (['sql', 'plsql'].includes(langId)) {
-            vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
-          } else if (insideStatics && ['javascript'].includes(langId)) {
-            const tersered = new Terserer(fileName);
-            tersered.genFile();
-            vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+          which(ConfigurationManager.getCliToUseForCompilation()).then(async resolvedPath => {
+            if (['sql', 'plsql'].includes(langId)) {
+              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+            } else if (insideStatics && ['javascript'].includes(langId)) {
+              const tersered = new Terserer(fileName);
+              tersered.genFile();
+              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
 
-          } else if (insideStatics && ['css'].includes(langId)) {
-            const uglifyer = new Uglifyer(fileName);
-            uglifyer.genFile();
-            vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
-          } else if (insideStatics) {
-            const simpleUploader = new SimpleUploader(fileName);
-            simpleUploader.genFile();
-            vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
-          } else if (insideReports) {
-            const reportTemplater = new ReportTemplater(fileName);
-            reportTemplater.genFile();
-            // vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
-          } else {
-            vscode.window.showWarningMessage('Current filetype is not supported by dbFlow ...');
-          }
+            } else if (insideStatics && ['css'].includes(langId)) {
+              const uglifyer = new Uglifyer(fileName);
+              uglifyer.genFile();
+              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+            } else if (insideStatics) {
+              const simpleUploader = new SimpleUploader(fileName);
+              simpleUploader.genFile();
+              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+            } else if (insideReports) {
+              const reportTemplater = new ReportTemplater(fileName);
+              reportTemplater.genFile();
+              // vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+            } else {
+              vscode.window.showWarningMessage('Current filetype is not supported by dbFlow ...');
+            }
+          }).catch(err => {
+            vscode.window.showErrorMessage(`dbFlow: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
+          });
+
         } else {
           vscode.window.showWarningMessage('No password provided ... nothing to do ...');
         }
@@ -136,6 +143,7 @@ export function activate(context: vscode.ExtensionContext) {
     const oraTaskProvider: CompileTaskProvider = new CompileTaskProvider();
     const oraTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", oraTaskProvider);
     context.subscriptions.push(oraTaskProviderDisposable);
+
 
 
     // Export APEX
@@ -155,12 +163,20 @@ export function activate(context: vscode.ExtensionContext) {
             (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
           ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID();
 
-          await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportAPEX");
+          which('sql').then(async resolvedPath => {
+            await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportAPEX");
+          }).catch(err => {
+            vscode.window.showErrorMessage('dbFlow: No executable "sql" found on path!');
+          });
+
 
         }
       }
     });
+
+
     context.subscriptions.push(exportCommand);
+
 
     const expTaskProvider: ExportTaskProvider = new ExportTaskProvider();
     const expTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlow", expTaskProvider);
@@ -203,9 +219,13 @@ export function activate(context: vscode.ExtensionContext) {
         if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
             (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
 
-          RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule();
+          which('sql').then(async resolvedPath => {
+            RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule();
 
-          await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportREST");
+            await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportREST");
+          }).catch(err => {
+            vscode.window.showErrorMessage('dbFlow: No executable "sql" found on path!');
+          });
         }
       }
     });
@@ -246,7 +266,11 @@ export function activate(context: vscode.ExtensionContext) {
                 });
               }
 
-              await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTests");
+              which(ConfigurationManager.getCliToUseForCompilation()).then(async resolvedPath => {
+                await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTests");
+              }).catch(err => {
+                vscode.window.showErrorMessage(`dbFlow: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
+              });
         }
       }
     });
@@ -291,9 +315,13 @@ export function activate(context: vscode.ExtensionContext) {
             const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
 
             if (['sql', 'plsql'].includes(langId) && (insidePackages || insideTests)) {
-              TestTaskStore.getInstance().selectedSchemas = [testPackageTaskProvider.getDBUserFromPath(fileName, projectInfos)];
-              TestTaskStore.getInstance().fileName = fileName;
-              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTestPackage");
+              which(ConfigurationManager.getCliToUseForCompilation()).then(async resolvedPath => {
+                TestTaskStore.getInstance().selectedSchemas = [testPackageTaskProvider.getDBUserFromPath(fileName, projectInfos)];
+                TestTaskStore.getInstance().fileName = fileName;
+                vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTestPackage");
+              }).catch(err => {
+                vscode.window.showErrorMessage(`dbFlow: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
+              });
             } else {
               vscode.window.showWarningMessage('Current filetype is not supported by dbFlow ...');
             }
