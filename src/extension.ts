@@ -18,7 +18,8 @@ import { ReportTemplater } from "./ReportTemplater";
 import { CompileTaskStore } from "./CompileTaskStore";
 import { TestTaskStore } from "./TestTaskStore";
 import { ConfigurationManager } from "./ConfigurationManager";
-import which = require("which");
+var which = require('which');
+
 
 
 
@@ -107,7 +108,7 @@ export function activate(context: vscode.ExtensionContext) {
           const insideStatics = matchRuleShort(fileName, '*/static/f*/src/*');
           const insideReports = matchRuleShort(fileName, '*/reports/*');
 
-          which(ConfigurationManager.getCliToUseForCompilation()).then(async resolvedPath => {
+          which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
             if (['sql', 'plsql'].includes(langId)) {
               vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
             } else if (insideStatics && ['javascript'].includes(langId)) {
@@ -130,7 +131,7 @@ export function activate(context: vscode.ExtensionContext) {
             } else {
               vscode.window.showWarningMessage('Current filetype is not supported by dbFlow ...');
             }
-          }).catch(err => {
+          }).catch(() => {
             vscode.window.showErrorMessage(`dbFlow: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
           });
 
@@ -165,9 +166,9 @@ export function activate(context: vscode.ExtensionContext) {
             (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
           ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID();
 
-          which('sql').then(async resolvedPath => {
+          which('sql').then(async () => {
             await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportAPEX");
-          }).catch(err => {
+          }).catch(() => {
             vscode.window.showErrorMessage('dbFlow: No executable "sql" found on path!');
           });
 
@@ -221,11 +222,11 @@ export function activate(context: vscode.ExtensionContext) {
         if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
             (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
 
-          which('sql').then(async resolvedPath => {
+          which('sql').then(async () => {
             RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule();
 
             await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportREST");
-          }).catch(err => {
+          }).catch(() => {
             vscode.window.showErrorMessage('dbFlow: No executable "sql" found on path!');
           });
         }
@@ -268,9 +269,9 @@ export function activate(context: vscode.ExtensionContext) {
                 });
               }
 
-              which(ConfigurationManager.getCliToUseForCompilation()).then(async resolvedPath => {
+              which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
                 await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTests");
-              }).catch(err => {
+              }).catch(() => {
                 vscode.window.showErrorMessage(`dbFlow: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
               });
         }
@@ -317,11 +318,11 @@ export function activate(context: vscode.ExtensionContext) {
             const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
 
             if (['sql', 'plsql'].includes(langId) && (insidePackages || insideTests)) {
-              which(ConfigurationManager.getCliToUseForCompilation()).then(async resolvedPath => {
+              which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
                 TestTaskStore.getInstance().selectedSchemas = [testPackageTaskProvider.getDBUserFromPath(fileName, projectInfos)];
                 TestTaskStore.getInstance().fileName = fileName;
                 vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTestPackage");
-              }).catch(err => {
+              }).catch(() => {
                 vscode.window.showErrorMessage(`dbFlow: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
               });
             } else {
