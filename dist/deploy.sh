@@ -45,20 +45,30 @@ echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
 echo -e "${BYELLOW}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
 echo -e "${BYELLOW}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC}"
 
+# define settings array
+settings=()
+settings+=( "WHENEVER SQLERROR EXIT SQL.SQLCODE" )
+settings+=( "    set linesize 2500" )
+settings+=( "    set tab off" )
+settings+=( "    set serveroutput on" )
+settings+=( "    set pagesize 9999" )
+settings+=( "    set trim on" )
+settings+=( "    set sqlblanklines on" )
+
 
 ${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
-WHENEVER SQLERROR EXIT SQL.SQLCODE
-set linesize 2500
-set tab off
-set serveroutput on
+$(
+  for element in "${settings[@]}"
+  do
+    echo "$element"
+  done
+)
+
 set scan off
 set define off
-set pagesize 9999
-set trim on
 set heading off
-set sqlblanklines on
-
 set feedback off
+
 Begin
   dbms_output.put_line(chr(27) || '[36m' || 'DB-User:     '|| chr(27) || '[0m'||USER);
   dbms_output.put_line(chr(27) || '[36m' || 'DB-Name:     '|| chr(27) || '[0m'||ORA_DATABASE_NAME);
@@ -120,19 +130,17 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
     IFS=',' read -r -a array <<< "${DBFLOW_FILE_DATA}"
 
     ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_DATA} <<!
-    WHENEVER SQLERROR EXIT SQL.SQLCODE
-    set linesize 2500
-    set tab off
-    set serveroutput on
-    set scan off
-    set define off
-    set pagesize 9999
-    set trim on
-    set sqlblanklines on
+    $(
+      for element in "${settings[@]}"
+      do
+        echo "$element"
+      done
+    )
 
     $(
       for element in "${array[@]}"
       do
+        echo "Prompt:: calling $element"
         echo "$element"
       done
     )
@@ -148,19 +156,17 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
     IFS=',' read -r -a array <<< "${DBFLOW_FILE_LOGIC}"
 
     ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_LOGIC} <<!
-    WHENEVER SQLERROR EXIT SQL.SQLCODE
-    set linesize 2500
-    set tab off
-    set serveroutput on
-    set scan off
-    set define off
-    set pagesize 9999
-    set trim on
-    set sqlblanklines on
+    $(
+      for element in "${settings[@]}"
+      do
+        echo "$element"
+      done
+    )
 
     $(
       for element in "${array[@]}"
       do
+        echo "Prompt:: calling $element"
         echo "$element"
       done
     )
@@ -174,26 +180,19 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
     echo -e "${BCYAN}Running additional files in APP-SCHEMA${NC}"
 
     IFS=',' read -r -a array <<< "${DBFLOW_FILE_APP}"
-    # debug
-    for element in "${array[@]}"
-    do
-      echo -e "${BCYAN}$element${NC}"
-    done
 
     ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_APP} << !
-    WHENEVER SQLERROR EXIT SQL.SQLCODE
-    set linesize 2500
-    set tab off
-    set serveroutput on
-    set scan off
-    set define off
-    set pagesize 9999
-    set trim on
-    set sqlblanklines on
+    $(
+      for element in "${settings[@]}"
+      do
+        echo "$element"
+      done
+    )
 
     $(
       for element in "${array[@]}"
       do
+        echo "Prompt:: calling $element"
         echo "$element"
       done
     )
