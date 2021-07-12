@@ -83,7 +83,6 @@ export function activate(context: vscode.ExtensionContext) {
       if (projectInfos.isValid) {
         const tmpClipboard = await vscode.env.clipboard.readText();
 
-        const langId = vscode.window.activeTextEditor?.document.languageId!;
 
         let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
 
@@ -107,16 +106,21 @@ export function activate(context: vscode.ExtensionContext) {
           }
           const insideStatics = matchRuleShort(fileName, '*/static/f*/src/*');
           const insideReports = matchRuleShort(fileName, '*/reports/*');
+          const fileExtension:string = ""+fileName.split('.').pop();
 
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            if (['sql', 'plsql'].includes(langId)) {
+            if (['sql', 'plsql', 'pks', 'pkb', 'fnc', 'prc'].includes(fileExtension.toLowerCase())) {
               vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
-            } else if (insideStatics && ['javascript'].includes(langId)) {
+            } else if (insideStatics && ['js'].includes(fileExtension.toLowerCase())) {
               const tersered = new Terserer(fileName);
-              tersered.genFile();
-              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+              const success = await tersered.genFile();
+              if ( success) {
+                vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+              } else {
+                vscode.window.showErrorMessage("dbFlow/terser: "+ tersered.getLastErrorMessage());
+              }
 
-            } else if (insideStatics && ['css'].includes(langId)) {
+            } else if (insideStatics && ['css'].includes(fileExtension.toLowerCase())) {
               const uglifyer = new Uglifyer(fileName);
               uglifyer.genFile();
               vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
@@ -292,7 +296,6 @@ export function activate(context: vscode.ExtensionContext) {
       if (projectInfos.isValid) {
 
         const tmpClipboard = await vscode.env.clipboard.readText();
-        const langId = vscode.window.activeTextEditor?.document.languageId!;
         let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
 
         if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
@@ -314,10 +317,12 @@ export function activate(context: vscode.ExtensionContext) {
 
               await vscode.env.clipboard.writeText(tmpClipboard);
             }
+
             const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
             const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
+            const fileExtension:string = ""+fileName.split('.').pop();
 
-            if (['sql', 'plsql'].includes(langId) && (insidePackages || insideTests)) {
+            if (['sql', 'plsql', 'pks', 'pkb'].includes(fileExtension.toLowerCase()) && (insidePackages || insideTests)) {
               which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
                 TestTaskStore.getInstance().selectedSchemas = [testPackageTaskProvider.getDBUserFromPath(fileName, projectInfos)];
                 TestTaskStore.getInstance().fileName = fileName;

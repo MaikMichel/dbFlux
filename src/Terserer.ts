@@ -7,12 +7,13 @@ import { changeExtension, getApplicationIdFromPath, getTargetPathFromFileName } 
 
 export class Terserer {
   private sourceContent: string;
+  private lastErrorMessage: string = "";
   constructor(private sourceFile: string){
     this.sourceContent = fs.readFileSync(this.sourceFile, "utf8");
   }
 
 
-  async genFile() {
+  async genFile():Promise<boolean|undefined> {
 
     const uploadSQLFile = this.sourceFile + '.sql';
     const inAppID = getApplicationIdFromPath(this.sourceFile);
@@ -28,26 +29,46 @@ export class Terserer {
     };
 
     if (ConfigurationManager.getCreateAndUploadJavaScriptMinifiedVersion()) {
-      var result = await minify(this.sourceContent, { sourceMap: ConfigurationManager.getCreateAndUploadJavaScriptSourceMap() });
-
-      if (result.code !== undefined) {
-        const inFileNameMin = changeExtension(inFileName, 'min.js');
-        content.files.push({
-          "inFileName": inFileNameMin,
-          "inFileContent" : Buffer.from(result.code, 'utf8').toString('base64').match(/.{1,200}/g),
-        });
+      try {
+        var result = await minify(this.sourceContent, { sourceMap: ConfigurationManager.getCreateAndUploadJavaScriptSourceMap() });
 
 
-        if (ConfigurationManager.getCreateAndUploadJavaScriptSourceMap() && result.map !== undefined) {
-          const inFileNameMap = changeExtension(inFileName, 'js.map');
+        if (result.code !== undefined) {
+          const inFileNameMin = changeExtension(inFileName, 'min.js');
           content.files.push({
-            "inFileName" : inFileNameMap,
-            "inFileContent" : Buffer.from(result.map?.toString()!, 'utf8').toString('base64').match(/.{1,200}/g)
+            "inFileName": inFileNameMin,
+            "inFileContent" : Buffer.from(result.code, 'utf8').toString('base64').match(/.{1,200}/g),
           });
+
+
+          if (ConfigurationManager.getCreateAndUploadJavaScriptSourceMap() && result.map !== undefined) {
+            const inFileNameMap = changeExtension(inFileName, 'js.map');
+            content.files.push({
+              "inFileName" : inFileNameMap,
+              "inFileContent" : Buffer.from(result.map?.toString()!, 'utf8').toString('base64').match(/.{1,200}/g)
+            });
+          }
         }
+
+        fs.writeFileSync(uploadSQLFile, template(content));
+
+        return Promise.resolve(true);
+
+      } catch (error) {
+        const { message } = error;
+
+        console.error("dbFlow/terser: " + message);
+        this.lastErrorMessage = message;
+        return Promise.resolve(false);
+
+
       }
+
     }
 
-    fs.writeFileSync(uploadSQLFile, template(content));
+  }
+
+  getLastErrorMessage() {
+    return this.lastErrorMessage;
   }
 }
