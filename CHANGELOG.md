@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.0.0 - 2021-07-12]
+- Fixed Bug in triggering Call-Definitions
+- Compile-Mode is now determined by file extension not by language
+- Invalid Javascript-Code message form terser is now fetched end rejected
+
 ## [0.9.0 - 2021-06-28]
 - Check if sql or sqlplus executable is on path before execution
 
