@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
 	"displayName": "dbFlow-vsce",
 	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"engines": {
 		"vscode": "^1.55.0"
 	},

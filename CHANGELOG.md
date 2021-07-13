@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.1 - 2021-07-13]
+- set xcl.yml as leading file check
+- Introduced new outputChannel dbFlow for further logging
+
 ## [1.0.0 - 2021-07-12]
 - Fixed Bug in triggering Call-Definitions
 - Compile-Mode is now determined by file extension not by language

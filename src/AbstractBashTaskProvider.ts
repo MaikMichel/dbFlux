@@ -142,13 +142,13 @@ export function getProjectInfos() {
 export function getDBFlowMode():string | undefined {
   let retValue: string | undefined = undefined;
   if (vscode.workspace.workspaceFolders !== undefined) {
-    const f = vscode.workspace.workspaceFolders[0].uri.fsPath;
-    const b = ["apply.env", "xcl.yml"];
+    const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    const knownBuildFiles = ["xcl.yml", "apply.env"];
 
-    for (let buildFileName of b) {
-      const buildFile = path.join(f, buildFileName);
+    for (let buildFileName of knownBuildFiles) {
+      const buildFile = path.join(workspaceFolder, buildFileName);
       if (existsSync(buildFile)) {
-        retValue = buildFileName==="apply.env"?"dbFlow":"xcl";
+        retValue = buildFileName === "apply.env" ? "dbFlow" : "xcl";
         break;
       }
     };

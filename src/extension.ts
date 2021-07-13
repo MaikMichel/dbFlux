@@ -18,6 +18,8 @@ import { ReportTemplater } from "./ReportTemplater";
 import { CompileTaskStore } from "./CompileTaskStore";
 import { TestTaskStore } from "./TestTaskStore";
 import { ConfigurationManager } from "./ConfigurationManager";
+import { outputLog } from './OutputChannel';
+
 var which = require('which');
 
 
@@ -34,6 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
   if (mode !== undefined && ["dbFlow", "xcl"].includes(mode)) {
     let projectInfos = getProjectInfos();
 
+    outputLog(`Mode is ${mode}`);
 
     let applyFileName:string = "";
     let buildFileName:string = "";
