@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1 - 2021-07-13]
+- new option to enable or disable colored output when compiling
+- fix executing tests on original package (Ctrl+Alt+t on example_util will run tests for package test_example_util)
+
 ## [1.0.1 - 2021-07-13]
 - set xcl.yml as leading file check
 - Introduced new outputChannel dbFlow for further logging

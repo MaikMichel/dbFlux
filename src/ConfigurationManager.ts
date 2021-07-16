@@ -6,6 +6,7 @@ interface ICustomTriggerRuns {
   runFileParameters: string[];
 }
 export class ConfigurationManager {
+
   static dbFlow:string = "dbFlow";
 
   static get<T>(confPath:string):T {
@@ -41,5 +42,9 @@ export class ConfigurationManager {
 
   static getCustomTriggerRuns():ICustomTriggerRuns[] {
     return this.get<ICustomTriggerRuns[]>("customTriggerRuns");
+  }
+
+  static getShowWarningsAndErrorsWithColoredOutput(): boolean {
+    return this.get<boolean>("showWarningMessages.showWarningsAndErrorsWithColoredOutput");
   }
 }

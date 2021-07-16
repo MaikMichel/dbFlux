@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
 	"displayName": "dbFlow-vsce",
 	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
-	"version": "1.0.1",
+	"version": "1.1.0",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
@@ -221,6 +221,12 @@
 						"type": "boolean",
 						"default": true,
 						"description": "Create a minified version or your CSS file",
+						"scope": "window"
+					},
+					"dbFlow.showWarningMessages.showWarningsAndErrorsWithColoredOutput": {
+						"type": "boolean",
+						"default": true,
+						"description": "Enables colored output from SQL(plus/cl) output",
 						"scope": "window"
 					}
 				}

@@ -24,6 +24,7 @@ interface ICompileInfos extends IBashInfos {
   logicFile:          string;
   appConn:            string;
   appFile:            string;
+  coloredOutput:      string;
 }
 
 export class CompileTaskProvider extends AbstractBashTaskProvider implements vscode.TaskProvider {
@@ -80,7 +81,9 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
 
           DBFLOW_FILE_DATA:       definition.runner.dataFile,
           DBFLOW_FILE_LOGIC:      definition.runner.logicFile,
-          DBFLOW_FILE_APP:        definition.runner.appFile
+          DBFLOW_FILE_APP:        definition.runner.appFile,
+
+          DBFLOW_COLOR_ON:        definition.runner.coloredOutput
         },
       }),
       ["$dbflow-plsql"]
@@ -102,6 +105,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
       runner.relativeWSPath     = vscode.workspace.asRelativePath(runner.activeFile);
       runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
       runner.moveYesNo          = "NO";
+      runner.coloredOutput      = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
 
 
       if (ConfigurationManager.getShowWarningMessages()) {

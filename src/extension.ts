@@ -321,7 +321,7 @@ export function activate(context: vscode.ExtensionContext) {
               await vscode.env.clipboard.writeText(tmpClipboard);
             }
 
-            const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
+            const insidePackages = matchRuleShort(fileName, '*/db/*/source/packages/*');
             const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
             const fileExtension:string = ""+fileName.split('.').pop();
 
