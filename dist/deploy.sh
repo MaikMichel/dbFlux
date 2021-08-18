@@ -39,11 +39,11 @@ esac
 
 basefl=$(basename -- "${DBFLOW_FILE}")
 extension="${basefl##*.}"
+MDATE=`date +%d.%m.%y_%H:%M:%S,%5N`
 
-
-echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
-echo -e "${BYELLOW}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
+echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBUSER}@${DBFLOW_DBTNS}${NC}"
 echo -e "${BYELLOW}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC}"
+echo -e "${BYELLOW}OS-Now:${NC}      ${WHITE}${MDATE}${NC}"
 
 # define settings array
 settings=()
@@ -75,7 +75,7 @@ Declare
 Begin
   dbms_output.put_line(l_color_on || 'DB-User:     ' || l_color_off || USER);
   dbms_output.put_line(l_color_on || 'DB-Name:     ' || l_color_off || ORA_DATABASE_NAME);
-  dbms_output.put_line(l_color_on || 'Now:         ' || l_color_off || SYSTIMESTAMP);
+  dbms_output.put_line(l_color_on || 'DB-Now:      ' || l_color_off || SYSTIMESTAMP);
 End;
 /
 
