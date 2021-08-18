@@ -324,8 +324,10 @@ export function activate(context: vscode.ExtensionContext) {
             const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
             const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
             const fileExtension:string = ""+fileName.split('.').pop();
+            const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
 
-            if (['sql', 'plsql', 'pks', 'pkb'].includes(fileExtension.toLowerCase()) && (insidePackages || insideTests)) {
+
+            if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insidePackages || insideTests)) {
               which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
                 TestTaskStore.getInstance().selectedSchemas = [testPackageTaskProvider.getDBUserFromPath(fileName, projectInfos)];
                 TestTaskStore.getInstance().fileName = fileName;

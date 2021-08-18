@@ -40,6 +40,10 @@ export class ConfigurationManager {
     return this.get<string[]>("showWarningMessages.AfterCompilationExcludingFollowingCodes");
   }
 
+  static getKnownSQLFileExtensions():string[] {
+    return this.get<string[]>("extensionsWhichShouldBeHandeldBySqlCli");
+  }
+
   static getCustomTriggerRuns():ICustomTriggerRuns[] {
     return this.get<ICustomTriggerRuns[]>("customTriggerRuns");
   }

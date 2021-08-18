@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
 	"displayName": "dbFlow-vsce",
 	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
@@ -171,13 +171,12 @@
 					},
 					"dbFlow.showWarningMessages.AfterCompilationExcludingFollowingCodes": {
 						"type": "array",
-						"default": [
-							"5018",
-							"7203",
-							"6009",
-							"6010",
-							"7204",
-							"6023"
+						"default": ["5018",
+												"7203",
+												"6009",
+												"6010",
+												"7204",
+												"6023"
 						],
 						"description": "Warning Codes to exclude. These values will have an effect only when Show Warning Messages is set to true",
 						"scope": "window"
@@ -227,6 +226,17 @@
 						"type": "boolean",
 						"default": true,
 						"description": "Enables colored output from SQL(plus/cl) output",
+						"scope": "window"
+					},
+					"dbFlow.extensionsWhichShouldBeHandeldBySqlCli": {
+						"type": "array",
+						"default": ["sql",
+												"pks",
+												"pkb",
+												"prc",
+												"fnc"
+						],
+						"description": "File-Extension dbFlow can compile by using either SQLPlus or SQLcl",
 						"scope": "window"
 					}
 				}
