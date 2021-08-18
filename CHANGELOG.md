@@ -1,5 +1,11 @@
 # Change Log
 
+
+## [1.1.2 - 2021-08-18]
+- Fix display of multiple Errors or Warnings in problem matcher
+- Display OS-Time on compile with bash
+- Configure recognized FileExtensions (sql, pks, pkb, ...)
+
 ## [1.1 - 2021-07-13]
 - new option to enable or disable colored output when compiling
 - fix executing tests on original package (Ctrl+Alt+t on example_util will run tests for package test_example_util)
