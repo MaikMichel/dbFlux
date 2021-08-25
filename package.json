@@ -22,7 +22,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"workspaceContains:apply.env",
+		"workspaceContains:build.env",
 		"workspaceContains:xcl.yml"
 	],
 	"main": "./out/extension.js",
