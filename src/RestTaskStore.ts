@@ -36,7 +36,7 @@ export class RestTaskStore {
           .map((dirent) => dirent.name);
       const modules = getDirectories(source);
 
-      value = await window.showQuickPick(modules, { placeHolder: "Select Application to export" });
+      value = await window.showQuickPick(modules, { placeHolder: "Select Module to export" });
     }
 
     return value;
