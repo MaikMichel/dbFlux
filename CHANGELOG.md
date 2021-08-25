@@ -1,6 +1,12 @@
 # Change Log
 
 
+
+## [1.1.3 - 2021-08-25]
+- Check xcl config at .xml/env.yml
+- fix password input when not given
+- some small improvements
+
 ## [1.1.2 - 2021-08-18]
 - Fix display of multiple Errors or Warnings in problem matcher
 - Display OS-Time on compile with bash
