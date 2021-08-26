@@ -3,7 +3,7 @@
 
 
 ## [1.1.3 - 2021-08-25]
-- Check xcl config at .xml/env.yml
+- Check xcl config at .xcl/env.yml
 - fix password input when not given
 - some small improvements
 
