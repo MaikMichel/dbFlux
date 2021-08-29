@@ -7,6 +7,7 @@ import { matchRuleShort } from "./utilities";
 import * as yaml from 'yaml';
 import * as os from 'os';
 import { CompileTaskStore } from "./CompileTaskStore";
+import { outputLog } from "./OutputChannel";
 
 export interface IBashInfos {
   runFile:        string;
@@ -142,13 +143,13 @@ export function getProjectInfos() {
 export function getDBFlowMode():string | undefined {
   let retValue: string | undefined = undefined;
   if (vscode.workspace.workspaceFolders !== undefined) {
-    const f = vscode.workspace.workspaceFolders[0].uri.fsPath;
-    const b = ["apply.env", "xcl.yml"];
+    const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    const knownBuildFiles = ["xcl.yml", "build.env"];
 
-    for (let buildFileName of b) {
-      const buildFile = path.join(f, buildFileName);
+    for (let buildFileName of knownBuildFiles) {
+      const buildFile = path.join(workspaceFolder, buildFileName);
       if (existsSync(buildFile)) {
-        retValue = buildFileName==="apply.env"?"dbFlow":"xcl";
+        retValue = buildFileName === "build.env" ? "dbFlow" : "xcl";
         break;
       }
     };
@@ -207,14 +208,17 @@ function getProjectInfosFromXCL():IProjectInfos {
       projectInfos.useProxy   = true; // xcl does not support SingleSchemas yet
     }
 
-    const o = os.homedir + "/AppData/Roaming/xcl";
-    const applyYml = yaml.parse(fs.readFileSync(path.join(o, `environment_${buildYml.xcl.project}.yml`)).toString());
+    if (fs.existsSync(path.join(f, `.xcl/env.yml`))) {
+      const applyYml = yaml.parse(fs.readFileSync(path.join(f, `.xcl/env.yml`)).toString());
 
-    if (applyYml) {
-      projectInfos.dbAppUser = buildYml.xcl.users.user_deployment;
-      projectInfos.dbTns     = applyYml.connection;
+      if (applyYml) {
+        projectInfos.dbAppUser = buildYml.xcl.users.user_deployment;
+        projectInfos.dbTns     = applyYml.connection;
+        projectInfos.dbAppPwd  = applyYml.password;
+      }
+    } else {
+      outputLog('.xcl/env.yml not found');
     }
-
   }
 
   validateProjectInfos(projectInfos);
@@ -271,6 +275,8 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
   }
 
   if ((dbConnMsg.length + schemaMsg.length) > 0) {
+    outputLog(dbConnMsg);
+    outputLog(schemaMsg);
     // throw new Error("Project configuration is invalid");
     projectInfos.isValid = false;
   } else {

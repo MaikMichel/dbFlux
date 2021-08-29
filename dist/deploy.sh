@@ -39,30 +39,43 @@ esac
 
 basefl=$(basename -- "${DBFLOW_FILE}")
 extension="${basefl##*.}"
+MDATE=`date +%d.%m.%y_%H:%M:%S,%5N`
 
-
-echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
-echo -e "${BYELLOW}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
+echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBUSER}@${DBFLOW_DBTNS}${NC}"
 echo -e "${BYELLOW}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC}"
+echo -e "${BYELLOW}OS-Now:${NC}      ${WHITE}${MDATE}${NC}"
+
+# define settings array
+settings=()
+settings+=( "WHENEVER SQLERROR EXIT SQL.SQLCODE" )
+settings+=( "    set linesize 2500" )
+settings+=( "    set tab off" )
+settings+=( "    set serveroutput on" )
+settings+=( "    set pagesize 9999" )
+settings+=( "    set trim on" )
+settings+=( "    set sqlblanklines on" )
 
 
 ${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
-WHENEVER SQLERROR EXIT SQL.SQLCODE
-set linesize 2500
-set tab off
-set serveroutput on
+$(
+  for element in "${settings[@]}"
+  do
+    echo "$element"
+  done
+)
+
 set scan off
 set define off
-set pagesize 9999
-set trim on
 set heading off
-set sqlblanklines on
-
 set feedback off
+
+Declare
+  l_color_on   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[36m' end;
+  l_color_off  constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[0m' end;
 Begin
-  dbms_output.put_line(chr(27) || '[36m' || 'DB-User:     '|| chr(27) || '[0m'||USER);
-  dbms_output.put_line(chr(27) || '[36m' || 'DB-Name:     '|| chr(27) || '[0m'||ORA_DATABASE_NAME);
-  dbms_output.put_line(chr(27) || '[36m' || 'Now:         '|| chr(27) || '[0m'||SYSTIMESTAMP);
+  dbms_output.put_line(l_color_on || 'DB-User:     ' || l_color_off || USER);
+  dbms_output.put_line(l_color_on || 'DB-Name:     ' || l_color_off || ORA_DATABASE_NAME);
+  dbms_output.put_line(l_color_on || 'DB-Now:      ' || l_color_off || SYSTIMESTAMP);
 End;
 /
 
@@ -77,34 +90,48 @@ set feedback off
 Rem show errors for easy correction
 Rem prompt Errors
 
-select user_errors
-  from (
-            select chr(27) || case when attribute = 'WARNING' then '[1;33m' else '[1;31m' end || attribute || chr(27) || '[0m' -- error or warning
-              || ' ' ||chr(27)||case when attribute = 'WARNING' then '[33m' else '[31m' end
-              || ' ' ||substr(text, 1, instr(text, ':', 1, 1) -1)||chr(10) -- code
-              || '${DBFLOW_WSPACE}' -- file name
-              || ':'||line || ':' || position ||chr(10) -- line and column
-              || replace(substr(text, instr(text, ': ', 1, 1) + 2), chr(10), ' ') -- remove line breaks from error text
-              || chr(27) || '[0m'
-              as user_errors
-            from user_errors
-            where attribute in ('ERROR', 'WARNING')
-              and lower(name||decode(type, 'PACKAGE', '.pks', 'PACKAGE BODY', '.pkb', '.${extension}')) = lower('${basefl}')
-            order by type, name, line, position)
- union
-select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || '[32m' || SYSTIMESTAMP||chr(27) || '[0m'
-  from dual
- where not exists (select 1
-                     from user_errors
-                    where attribute in ('ERROR', 'WARNING')
-                      and lower(name||decode(type, 'PACKAGE', '.pks', 'PACKAGE BODY', '.pkb', '.${extension}')) = lower('${basefl}')) ;
+Declare
+  l_errors_exists   boolean := false;
+  l_color_off       constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[0m' end;
+  l_color_greenb    constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[48;5;28m' end;
+  l_color_green     constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[1m' || chr(27) || '[38;5;28m' end;
+  l_color_yellowb   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[48;5;202m' end;
+  l_color_yellow    constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[1m' || chr(27) || '[38;5;202m' end;
+  l_color_redb      constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[48;5;197m' end;
+  l_color_red       constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[1m' || chr(27) || '[38;5;1;197m' end;
+
+  l_color_blue      constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[38;5;45m' end;
+Begin
+  for cur in (select attribute, text, line, position, name
+                from user_errors
+               where attribute in ('ERROR', 'WARNING')
+                 and lower(name||decode(type, 'PACKAGE', '.pks', 'PACKAGE BODY', '.pkb', '.${extension}')) = lower('${basefl}')
+               order by type, name, line, position)
+  loop
+    l_errors_exists := true;
+    dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_yellowb else l_color_redb end ||
+                         cur.attribute || l_color_off || ' ' ||
+                         case when cur.attribute = 'WARNING' then l_color_yellow else l_color_red end ||
+                         substr(cur.text, 1, instr(cur.text, ':', 1, 1) -1) || l_color_off);
+    dbms_output.put_line(l_color_blue|| '${DBFLOW_WSPACE}' || ':' || cur.line || ':' || cur.position || l_color_off);
+    dbms_output.put_line(replace(substr(cur.text, instr(cur.text, ': ', 1, 1) + 2), chr(10), ' '));
+  end loop;
+
+  if not l_errors_exists then
+    dbms_output.put_line(l_color_greenb || 'Successful' || l_color_off || '   ' || l_color_green || SYSTIMESTAMP || l_color_off);
+  end if;
+End;
+/
+
+
+
 !
 
-# if [ $? -ne 0 ]
-# then
-#   echo -e "${BRED}Error when executing ${DBFLOW_FILE} ${NC}"
-#   echo
-# else
+if [ $? -ne 0 ]
+then
+  echo -e "${BRED}Error when executing ${DBFLOW_FILE} ${NC}"
+  echo
+else
 
   if [[ ${DBFLOW_MOVEYN} == "YES" ]]; then
     target=${DBFLOW_FILE/\/src\//\/dist\/}
@@ -120,19 +147,17 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
     IFS=',' read -r -a array <<< "${DBFLOW_FILE_DATA}"
 
     ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_DATA} <<!
-    WHENEVER SQLERROR EXIT SQL.SQLCODE
-    set linesize 2500
-    set tab off
-    set serveroutput on
-    set scan off
-    set define off
-    set pagesize 9999
-    set trim on
-    set sqlblanklines on
+    $(
+      for element in "${settings[@]}"
+      do
+        echo "$element"
+      done
+    )
 
     $(
       for element in "${array[@]}"
       do
+        echo "Prompt:: calling $element"
         echo "$element"
       done
     )
@@ -148,19 +173,17 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
     IFS=',' read -r -a array <<< "${DBFLOW_FILE_LOGIC}"
 
     ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_LOGIC} <<!
-    WHENEVER SQLERROR EXIT SQL.SQLCODE
-    set linesize 2500
-    set tab off
-    set serveroutput on
-    set scan off
-    set define off
-    set pagesize 9999
-    set trim on
-    set sqlblanklines on
+    $(
+      for element in "${settings[@]}"
+      do
+        echo "$element"
+      done
+    )
 
     $(
       for element in "${array[@]}"
       do
+        echo "Prompt:: calling $element"
         echo "$element"
       done
     )
@@ -174,26 +197,19 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
     echo -e "${BCYAN}Running additional files in APP-SCHEMA${NC}"
 
     IFS=',' read -r -a array <<< "${DBFLOW_FILE_APP}"
-    # debug
-    for element in "${array[@]}"
-    do
-      echo -e "${BCYAN}$element${NC}"
-    done
 
     ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_APP} << !
-    WHENEVER SQLERROR EXIT SQL.SQLCODE
-    set linesize 2500
-    set tab off
-    set serveroutput on
-    set scan off
-    set define off
-    set pagesize 9999
-    set trim on
-    set sqlblanklines on
+    $(
+      for element in "${settings[@]}"
+      do
+        echo "$element"
+      done
+    )
 
     $(
       for element in "${array[@]}"
       do
+        echo "Prompt:: calling $element"
         echo "$element"
       done
     )
@@ -204,4 +220,4 @@ select chr(27) || '[1;32m' || 'Successful   ' || chr(27) || '[0m' || chr(27) || 
   echo -e "-----------------------------------------------------"
   echo
 
-# fi
+fi

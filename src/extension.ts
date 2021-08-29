@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as which from "which";
 
 import * as path from "path";
 import { CompileTaskProvider } from "./CompileTaskProvider";
@@ -13,12 +12,18 @@ import { RestTaskStore } from "./RestTaskStore";
 import { RestTaskProvider } from "./RestTaskProvider";
 import { SimpleUploader } from "./SimpleUploader";
 import { getDBFlowMode, getProjectInfos } from "./AbstractBashTaskProvider";
-import * as os from 'os';
 import { TestTaskProvider } from "./TestTaskProvider";
 import { ReportTemplater } from "./ReportTemplater";
 import { CompileTaskStore } from "./CompileTaskStore";
 import { TestTaskStore } from "./TestTaskStore";
 import { ConfigurationManager } from "./ConfigurationManager";
+import { outputLog } from './OutputChannel';
+import { existsSync } from "fs";
+
+var which = require('which');
+
+
+
 
 
 
@@ -28,17 +33,16 @@ export function activate(context: vscode.ExtensionContext) {
 
   const mode = getDBFlowMode();
 
-  if (mode !== undefined && ["dbFlow", "xcl"].includes(mode)) {
+  if (mode !== undefined && ["dbFlow", "xcl"].includes(mode) && applyFileExists(mode)) {
     let projectInfos = getProjectInfos();
 
+    outputLog(`Mode is ${mode}`);
 
     let applyFileName:string = "";
     let buildFileName:string = "";
 
     if (vscode.workspace.workspaceFolders) {
-      applyFileName = mode === "dbFlow" ? path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "apply.env") :
-                                          path.join(os.homedir + "/AppData/Roaming/xcl", `environment_${path.basename(vscode.workspace.workspaceFolders[0].uri.fsPath)}.yml`) ;
-
+      applyFileName = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, mode === "dbFlow"?"apply.env":".xcl/env.yml");
       buildFileName = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, mode === "dbFlow"?"build.env":"xcl.yml");
     }
 
@@ -80,12 +84,11 @@ export function activate(context: vscode.ExtensionContext) {
       if (projectInfos.isValid) {
         const tmpClipboard = await vscode.env.clipboard.readText();
 
-        const langId = vscode.window.activeTextEditor?.document.languageId!;
 
         let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
 
-
-        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
+        // eslint-disable-next-line eqeqeq
+        if (   (projectInfos.dbAppPwd ==  (undefined || null) && CompileTaskStore.getInstance().appPwd == (undefined || null))) {
           CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlow: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
           if (CompileTaskStore.getInstance().appPwd?.length === 0) {
             CompileTaskStore.getInstance().appPwd = undefined;
@@ -104,16 +107,22 @@ export function activate(context: vscode.ExtensionContext) {
           }
           const insideStatics = matchRuleShort(fileName, '*/static/f*/src/*');
           const insideReports = matchRuleShort(fileName, '*/reports/*');
+          const fileExtension:string = ""+fileName.split('.').pop();
+          const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
 
-          which(ConfigurationManager.getCliToUseForCompilation()).then(async resolvedPath => {
-            if (['sql', 'plsql'].includes(langId)) {
+          which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+            if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) ) {
               vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
-            } else if (insideStatics && ['javascript'].includes(langId)) {
+            } else if (insideStatics && ['js'].includes(fileExtension.toLowerCase())) {
               const tersered = new Terserer(fileName);
-              tersered.genFile();
-              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+              const success = await tersered.genFile();
+              if ( success) {
+                vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
+              } else {
+                vscode.window.showErrorMessage("dbFlow/terser: "+ tersered.getLastErrorMessage());
+              }
 
-            } else if (insideStatics && ['css'].includes(langId)) {
+            } else if (insideStatics && ['css'].includes(fileExtension.toLowerCase())) {
               const uglifyer = new Uglifyer(fileName);
               uglifyer.genFile();
               vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: compileFile");
@@ -128,7 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
             } else {
               vscode.window.showWarningMessage('Current filetype is not supported by dbFlow ...');
             }
-          }).catch(err => {
+          }).catch(() => {
             vscode.window.showErrorMessage(`dbFlow: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
           });
 
@@ -163,9 +172,9 @@ export function activate(context: vscode.ExtensionContext) {
             (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
           ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID();
 
-          which('sql').then(async resolvedPath => {
+          which('sql').then(async () => {
             await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportAPEX");
-          }).catch(err => {
+          }).catch(() => {
             vscode.window.showErrorMessage('dbFlow: No executable "sql" found on path!');
           });
 
@@ -219,11 +228,11 @@ export function activate(context: vscode.ExtensionContext) {
         if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
             (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
 
-          which('sql').then(async resolvedPath => {
+          which('sql').then(async () => {
             RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule();
 
             await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: exportREST");
-          }).catch(err => {
+          }).catch(() => {
             vscode.window.showErrorMessage('dbFlow: No executable "sql" found on path!');
           });
         }
@@ -266,9 +275,9 @@ export function activate(context: vscode.ExtensionContext) {
                 });
               }
 
-              which(ConfigurationManager.getCliToUseForCompilation()).then(async resolvedPath => {
+              which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
                 await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTests");
-              }).catch(err => {
+              }).catch(() => {
                 vscode.window.showErrorMessage(`dbFlow: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
               });
         }
@@ -289,7 +298,6 @@ export function activate(context: vscode.ExtensionContext) {
       if (projectInfos.isValid) {
 
         const tmpClipboard = await vscode.env.clipboard.readText();
-        const langId = vscode.window.activeTextEditor?.document.languageId!;
         let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
 
         if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
@@ -311,15 +319,19 @@ export function activate(context: vscode.ExtensionContext) {
 
               await vscode.env.clipboard.writeText(tmpClipboard);
             }
+
             const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
             const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
+            const fileExtension:string = ""+fileName.split('.').pop();
+            const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
 
-            if (['sql', 'plsql'].includes(langId) && (insidePackages || insideTests)) {
-              which(ConfigurationManager.getCliToUseForCompilation()).then(async resolvedPath => {
+
+            if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insidePackages || insideTests)) {
+              which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
                 TestTaskStore.getInstance().selectedSchemas = [testPackageTaskProvider.getDBUserFromPath(fileName, projectInfos)];
                 TestTaskStore.getInstance().fileName = fileName;
                 vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlow: executeTestPackage");
-              }).catch(err => {
+              }).catch(() => {
                 vscode.window.showErrorMessage(`dbFlow: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
               });
             } else {
@@ -342,7 +354,16 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(resetPwdCommand);
 
   } else {
-    vscode.window.showErrorMessage("dbFlow: Working folder not found, open a folder an try again");
+    // vscode.window.showErrorMessage("dbFlow: Working folder not found, open a folder an try again");
+
+    // statusbaritem to indicate we can use dbFlow
+    myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    // myStatusBarItem.command = 'dbFlow.openBuildFile';
+    myStatusBarItem.text = `$(database) ${mode}*`;
+    myStatusBarItem.tooltip = "dbFlow: No config file found (" + (mode === "dbFlow" ? "apply.env":".xcl/env.yml")+")";
+    myStatusBarItem.show();
+    context.subscriptions.push(myStatusBarItem);
+
     vscode.commands.executeCommand("setContext", "inDbFlowProject", false);
     return;
   }
@@ -351,3 +372,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
+
+function applyFileExists(pMode:string) {
+  return vscode.workspace.workspaceFolders
+       && existsSync(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, pMode === "dbFlow"?"apply.env":".xcl/env.yml"));
+}

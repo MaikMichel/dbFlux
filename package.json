@@ -9,8 +9,8 @@
 	},
 	"bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
 	"displayName": "dbFlow-vsce",
-	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your APEX Instance",
-	"version": "0.8.0",
+	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your Oracle APEX Instance",
+	"version": "1.1.4",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
@@ -22,7 +22,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"workspaceContains:apply.env",
+		"workspaceContains:build.env",
 		"workspaceContains:xcl.yml"
 	],
 	"main": "./out/extension.js",
@@ -54,8 +54,7 @@
 					},
 					{
 						"regexp": "(.*)",
-						"message": 1,
-						"loop": true
+						"message": 1
 					}
 				]
 			}
@@ -171,13 +170,12 @@
 					},
 					"dbFlow.showWarningMessages.AfterCompilationExcludingFollowingCodes": {
 						"type": "array",
-						"default": [
-							"5018",
-							"7203",
-							"6009",
-							"6010",
-							"7204",
-							"6023"
+						"default": ["5018",
+												"7203",
+												"6009",
+												"6010",
+												"7204",
+												"6023"
 						],
 						"description": "Warning Codes to exclude. These values will have an effect only when Show Warning Messages is set to true",
 						"scope": "window"
@@ -222,6 +220,23 @@
 						"default": true,
 						"description": "Create a minified version or your CSS file",
 						"scope": "window"
+					},
+					"dbFlow.showWarningMessages.showWarningsAndErrorsWithColoredOutput": {
+						"type": "boolean",
+						"default": true,
+						"description": "Enables colored output from SQL(plus/cl) output",
+						"scope": "window"
+					},
+					"dbFlow.extensionsWhichShouldBeHandeldBySqlCli": {
+						"type": "array",
+						"default": ["sql",
+												"pks",
+												"pkb",
+												"prc",
+												"fnc"
+						],
+						"description": "File-Extension dbFlow can compile by using either SQLPlus or SQLcl",
+						"scope": "window"
 					}
 				}
 			}
@@ -254,11 +269,11 @@
 		"vscode-test": "^1.5.0"
 	},
 	"dependencies": {
-		"@types/which": "^2.0.0",
 		"dotenv": "^8.2.0",
 		"handlebars": "^4.7.7",
 		"terser": "^5.6.1",
 		"uglifycss": "0.0.29",
+		"which": "^2.0.2",
 		"yaml": "^1.10.2"
 	}
 }
