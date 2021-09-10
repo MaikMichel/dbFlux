@@ -57,7 +57,7 @@ export class Terserer {
       } catch (error) {
         const { message } = error;
 
-        console.error("dbFlow/terser: " + message);
+        console.error("dbFlux/terser: " + message);
         this.lastErrorMessage = message;
         return Promise.resolve(false);
 

@@ -18,7 +18,7 @@ interface IRESTExportInfos extends IBashInfos {
 }
 
 export class RestTaskProvider extends AbstractBashTaskProvider implements vscode.TaskProvider {
-  static dbFlowType: string = "dbFlow";
+  static dbFluxType: string = "dbFlux";
 
   provideTasks(): Thenable<vscode.Task[]> | undefined {
     return this.getRestTasks();
@@ -41,7 +41,7 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements vscode
 
   createRestTaskDefinition(name: string, runner: IRESTExportInfos): RestTaskDefinition {
     return {
-      type: RestTaskProvider.dbFlowType,
+      type: RestTaskProvider.dbFluxType,
       name,
       runner,
     };
@@ -52,7 +52,7 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements vscode
       definition,
       vscode.TaskScope.Workspace,
       definition.name,
-      RestTaskProvider.dbFlowType,
+      RestTaskProvider.dbFluxType,
       new vscode.ShellExecution(definition.runner.runFile, {
         env: {
           DBFLOW_DBTNS:      definition.runner.connectionTns,

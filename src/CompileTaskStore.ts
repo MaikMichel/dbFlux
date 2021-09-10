@@ -1,6 +1,8 @@
 export class CompileTaskStore {
   private static _instance: CompileTaskStore;
   private _appPwd: string | undefined;
+  private _adminPwd: string | undefined;
+  private _adminUser: string | undefined;
 
   public get appPwd(): string | undefined {
     return this._appPwd;
@@ -9,7 +11,19 @@ export class CompileTaskStore {
     this._appPwd = value;
   }
 
+  public get adminPwd(): string | undefined {
+    return this._adminPwd;
+  }
+  public set adminPwd(value: string | undefined) {
+    this._adminPwd = value;
+  }
 
+  public get adminUser(): string | undefined {
+    return this._adminUser;
+  }
+  public set adminUser(value: string | undefined) {
+    this._adminUser = value;
+  }
 
   private constructor()
   {

@@ -25,13 +25,21 @@ interface IProjectInfos {
   useProxy: boolean;
   dbAppUser: string;
   dbAppPwd: string|undefined;
+  dbAdminUser: string|undefined;
+  dbAdminPwd: string|undefined;
   dbTns: string;
   isValid: boolean;
 
 }
 
 export abstract class AbstractBashTaskProvider {
-  static dbFlowType: string = "dbFlow";
+  context: vscode.ExtensionContext;
+
+  constructor(context: vscode.ExtensionContext) {
+    this.context = context;
+  }
+
+  static dbFluxType: string = "dbFlux";
   /* eslint-disable */
   static CONN_DATA:  string = "DATA";
   static CONN_LOGIC: string = "LOGIC";
@@ -81,11 +89,15 @@ export abstract class AbstractBashTaskProvider {
   }
 
   buildConnectionUser(projectInfos: IProjectInfos, currentPath: string): string {
-    if (!projectInfos.useProxy) {
-      return `${projectInfos.dbAppUser}`;
+    let dbSchemaFolder = this.getDBUserFromPath(currentPath, projectInfos);
+    if (currentPath.includes("db" + path.posix.sep + "_sys")) {
+      return projectInfos.dbAdminUser+"".toLowerCase();
     } else {
-      let dbSchemaFolder = this.getDBUserFromPath(currentPath, projectInfos);
-      return `${projectInfos.dbAppUser}[${dbSchemaFolder}]`;
+      if (!projectInfos.useProxy) {
+        return `${projectInfos.dbAppUser}`;
+      } else {
+        return `${projectInfos.dbAppUser}[${dbSchemaFolder}]`;
+      }
     }
   }
 
@@ -95,7 +107,7 @@ export abstract class AbstractBashTaskProvider {
 
 
    setInitialCompileInfo(execFileName:string, fileUri: vscode.Uri, runnerInfo:IBashInfos):void {
-    let projectInfos: IProjectInfos = getProjectInfos();
+    let projectInfos: IProjectInfos = getProjectInfos(this.context);
 
 
     const activeFile = fileUri.fsPath.split(path.sep).join(path.posix.sep);
@@ -105,7 +117,7 @@ export abstract class AbstractBashTaskProvider {
 
     runnerInfo.connectionTns  = projectInfos.dbTns;
     runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd);
-    runnerInfo.connectionPass = projectInfos.dbAppPwd ? projectInfos.dbAppPwd  : CompileTaskStore.getInstance().appPwd!;
+    runnerInfo.connectionPass = runnerInfo.connectionUser === projectInfos.dbAdminUser ? CompileTaskStore.getInstance().adminPwd! : CompileTaskStore.getInstance().appPwd!;
     runnerInfo.projectInfos   = projectInfos;
 
 
@@ -113,8 +125,8 @@ export abstract class AbstractBashTaskProvider {
     if (matchRuleShort(runnerInfo.connectionPass, "${*}") ||
         matchRuleShort(runnerInfo.connectionUser, "${*}") ||
         matchRuleShort(runnerInfo.connectionPass, "${*}")) {
-      vscode.window.showErrorMessage("dbFlow: Sourcing or parameters not supported");
-      throw new Error("dbFlow: Sourcing or parameters not supported");
+      vscode.window.showErrorMessage("dbFlux: Sourcing or parameters not supported");
+      throw new Error("dbFlux: Sourcing or parameters not supported");
     }
   }
 
@@ -129,18 +141,19 @@ export abstract class AbstractBashTaskProvider {
   }
 }
 
-export function getProjectInfos() {
+export function getProjectInfos(context: vscode.ExtensionContext) {
   let projectInfos: IProjectInfos = {} as IProjectInfos;
-
-  if (getDBFlowMode() === "dbFlow") {
+  if (getDBFlowMode(context) === "dbFlux") {
+    projectInfos = getProjectInfosFromDBFlux(context);
+  } else if (getDBFlowMode(context) === "dbFlow") {
     projectInfos = getProjectInfosFromDBFlow();
-  } else if (getDBFlowMode() === "xcl") {
+  } else if (getDBFlowMode(context) === "xcl") {
     projectInfos = getProjectInfosFromXCL();
   }
   return projectInfos;
 }
 
-export function getDBFlowMode():string | undefined {
+export function getDBFlowMode(context: vscode.ExtensionContext):string | undefined {
   let retValue: string | undefined = undefined;
   if (vscode.workspace.workspaceFolders !== undefined) {
     const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
@@ -154,6 +167,11 @@ export function getDBFlowMode():string | undefined {
       }
     };
 
+
+    if (retValue === undefined) {
+      retValue = context.workspaceState.get("dbFlux_modex");
+      outputLog("retValue: " + retValue);
+    }
   }
 
   return retValue;
@@ -169,9 +187,11 @@ function getProjectInfosFromDBFlow():IProjectInfos {
     const buildEnv = dotenv.config({ path: path.join(f, "build.env")});
 
     if (applyEnv.parsed) {
-      projectInfos.dbAppUser = applyEnv.parsed.DB_APP_USER;
-      projectInfos.dbAppPwd  = applyEnv.parsed.DB_APP_PWD;
-      projectInfos.dbTns     = applyEnv.parsed.DB_TNS;
+      projectInfos.dbAppUser   = applyEnv.parsed.DB_APP_USER;
+      projectInfos.dbAppPwd    = applyEnv.parsed.DB_APP_PWD;
+      projectInfos.dbAdminUser = applyEnv.parsed.DB_ADMIN_USER;
+      projectInfos.dbAdminPwd  = applyEnv.parsed.DB_ADMIN_PWD;
+      projectInfos.dbTns       = applyEnv.parsed.DB_TNS;
     }
 
     if (buildEnv.parsed) {
@@ -179,11 +199,8 @@ function getProjectInfosFromDBFlow():IProjectInfos {
       projectInfos.logicSchema  = buildEnv.parsed.LOGIC_SCHEMA;
       projectInfos.dataSchema   = buildEnv.parsed.DATA_SCHEMA;
 
-      if (buildEnv.parsed.USE_PROXY === undefined) {
-        vscode.window.showErrorMessage("Variable: USE_PROXY missing inside build.env");
-        throw new Error("Variable: USE_PROXY missing inside build.env");
-      }
-      projectInfos.useProxy   = buildEnv.parsed.USE_PROXY.toUpperCase() === "TRUE";
+      projectInfos.useProxy = mustUseProxy(projectInfos);
+
     }
   }
 
@@ -192,6 +209,29 @@ function getProjectInfosFromDBFlow():IProjectInfos {
   return projectInfos;
 }
 
+function getProjectInfosFromDBFlux(context: vscode.ExtensionContext):IProjectInfos {
+  const projectInfos: IProjectInfos = {} as IProjectInfos;
+  if (vscode.workspace.workspaceFolders !== undefined) {
+
+      projectInfos.dbAppUser   = context.workspaceState.get("dbFlux_DB_APP_USER")!;
+      projectInfos.dbAppPwd    = context.workspaceState.get("dbFlux_DB_APP_PWD");
+      projectInfos.dbAdminUser = context.workspaceState.get("dbFlux_DB_ADMIN_USER");
+      projectInfos.dbAdminPwd  = context.workspaceState.get("dbFlux_DB_ADMIN_PWD");
+      projectInfos.dbTns       = context.workspaceState.get("dbFlux_DB_TNS")!;
+
+      projectInfos.appSchema    = context.workspaceState.get("dbFlux_APP_SCHEMA")!;
+      projectInfos.logicSchema  = context.workspaceState.get("dbFlux_LOGIC_SCHEMA")!;
+      projectInfos.dataSchema   = context.workspaceState.get("dbFlux_DATA_SCHEMA")!;
+
+      projectInfos.useProxy = mustUseProxy(projectInfos);
+
+
+  }
+
+  validateProjectInfos(projectInfos);
+
+  return projectInfos;
+}
 
 function getProjectInfosFromXCL():IProjectInfos {
   const projectInfos: IProjectInfos = {} as IProjectInfos;
@@ -205,7 +245,7 @@ function getProjectInfosFromXCL():IProjectInfos {
       projectInfos.logicSchema  = buildYml.xcl.users.schema_logic;
       projectInfos.dataSchema   = buildYml.xcl.users.schema_data;
 
-      projectInfos.useProxy   = true; // xcl does not support SingleSchemas yet
+      projectInfos.useProxy = mustUseProxy(projectInfos);
     }
 
     if (fs.existsSync(path.join(f, `.xcl/env.yml`))) {
@@ -238,14 +278,14 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
     (User: ${projectInfos.dbAppUser},
     Connection: ${projectInfos.dbTns})
     `;
-    vscode.window.setStatusBarMessage("$(testing-error-icon) dbFlow > Connection configuration incomplete!");
+    vscode.window.setStatusBarMessage("$(testing-error-icon) dbFlux > Connection configuration incomplete!");
     setTimeout(function(){
       vscode.window.setStatusBarMessage("");
     }, 4000);
 
     vscode.window.showErrorMessage(dbConnMsg, "Open configuration").then(selection => {
       if (selection) {
-        vscode.commands.executeCommand("dbFlow.openApplyFile");
+        vscode.commands.executeCommand("dbFlux.openApplyFile");
       }
     });
   }
@@ -261,7 +301,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
     APP: ${projectInfos.appSchema})
     `;
 
-    vscode.window.setStatusBarMessage("$(testing-error-icon) dbFlow > Schema configuration incomplete!");
+    vscode.window.setStatusBarMessage("$(testing-error-icon) dbFlux > Schema configuration incomplete!");
     setTimeout(function(){
       vscode.window.setStatusBarMessage("");
     }, 4000);
@@ -269,7 +309,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
     vscode.window.showErrorMessage(schemaMsg, "Open configuration").then(selection => {
 
       if (selection) {
-        vscode.commands.executeCommand("dbFlow.openBuildFile");
+        vscode.commands.executeCommand("dbFlux.openBuildFile");
       }
     });
   }
@@ -283,4 +323,11 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
     projectInfos.isValid = true;
   }
 
+}
+
+function mustUseProxy(projectInfos:IProjectInfos) : boolean {
+  const allSchemas = [projectInfos.dataSchema, projectInfos.logicSchema, projectInfos.dataSchema];
+  const uniqueSchemas = [...new Set(allSchemas)];
+
+  return uniqueSchemas.length > 1;
 }

@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as vscode from "vscode";
+import { existsSync, mkdirSync } from "fs";
 
 export function matchRuleShort(str:string, rule:string) {
   var escapeRegex = (str:string) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
@@ -50,4 +51,27 @@ export async function getActiveFileUri():Promise<vscode.Uri | undefined>{
   }
 
   return fileUri;
+}
+
+export async function createDirectoryPath(path: any, fullPath: string, rootPaath: string) {
+  if (path instanceof Array) {
+    for (let i = 0; i < path.length; i++) {
+      createDirectoryPath(path[i], fullPath, rootPaath);
+    }
+  } else if (path instanceof Object) {
+    for (let i = 0; i < Object.keys(path).length; i++) {
+      const objName = Object.keys(path)[i];
+
+      createDirectoryPath(path[objName], fullPath + objName + "/", rootPaath);
+    }
+  } else {
+
+
+    let makePath:string = rootPaath + fullPath + path;
+
+    if (!existsSync(makePath)) {
+      mkdirSync(makePath, { recursive: true });
+
+    }
+  }
 }

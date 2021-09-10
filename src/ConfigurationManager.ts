@@ -7,11 +7,11 @@ interface ICustomTriggerRuns {
 }
 export class ConfigurationManager {
 
-  static dbFlow:string = "dbFlow";
+  static dbFlux:string = "dbFlux";
 
   static get<T>(confPath:string):T {
-    const myValue:T | undefined = workspace.getConfiguration(ConfigurationManager.dbFlow).get(confPath);
-    const myDefault = workspace.getConfiguration(ConfigurationManager.dbFlow).inspect(confPath)?.defaultValue;
+    const myValue:T | undefined = workspace.getConfiguration(ConfigurationManager.dbFlux).get(confPath);
+    const myDefault = workspace.getConfiguration(ConfigurationManager.dbFlux).inspect(confPath)?.defaultValue;
     return (myValue === undefined ? <T>myDefault : myValue);
   }
 

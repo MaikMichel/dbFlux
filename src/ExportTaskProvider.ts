@@ -18,7 +18,7 @@ interface ISQLExportInfos extends IBashInfos {
 }
 
 export class ExportTaskProvider extends AbstractBashTaskProvider implements vscode.TaskProvider {
-  static dbFlowType: string = "dbFlow";
+  static dbFluxType: string = "dbFlux";
 
   provideTasks(): Thenable<vscode.Task[]> | undefined {
     return this.getExpTasks();
@@ -41,7 +41,7 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements vsco
 
   createExpTaskDefinition(name: string, runner: ISQLExportInfos): ExportTaskDefinition {
     return {
-      type: ExportTaskProvider.dbFlowType,
+      type: ExportTaskProvider.dbFluxType,
       name,
       runner,
     };
@@ -52,7 +52,7 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements vsco
       definition,
       vscode.TaskScope.Workspace,
       definition.name,
-      ExportTaskProvider.dbFlowType,
+      ExportTaskProvider.dbFluxType,
       new vscode.ShellExecution(definition.runner.runFile, {
         env: {
           DBFLOW_DBTNS: definition.runner.connectionTns,

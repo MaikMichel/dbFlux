@@ -22,10 +22,10 @@ interface ISQLTestInfos extends IBashInfos {
 }
 
 export class TestTaskProvider extends AbstractBashTaskProvider implements vscode.TaskProvider {
-  static dbFlowType: string = "dbFlow";
+  static dbFluxType: string = "dbFlux";
 
-  constructor(private mode:string){
-    super();
+  constructor(context: vscode.ExtensionContext, private mode:string){
+    super(context);
   };
 
   provideTasks(): Thenable<vscode.Task[]> | undefined {
@@ -49,7 +49,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
 
   createTestTaskDefinition(name: string, runner: ISQLTestInfos): TestTaskDefinition {
     return {
-      type: TestTaskProvider.dbFlowType,
+      type: TestTaskProvider.dbFluxType,
       name,
       runner,
     };
@@ -60,7 +60,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
       definition,
       vscode.TaskScope.Workspace,
       definition.name,
-      TestTaskProvider.dbFlowType,
+      TestTaskProvider.dbFluxType,
       new vscode.ShellExecution(definition.runner.runFile, {
         env: {
           DBFLOW_SQLCLI:     definition.runner.executableCli,

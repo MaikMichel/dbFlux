@@ -1,16 +1,16 @@
 {
 	"name": "dbflow",
 	"publisher": "MaikMichel",
-	"icon": "images/icon.png",
+	"icon": "images/dbflux.png",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/MaikMichel/dbFlow-vsce"
+		"url": "https://github.com/MaikMichel/dbFlux"
 	},
-	"bugs": "https://github.com/MaikMichel/dbFlow-vsce/issues",
-	"displayName": "dbFlow-vsce",
+	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
+	"displayName": "dbFlux",
 	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your Oracle APEX Instance",
-	"version": "1.1.4",
+	"version": "2.0.0",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
@@ -22,19 +22,22 @@
 		"Other"
 	],
 	"activationEvents": [
+		"onCommand:dbFlux.wizard",
 		"workspaceContains:build.env",
-		"workspaceContains:xcl.yml"
+		"workspaceContains:xcl.yml",
+		"onStartupFinished",
+		""
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"taskDefinitions": [
 			{
-				"type": "dbFlow"
+				"type": "dbFlux"
 			}
 		],
 		"problemMatchers": [
 			{
-				"name": "dbflow-plsql",
+				"name": "dbflux-plsql",
 				"owner": "external",
 				"fileLocation": [
 					"relative",
@@ -61,87 +64,92 @@
 		],
 		"commands": [
 			{
-				"command": "dbFlow.compileFile",
+				"command": "dbFlux.wizard",
+				"title": "Initialize Project structure",
+				"category": "dbFlux"
+			},
+			{
+				"command": "dbFlux.compileFile",
 				"title": "Compile current File",
-				"category": "dbFlow",
+				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.exportAPEX",
+				"command": "dbFlux.exportAPEX",
 				"title": "Export APEX Application",
-				"category": "dbFlow",
+				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.exportREST",
+				"command": "dbFlux.exportREST",
 				"title": "Export REST Module",
-				"category": "dbFlow",
+				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.addREST",
+				"command": "dbFlux.addREST",
 				"title": "Add REST Module",
-				"category": "dbFlow",
+				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.addAPP",
+				"command": "dbFlux.addAPP",
 				"title": "Add APEX Application",
-				"category": "dbFlow",
+				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.addStaticFolder",
+				"command": "dbFlux.addStaticFolder",
 				"title": "Add static folder for APP",
-				"category": "dbFlow",
+				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.addReportFolder",
+				"command": "dbFlux.addReportFolder",
 				"title": "Add report folder with prompted type",
-				"category": "dbFlow",
+				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.executeTests",
+				"command": "dbFlux.executeTests",
 				"title": "Execute utPLSQL tests",
-				"category": "dbFlow",
+				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.executeTestPackage",
+				"command": "dbFlux.executeTestPackage",
 				"title": "Execute utPLSQL test with current Package",
-				"category": "dbFlow",
-				"enablement": "inDbFlowProject"
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*tests.*$/"
 			},
 			{
-				"command": "dbFlow.resetPassword",
+				"command": "dbFlux.resetPassword",
 				"title": "Reset password",
-				"category": "dbFlow",
+				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			}
 		],
 		"keybindings": [
 			{
-				"command": "dbFlow.compileFile",
+				"command": "dbFlux.compileFile",
 				"key": "ctrl+alt+b",
 				"mac": "ctrl+alt+b",
 				"when": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.executeTestPackage",
+				"command": "dbFlux.executeTestPackage",
 				"key": "ctrl+alt+t",
 				"mac": "ctrl+alt+t",
 				"when": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.exportAPEX",
+				"command": "dbFlux.exportAPEX",
 				"key": "ctrl+alt+e",
 				"mac": "ctrl+alt+e",
 				"when": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlow.exportREST",
+				"command": "dbFlux.exportREST",
 				"key": "ctrl+alt+r",
 				"mac": "ctrl+alt+r",
 				"when": "inDbFlowProject"
@@ -150,9 +158,9 @@
 		"configuration": [
 			{
 				"type": "object",
-				"title": "dbFlow",
+				"title": "dbFlux",
 				"properties": {
-					"dbFlow.cliToUseForCompilation": {
+					"dbFlux.cliToUseForCompilation": {
 						"type": "string",
 						"default": "SQL*Plus",
 						"enum": [
@@ -162,13 +170,13 @@
 						"description": "Which CLI should be used to compile your source to specified database. Please make sure to set binaries to path",
 						"scope": "window"
 					},
-					"dbFlow.showWarningMessages.AfterCompilation": {
+					"dbFlux.showWarningMessages.AfterCompilation": {
 						"type": "boolean",
 						"default": false,
 						"description": "If set to true additional output concerning warning messages is rendered to output",
 						"scope": "window"
 					},
-					"dbFlow.showWarningMessages.AfterCompilationExcludingFollowingCodes": {
+					"dbFlux.showWarningMessages.AfterCompilationExcludingFollowingCodes": {
 						"type": "array",
 						"default": ["5018",
 												"7203",
@@ -180,7 +188,7 @@
 						"description": "Warning Codes to exclude. These values will have an effect only when Show Warning Messages is set to true",
 						"scope": "window"
 					},
-					"dbFlow.customTriggerRuns": {
+					"dbFlux.customTriggerRuns": {
 						"type": "array",
 						"items": {
 							"type": "object",
@@ -203,31 +211,31 @@
 						"description": "Define regex to run files after you compile a file",
 						"scope": "window"
 					},
-					"dbFlow.javaScriptModification.createAndUploadJavascriptMinifiedVersion": {
+					"dbFlux.javaScriptModification.createAndUploadJavascriptMinifiedVersion": {
 						"type": "boolean",
 						"default": true,
 						"description": "Create a minified version or your JavaScript file",
 						"scope": "window"
 					},
-					"dbFlow.javaScriptModification.createAndUploadJavascriptSourceMap": {
+					"dbFlux.javaScriptModification.createAndUploadJavascriptSourceMap": {
 						"type": "boolean",
 						"default": true,
 						"description": "Create a source map of your minified JavaScript file",
 						"scope": "window"
 					},
-					"dbFlow.cssModification.createAndUploadCSSMinifiedVersion": {
+					"dbFlux.cssModification.createAndUploadCSSMinifiedVersion": {
 						"type": "boolean",
 						"default": true,
 						"description": "Create a minified version or your CSS file",
 						"scope": "window"
 					},
-					"dbFlow.showWarningMessages.showWarningsAndErrorsWithColoredOutput": {
+					"dbFlux.showWarningMessages.showWarningsAndErrorsWithColoredOutput": {
 						"type": "boolean",
 						"default": true,
 						"description": "Enables colored output from SQL(plus/cl) output",
 						"scope": "window"
 					},
-					"dbFlow.extensionsWhichShouldBeHandeldBySqlCli": {
+					"dbFlux.extensionsWhichShouldBeHandeldBySqlCli": {
 						"type": "array",
 						"default": ["sql",
 												"pks",
@@ -235,7 +243,7 @@
 												"prc",
 												"fnc"
 						],
-						"description": "File-Extension dbFlow can compile by using either SQLPlus or SQLcl",
+						"description": "File-Extension dbFlux can compile by using either SQLPlus or SQLcl",
 						"scope": "window"
 					}
 				}

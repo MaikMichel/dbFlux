@@ -52,7 +52,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
 
   createOraTaskDefinition(name: string, runner: ICompileInfos): OraTaskDefinition {
     return {
-      type: CompileTaskProvider.dbFlowType,
+      type: CompileTaskProvider.dbFluxType,
       name,
       runner,
     };
@@ -63,7 +63,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
       definition,
       vscode.TaskScope.Workspace,
       definition.name,
-      CompileTaskProvider.dbFlowType,
+      CompileTaskProvider.dbFluxType,
       new vscode.ShellExecution(definition.runner.runFile, {
         env: {
           DBFLOW_DBTNS:           definition.runner.connectionTns,
@@ -86,7 +86,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
           DBFLOW_COLOR_ON:        definition.runner.coloredOutput
         },
       }),
-      ["$dbflow-plsql"]
+      ["$dbflux-plsql"]
     );
     _task.presentationOptions.echo = false;
     return _task;
@@ -125,8 +125,8 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
 
 
       if (matchRuleShort(runner.connectionPass, "${*}") || matchRuleShort(runner.connectionUser, "${*}") || matchRuleShort(runner.connectionPass, "${*}")) {
-        vscode.window.showErrorMessage("dbFlow: Sourcing or parameters not supported");
-        throw new Error("dbFlow: Sourcing or parameters not supported");
+        vscode.window.showErrorMessage("dbFlux: Sourcing or parameters not supported");
+        throw new Error("dbFlux: Sourcing or parameters not supported");
       }
 
       // Trigger?

@@ -60,7 +60,7 @@ export class RestTaskStore {
   }
 
   async getNewRestModule(): Promise<string> {
-     const value:string | undefined = await window.showInputBox({ prompt: "dbFlow add REST Modul", placeHolder: "Enter module name" });
+     const value:string | undefined = await window.showInputBox({ prompt: "dbFlux add REST Modul", placeHolder: "Enter module name" });
      return value ? value : "";
   }
 

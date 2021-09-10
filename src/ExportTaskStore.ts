@@ -55,6 +55,8 @@ export class ExportTaskStore {
 
         window.showInformationMessage(`Folder: apex/f${appID} created. At next export you can export the application.`);
       }
+
+      this.addStaticFolder(appID);
     }
   }
 
@@ -74,7 +76,7 @@ export class ExportTaskStore {
   }
 
   async getNewApplication(): Promise<string> {
-     const value:string | undefined = await window.showInputBox({ prompt: "dbFlow add Application", placeHolder: "Enter APP-ID" });
+     const value:string | undefined = await window.showInputBox({ prompt: "dbFlux add Application", placeHolder: "Enter APP-ID" });
      return value ? value : "";
   }
 
@@ -99,7 +101,7 @@ export class ExportTaskStore {
   }
 
   async getReportType(): Promise<string> {
-    const value:string | undefined = await window.showInputBox({ prompt: "dbFlow add Report Type", placeHolder: "Enter type name" });
+    const value:string | undefined = await window.showInputBox({ prompt: "dbFlux add Report Type", placeHolder: "Enter type name" });
     return value ? value : "";
   }
 
