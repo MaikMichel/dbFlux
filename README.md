@@ -1,4 +1,4 @@
-# dbFlow - Easy development flow for Oracle APEX Apps
+# dbFLux - Easy development flow for Oracle APEX Apps
 
 Using this extension enables you to develop Oracle APEX applications in a simple flow
 
@@ -7,7 +7,7 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 - Minify and upload your Cascading Stylesheets to your APEX Application
 - Upload any file to your APEX Application
 - Run utPLSQL Test
-- Runs with dbFlow and XCL configuration
+- Runs with dbFLux and XCL configuration
 
 
 #### Demo - Compiling PL/SQL Package
@@ -33,7 +33,7 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 
 ## Configuration
 
-dbFlow Extension is based on a specic file / folder structur. Either create this structure by using [dbFlow-Template](https://github.com/MaikMichel/dbFlow-template) or just make it on your own.
+dbFLux Extension is based on a specic file / folder structur. Either create this structure by using [dbFLow-Template](https://github.com/MaikMichel/dbFLux-template) or just make it on your own.
 Another way is to use XCL (currently in Alpha)
 
 ``` shell
@@ -61,18 +61,15 @@ static            - static application files
       js          - place javascript files here
       css         - place css files here
 
-apply.env         - this file MUST exists (Mode=dbFlow)
-build.env         - this fime MUST exists (Mode=dbFlow)
-xcl.yml           - this fime MUST exists (Mode=xcl)
+apply.env         - if exists then Mode is dbFLow
+build.env         - if exists then Mode is dbFLow
+xcl.yml           - if exists then Mode is xcl
+.xcl/env.yml      - if exists then Mode is xcl
 ```
 
 Content of build.env
 
 ``` shell
-# Use DB_APP_USER as Proxy to multischemas?
-# otherwise connect directly as defined in apply.env
-USE_PROXY=FALSE
-
 # what are the schema-names, all the same when USE_PROXY is FALSE
 DATA_SCHEMA=DB_SCHEMA_NAME_DATA
 LOGIC_SCHEMA=DB_SCHEMA_NAME_LOGIC
@@ -105,7 +102,7 @@ DB_APP_PWD=user_pwd
 - You can define custom trigger runs by defining the following array in your workspace settings
   ```json
     ...,
-    "dbFlow.customTriggerRuns": [
+    "dbFLux.customTriggerRuns": [
       {
         "triggeringExpression": "db\/trex\/(tables|tables_ddl)\/.+\\.sql",
         "runFile": "db/your_data/.hooks/post/build_table_api.sql",
@@ -131,7 +128,7 @@ DB_APP_PWD=user_pwd
 #### Compile code
 
 - Open file
-- call command `dbFlow: Compile current file` (Ctr+Alt+B)
+- call command `dbFLux: Compile current file` (Ctr+Alt+B)
   - inside db-Folder
     - SQL and PL/SQL compiled towards DB connections
   - inside static-Folder
@@ -144,7 +141,7 @@ DB_APP_PWD=user_pwd
 
 #### Prepare upload
 
-If you want to upload file to a specific table or service, place them inside the reports folder/subfolder ex.: `reports/docs`. Here you have to put a template file with the name template.sql in. This template is merged to to upload file. When calling command: `dbFlow: Compile current file` you are prompted for a filename and a target directory to place the resulting file in.
+If you want to upload file to a specific table or service, place them inside the reports folder/subfolder ex.: `reports/docs`. Here you have to put a template file with the name template.sql in. This template is merged to to upload file. When calling command: `dbFLux: Compile current file` you are prompted for a filename and a target directory to place the resulting file in.
 
 #### Demo - Create a report type, merge with template, move to target folder and compile
 ![Create a report type, merge with template, move to target folder and compile](images/screen-rec-vscode-run-reports.gif)
@@ -152,6 +149,6 @@ If you want to upload file to a specific table or service, place them inside the
 
 #### Execute utPLSQL Unittests
 
-To run your tests just call command: `dbFlow: Execute utPLSQL tests`. All tests found are executed. If you are using the multischema configuration you are prompted to select the schemas to run your tests.
+To run your tests just call command: `dbFLux: Execute utPLSQL tests`. All tests found are executed. If you are using the multischema configuration you are prompted to select the schemas to run your tests.
 
 ![Execute tests, enter password, choose target schemas](images/screen-rec-vscode-run-tests.gif)

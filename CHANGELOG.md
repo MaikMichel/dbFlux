@@ -1,6 +1,15 @@
 # Change Log
 
 
+## [2.0.0 - 2021-09-10]
+- RENAMED dbFlow-vsce to **dbFlux**
+- dbFlux knows 3 modes
+  - dbFlow: configuration is read from build.env and apply.env
+  - xcl: configuration is read from xcl.yml and .xcl/env.yml
+  - dbFlux: configuration is read from workspace state
+- you can now create workspace structure and configuration from command: dbFlux:Initialize Project structure
+- any file stored below db/_sys - is executed by configured admin user
+- some small improvements
 
 ## [1.1.3 - 2021-08-25]
 - Check xcl config at .xcl/env.yml
@@ -18,7 +27,7 @@
 
 ## [1.0.1 - 2021-07-13]
 - set xcl.yml as leading file check
-- Introduced new outputChannel dbFlow for further logging
+- Introduced new outputChannel dbFlux for further logging
 
 ## [1.0.0 - 2021-07-12]
 - Fixed Bug in triggering Call-Definitions
@@ -41,7 +50,7 @@
 
 - Support colored output on Git-Bash
 - Execute tests on selected schemas
-- Enter password via Input when not stored in configuration files (dbFlow/xcl)
+- Enter password via Input when not stored in configuration files (dbFlux/xcl)
 
 
 ## [0.1.0 - Beta - 2021-05-04]
