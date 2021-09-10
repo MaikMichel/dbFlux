@@ -55,8 +55,13 @@ settings+=( "    set pagesize 9999" )
 settings+=( "    set trim on" )
 settings+=( "    set sqlblanklines on" )
 
+# used when admin user is sys
+DBA_OPTION=""
+if [[ ${DBFLOW_DBUSER} == "sys" ]]; then
+  DBA_OPTION=" as sysdba"
+fi
 
-${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
+${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}${DBA_OPTION} <<!
 $(
   for element in "${settings[@]}"
   do
