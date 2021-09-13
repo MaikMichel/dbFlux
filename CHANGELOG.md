@@ -1,6 +1,10 @@
 # Change Log
 
 
+## [2.1.0 - 2021-09-13]
+- some fixes concerning password validation
+- after initialize project a welcome help page is displayed
+
 ## [2.0.0 - 2021-09-10]
 - RENAMED dbFlow-vsce to **dbFlux**
 - dbFlux knows 3 modes
@@ -8,7 +12,7 @@
   - xcl: configuration is read from xcl.yml and .xcl/env.yml
   - dbFlux: configuration is read from workspace state
 - you can now create workspace structure and configuration from command: dbFlux:Initialize Project structure
-- any file stored below db/_sys - is executed by configured admin user
+- any file stored below db/_setup - is executed by configured admin user
 - some small improvements
 
 ## [1.1.3 - 2021-08-25]

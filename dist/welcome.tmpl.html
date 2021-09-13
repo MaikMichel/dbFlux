@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+    <html lang="en">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <!--link rel='stylesheet' href='${uri}' /-->
+          <title>{{title}}</title>
+      </head>
+      <body>
+        <h1>{{title}}</h1>
+        <p>dbFlux has just created the directory structure. <br/>In the directory db/_setup/users you will now find the following file(s)</p>
+        <ul>
+          {{#each this.files}}
+          <li><a href='file:///{{{this}}}'>{{{this}}}</a></li>
+          {{/each}}
+        </ul>
+        <p>If you still have to create the schemas / users, import them in the given order by using <i>Ctrl+Alt+B</i> or <i>cmd: dbFlux:Compile current file</i>. Of course, you can also adjust them manually before.</p>
+        <h3>Attention</h3>
+        <p style="background-color: red; color:white;">Be carfull: If Schema or User exists it will be dropped</p>
+        <p>{{userFile}} was automatically added to <a href="file:///.gitignore"><em>.gitignore</em></a>, because the password you specified was saved there.</p>
+        <h2>Have fun developing with <em>dbFlux</em>.</h2>
+        <p>You can find more documentation on github at: <a href="https://github.com/MaikMichel/dbFlux">https://github.com/MaikMichel/dbFlux</a></p>
+        <script language="javascript">
+          const vscode = acquireVsCodeApi();
+
+          for (const link of document.querySelectorAll('a[href^="file:"]')) {
+              link.addEventListener('click', () => {
+                  vscode.postMessage({
+                      command: "open",
+                      link: link.getAttribute('href'),
+                  });
+              });
+          }
+        </script>
+      </body>
+    </html>

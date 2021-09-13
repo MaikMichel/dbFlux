@@ -9,8 +9,8 @@
 	},
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
-	"description": "An extension to let you compile PL/SQL, Javascript and CSS towards your Oracle APEX Instance",
-	"version": "2.0.1",
+	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
+	"version": "2.1.0",
 	"engines": {
 		"vscode": "^1.55.0"
 	},

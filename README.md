@@ -7,7 +7,7 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 - Minify and upload your Cascading Stylesheets to your APEX Application
 - Upload any file to your APEX Application
 - Run utPLSQL Test
-- Runs with dbFLux and XCL configuration
+- Runs additionaly with dbFlow and XCL
 
 
 #### Demo - Compiling PL/SQL Package

@@ -26,8 +26,7 @@ end;
 /
 
 prompt create user {{proxy_user}} identified by {{db_app_pwd}} default tablespace ^deftablespace
-create user {{proxy_user}}
-  identified by {{db_app_pwd}}
+create user {{proxy_user}} identified by "{{db_app_pwd}}"
   default tablespace users
   temporary tablespace temp
   profile default

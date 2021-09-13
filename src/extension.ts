@@ -21,6 +21,7 @@ import { outputLog } from './OutputChannel';
 import { existsSync } from "fs";
 import { multiStepInput } from './multiStepInput';
 
+
 var which = require('which');
 
 
@@ -33,7 +34,6 @@ let myStatusBarItem: vscode.StatusBarItem;
 export function activate(context: vscode.ExtensionContext) {
 
   const mode = getDBFlowMode(context);
-  console.log('mode:', mode);
 
   context.subscriptions.push(vscode.commands.registerCommand("dbFlux.reloadExtension", (_) => {
     deactivate();
@@ -132,11 +132,11 @@ export function activate(context: vscode.ExtensionContext) {
           await vscode.env.clipboard.writeText(tmpClipboard);
         }
 
-        const insideSys = matchRuleShort(fileName, '*/db/_sys/*');
-        console.log('insideSys:', insideSys);
+        const insideSetup = matchRuleShort(fileName, '*/db/_setup/*');
+        console.log('insideSetup:', insideSetup);
 
         // now check connection infos
-        if (insideSys) {
+        if (insideSetup) {
           if (!projectInfos.dbAdminUser) {
             if (!CompileTaskStore.getInstance().adminUser) {
               CompileTaskStore.getInstance().adminUser  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Admin user name for connection: ${projectInfos.dbTns}` , placeHolder: "admin"});
@@ -176,10 +176,10 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
 
-        if (   (    insideSys
+        if (   (    insideSetup
             && (    CompileTaskStore.getInstance().adminPwd  !== undefined
                  && CompileTaskStore.getInstance().adminUser !== undefined))
-            ||  (    !insideSys
+            ||  (    !insideSetup
              && (    CompileTaskStore.getInstance().appPwd  !== undefined ))
                  ) {
 
@@ -238,16 +238,22 @@ export function activate(context: vscode.ExtensionContext) {
       projectInfos = getProjectInfos(context);
       if (projectInfos.isValid) {
 
-        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
-          CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-          if (CompileTaskStore.getInstance().appPwd?.length === 0) {
-            CompileTaskStore.getInstance().appPwd = undefined;
+        if (!projectInfos.dbAppPwd) {
+          if (!CompileTaskStore.getInstance().appPwd) {
+            CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
+          } else {
+            if (CompileTaskStore.getInstance().appPwd?.length === 0) {
+              CompileTaskStore.getInstance().appPwd = undefined;
+            }
           }
+        } else {
+          CompileTaskStore.getInstance().appPwd = projectInfos.dbAppPwd;
         }
 
 
-        if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
-            (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
+
+
+        if (CompileTaskStore.getInstance().appPwd  !== undefined) {
           ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID();
 
           which('sql').then(async () => {
@@ -295,16 +301,20 @@ export function activate(context: vscode.ExtensionContext) {
       projectInfos = getProjectInfos(context);
       if (projectInfos.isValid) {
 
-        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
-          CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-          if (CompileTaskStore.getInstance().appPwd?.length === 0) {
-            CompileTaskStore.getInstance().appPwd = undefined;
+        if (!projectInfos.dbAppPwd) {
+          if (!CompileTaskStore.getInstance().appPwd) {
+            CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
+          } else {
+            if (CompileTaskStore.getInstance().appPwd?.length === 0) {
+              CompileTaskStore.getInstance().appPwd = undefined;
+            }
           }
+        } else {
+          CompileTaskStore.getInstance().appPwd = projectInfos.dbAppPwd;
         }
 
 
-        if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
-            (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
+        if (CompileTaskStore.getInstance().appPwd  !== undefined) {
 
           which('sql').then(async () => {
             RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule();
@@ -336,16 +346,20 @@ export function activate(context: vscode.ExtensionContext) {
     const testCommand = vscode.commands.registerCommand("dbFlux.executeTests", async () => {
       projectInfos = getProjectInfos(context);
       if (projectInfos.isValid) {
-        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
-          CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-          if (CompileTaskStore.getInstance().appPwd?.length === 0) {
-            CompileTaskStore.getInstance().appPwd = undefined;
+        if (!projectInfos.dbAppPwd) {
+          if (!CompileTaskStore.getInstance().appPwd) {
+            CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
+          } else {
+            if (CompileTaskStore.getInstance().appPwd?.length === 0) {
+              CompileTaskStore.getInstance().appPwd = undefined;
+            }
           }
+        } else {
+          CompileTaskStore.getInstance().appPwd = projectInfos.dbAppPwd;
         }
 
 
-        if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
-            (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
+        if (CompileTaskStore.getInstance().appPwd  !== undefined) {
 
               if (projectInfos.useProxy) {
                 TestTaskStore.getInstance().selectedSchemas = await vscode.window.showQuickPick([projectInfos.dataSchema, projectInfos.logicSchema, projectInfos.appSchema], {
@@ -390,17 +404,20 @@ export function activate(context: vscode.ExtensionContext) {
 
 
         // now check connection infos
-        if ((projectInfos.dbAppPwd === undefined && CompileTaskStore.getInstance().appPwd === undefined) || (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length === 0)) {
-          CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-          if (CompileTaskStore.getInstance().appPwd?.length === 0) {
-            CompileTaskStore.getInstance().appPwd = undefined;
+        if (!projectInfos.dbAppPwd) {
+          if (!CompileTaskStore.getInstance().appPwd) {
+            CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
+          } else {
+            if (CompileTaskStore.getInstance().appPwd?.length === 0) {
+              CompileTaskStore.getInstance().appPwd = undefined;
+            }
           }
+        } else {
+          CompileTaskStore.getInstance().appPwd = projectInfos.dbAppPwd;
         }
 
 
-
-        if ((projectInfos.dbAppPwd  !== undefined && projectInfos.dbAppPwd?.length > 0) ||
-            (CompileTaskStore.getInstance().appPwd !== undefined && (""+CompileTaskStore.getInstance().appPwd).length > 0)) {
+        if (CompileTaskStore.getInstance().appPwd  !== undefined){
 
 
 

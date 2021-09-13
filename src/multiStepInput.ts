@@ -4,7 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { QuickPickItem, window, Disposable, CancellationToken, QuickInputButton, QuickInput, ExtensionContext, QuickInputButtons, Uri, workspace, commands, ShellExecution } from 'vscode';
+import { QuickPickItem, window, Disposable, CancellationToken, QuickInputButton, QuickInput, ExtensionContext, QuickInputButtons, Uri, workspace, commands, ShellExecution, ViewColumn } from 'vscode';
 import { createDirectoryPath } from './utilities';
 import * as path from "path";
 import * as fs from "fs";
@@ -62,6 +62,7 @@ const setEnvValue = (file: string, key: string, value: string) => {
 };
 
 const setLine = (file: string, content: string) => {
+	console.log('file:', file);
   const lines = readEnvVars(file);
   const targetLine = lines.find((line) => line === content);
   if (targetLine !== undefined) {
@@ -265,7 +266,7 @@ export async function multiStepInput(context: ExtensionContext) {
 			const folderDef:any = {
 				"apex" : "",
 				"db" : {
-					["_sys"]: {
+					["_setup"]: {
 						users: ""
 					},
 					[dataSchema] : schemaDef,
@@ -287,25 +288,34 @@ export async function multiStepInput(context: ExtensionContext) {
 
 	createFolders(state);
 
+	const fcontent = {
+		"title" : "dbFlux - Initialization summary",
+		"files" : [],
+		"userFile": ""
+	};
 
 	async function writeUserScritps(state: State) {
 		if (workspace.workspaceFolders) {
 
+			const gitIgnore = path.resolve(workspace.workspaceFolders![0].uri.fsPath, ".gitignore");
 			if (state.projectType.label === "MultiSchema") {
 				let schemas = [`${state.projectName}_data`, `${state.projectName}_logic`, `${state.projectName}_app`];
 
 				schemas.forEach((schema, index) => {
-					const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, `db/_sys/users/0${index+1}_create_${schema}.sql`);
+					const relativeFile = `db/_setup/users/0${index + 1}_create_${schema}.sql`;
+					const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
 					const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "user_default.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 					const content = {
 						"data_schema": schema
 					};
 
 					fs.writeFileSync(schemaUser, template(content));
+					(fcontent.files as string[]).push(relativeFile);
 				});
 
 				if (state.projectType.label === "MultiSchema") {
-					const proxyUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, `db/_sys/users/04_create_${state.projectName}_depl.sql`);
+					const relativeFile = `db/_setup/users/04_create_${state.projectName}_depl.sql`;
+					const proxyUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
 					const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "user_proxy.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 					const content = {
 						"proxy_user": `${state.projectName}_depl`,
@@ -314,11 +324,13 @@ export async function multiStepInput(context: ExtensionContext) {
 						"app_schema": `${state.projectName}_app`,
 						"db_app_pwd": state.dbAppPwd
 					};
-
+					(fcontent.files as string[]).push(relativeFile);
 					fs.writeFileSync(proxyUser, template(content));
+					setLine(gitIgnore, relativeFile);
 				}
 			} else {
-				const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, `db/_sys/users/01_create_${state.projectName}_app.sql`);
+				const relativeFile = `db/_setup/users/01_create_${state.projectName}_app.sql`;
+				const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
 				const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 				const content = {
 					"data_schema": `${state.projectName}_app`,
@@ -326,11 +338,53 @@ export async function multiStepInput(context: ExtensionContext) {
 				};
 
 				fs.writeFileSync(schemaUser, template(content));
+				(fcontent.files as string[]).push(relativeFile);
+				setLine(gitIgnore, relativeFile);
 			}
 
 		}
 	}
 
+	function getWebviewContent(content:any) {
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "welcome.tmpl.html").split(path.sep).join('/'), "utf8"));
+    return template(content);
+  }
+
+	function openWebView() {
+		const panel = window.createWebviewPanel(
+                        'openWebview', // Identifies the type of the webview. Used internally
+                        fcontent.title, // Title of the panel displayed to the user
+                        ViewColumn.One, // Editor column to show the new webview panel in.
+                        { // Enable scripts in the webview
+                          enableScripts: true, //Set this to true if you want to enable Javascript.
+                          enableCommandUris: true
+                        },
+
+                  );
+
+
+
+    // Get path to resource on disk
+    const onDiskPath = Uri.file(
+      path.join(context.extensionPath, 'css', 'style.css')
+    );
+
+    panel.webview.onDidReceiveMessage(async message => {
+      if (message.command === "open") {
+        if (workspace.workspaceFolders) {
+          const filePath = path.join(workspace.workspaceFolders[0].uri.fsPath, Uri.parse(message.link).path);
+          console.log('filePath:', filePath);
+          const uri = Uri.file(filePath);
+          await window.showTextDocument(uri);
+        }
+      }
+  });
+
+    // And get the special URI to use with the webview
+    const cssURI = panel.webview.asWebviewUri(onDiskPath);
+		fcontent.userFile = fcontent.files[fcontent.files.length-1];
+    panel.webview.html = getWebviewContent(fcontent);
+	}
 
 	async function writeConfigFiles(state: State) {
 		if (workspace.workspaceFolders) {
@@ -362,48 +416,17 @@ export async function multiStepInput(context: ExtensionContext) {
 			}
 
 				context.workspaceState.update("dbFlux_WORKSPACE", state.projectName.toLowerCase());
-			// const applyFilePath = path.resolve(workspace.workspaceFolders[0].uri.fsPath, "apply.env");
-			// await ShellHelper.execScript('git init', workspace.workspaceFolders[0].uri.fsPath, {});
 
-			// setLine(gitignore, "apply.env");
-
-			// setEnvValue(applyFilePath, "DB_TNS", state.dbConnection);
-			// if (state.projectType.label === "MultiSchema") {
-			// 	setEnvValue(applyFilePath, "DB_APP_USER", state.projectName.toLowerCase() + "_depl");
-			// } else {
-			// 	setEnvValue(applyFilePath, "DB_APP_USER", state.projectName.toLowerCase() + "_app");
-			// }
-
-			// setEnvValue(applyFilePath, "DB_APP_PWD", state.dbAppPwd);
-
-			// setEnvValue(applyFilePath, "DB_ADMIN_USER", state.dbAdminUser);
-
-			// setEnvValue(buildFilePath, "PROJECT", state.projectName.toLowerCase());
-			// if (state.projectType.label === "MultiSchema") {
-			// 	setEnvValue(buildFilePath, "DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
-			// 	setEnvValue(buildFilePath, "LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
-			// 	setEnvValue(buildFilePath, "APP_SCHEMA", state.projectName.toLowerCase() + "_app");
-			// } else {
-			// 	setEnvValue(buildFilePath, "DATA_SCHEMA", state.projectName.toLowerCase() + "_app");
-			// 	setEnvValue(buildFilePath, "LOGIC_SCHEMA", state.projectName.toLowerCase() + "_app");
-			// 	setEnvValue(buildFilePath, "APP_SCHEMA", state.projectName.toLowerCase() + "_app");
-			// }
-
-			// setEnvValue(buildFilePath, "WORKSPACE", state.projectName.toLowerCase());
-			// // const applyFilePath = path.resolve(workspace.workspaceFolders[0].uri.fsPath, "apply.env");
-			// await ShellHelper.execScript('git init', workspace.workspaceFolders[0].uri.fsPath, {});
-
-			// setLine(gitignore, "apply.env");
 		}
 
 	}
 
 	writeConfigFiles(state);
 	writeUserScritps(state);
-
+	openWebView();
 	commands.executeCommand("dbFlux.reloadExtension");
 
-	console.log(state);
+
 	window.showInformationMessage(`Application structure for '${state.projectName}' successfully created`);
 }
 

@@ -90,7 +90,7 @@ export abstract class AbstractBashTaskProvider {
 
   buildConnectionUser(projectInfos: IProjectInfos, currentPath: string): string {
     let dbSchemaFolder = this.getDBUserFromPath(currentPath, projectInfos);
-    if (currentPath.includes("db" + path.posix.sep + "_sys")) {
+    if (currentPath.includes("db" + path.posix.sep + "_setup")) {
       return projectInfos.dbAdminUser+"".toLowerCase();
     } else {
       if (!projectInfos.useProxy) {
@@ -108,8 +108,6 @@ export abstract class AbstractBashTaskProvider {
 
    setInitialCompileInfo(execFileName:string, fileUri: vscode.Uri, runnerInfo:IBashInfos):void {
     let projectInfos: IProjectInfos = getProjectInfos(this.context);
-
-
     const activeFile = fileUri.fsPath.split(path.sep).join(path.posix.sep);
 
     runnerInfo.runFile  = path.resolve(__dirname, "..", "dist", execFileName).split(path.sep).join(path.posix.sep);
@@ -119,8 +117,6 @@ export abstract class AbstractBashTaskProvider {
     runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd);
     runnerInfo.connectionPass = runnerInfo.connectionUser === projectInfos.dbAdminUser ? CompileTaskStore.getInstance().adminPwd! : CompileTaskStore.getInstance().appPwd!;
     runnerInfo.projectInfos   = projectInfos;
-
-
 
     if (matchRuleShort(runnerInfo.connectionPass, "${*}") ||
         matchRuleShort(runnerInfo.connectionUser, "${*}") ||
@@ -169,7 +165,7 @@ export function getDBFlowMode(context: vscode.ExtensionContext):string | undefin
 
 
     if (retValue === undefined) {
-      retValue = context.workspaceState.get("dbFlux_modex");
+      retValue = context.workspaceState.get("dbFlux_mode");
       outputLog("retValue: " + retValue);
     }
   }
