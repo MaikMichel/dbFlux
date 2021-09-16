@@ -7,7 +7,9 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 - Minify and upload your Cascading Stylesheets to your APEX Application
 - Upload any file to your APEX Application
 - Run utPLSQL Test
-- Runs additionaly with dbFlow and XCL
+- Runs additionaly with dbFlow and XCL configurations
+- Create a project specific folder structure
+- Automatic call snippet on new files
 
 
 #### Demo - Compiling PL/SQL Package
@@ -21,8 +23,17 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 #### Demo - Uploading CSS
 ![Minify and Upload CSS Demo](images/screen-rec-vscode-compile-css.gif)
 
+
 #### Demo - Running utPLSQL Tests
 ![Minify and Upload CSS Demo](images/screen-rec-vscode-run-utplsql.gif)
+
+
+#### Demo - Initializing Project
+![Initializing Project](images/screen-rec-vscode-init-dbflux-project.gif)
+
+
+#### Demo - Create an object
+![Creating an Object](images/screen-rec-vscode-init-create-object.gif)
 
 ## Prerequisites
 
@@ -33,8 +44,8 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 
 ## Configuration
 
-dbFLux Extension is based on a specic file / folder structur. Either create this structure by using [dbFLow-Template](https://github.com/MaikMichel/dbFLux-template) or just make it on your own.
-Another way is to use XCL (currently in Alpha)
+dbFLux Extension is based on a specic file / folder structur. Either create this structure by using command `dbFlux: Initialize project structure` or by [dbFLow-Template](https://github.com/MaikMichel/dbFLux-template) or just make it on your own.
+Another way is to use XCL (coming soon)
 
 ``` shell
 apex              - all your apex apps goes here
@@ -61,35 +72,7 @@ static            - static application files
       js          - place javascript files here
       css         - place css files here
 
-apply.env         - if exists then Mode is dbFLow
-build.env         - if exists then Mode is dbFLow
-xcl.yml           - if exists then Mode is xcl
-.xcl/env.yml      - if exists then Mode is xcl
 ```
-
-Content of build.env
-
-``` shell
-# what are the schema-names, all the same when USE_PROXY is FALSE
-DATA_SCHEMA=DB_SCHEMA_NAME_DATA
-LOGIC_SCHEMA=DB_SCHEMA_NAME_LOGIC
-APP_SCHEMA=DB_SCHEMA_NAME_APP
-```
-
-Content of apply.env
-
-``` shell
-# KEEP THAT FILE OUT OF GIT !!!
-
-# DB Connection
-DB_TNS=localhost:1521/xepdb1
-
-# Deployment User and Pass
-DB_APP_USER=user_name
-DB_APP_PWD=user_pwd
-```
-
-> Keep apply.env out of git using `.gitignore`
 
 
 ### Basic Workflow
@@ -141,7 +124,7 @@ DB_APP_PWD=user_pwd
 
 #### Prepare upload
 
-If you want to upload file to a specific table or service, place them inside the reports folder/subfolder ex.: `reports/docs`. Here you have to put a template file with the name template.sql in. This template is merged to to upload file. When calling command: `dbFLux: Compile current file` you are prompted for a filename and a target directory to place the resulting file in.
+If you want to upload files to a specific table or service, place them inside the reports folder/subfolder ex.: `reports/docs`. Here you have to put a template file with the name template.sql in. This template is merged into an upload file. When calling the command: `dbFLux: Compile current file` you are prompted for a filename and a target directory to place the resulting file in.
 
 #### Demo - Create a report type, merge with template, move to target folder and compile
 ![Create a report type, merge with template, move to target folder and compile](images/screen-rec-vscode-run-reports.gif)
@@ -149,6 +132,18 @@ If you want to upload file to a specific table or service, place them inside the
 
 #### Execute utPLSQL Unittests
 
-To run your tests just call command: `dbFLux: Execute utPLSQL tests`. All tests found are executed. If you are using the multischema configuration you are prompted to select the schemas to run your tests.
+To run your tests just call the command: `dbFLux: Execute utPLSQL tests`. All tests found are executed. If you are using the multischema configuration you are prompted to select the schemas to run your tests.
 
 ![Execute tests, enter password, choose target schemas](images/screen-rec-vscode-run-tests.gif)
+
+
+#### Initialze project
+
+Sometimes you don't need CI/CD tools to support your development process. Therefore you are now able to create the desired folder structure by just triggering the command: `dbFlux: Initialize project structure. Here you are prompted to enter the name and type of the project. Additionally, you have to define your connection properties.
+Furthermore, you can define what admin-user you are using (system, sys, ...). All files placed inside folder `db/_setup` will be executed by using the admin-user. The password for this special connection has to be entered manually and will not be saved on disk.
+
+
+#### Object creation
+
+By running the command: `dbFlux: Create object` (Ctrl+Alt+C) you are now able to create an object in a specific folder directly. If a snippet is defined for that folder it will be applied afterward. Some simple snippets will ship with dbFlux. Snippets can always be overridden.
+dbFlux will search for a snippet with a name specified by all folders sibling from schema level `db/schema/`. For example, if you want a snippet to be applied when creating a package spec `db/schema_logic/sources/packages/my_logic.pks` you have to create a snippet with the name `sources-packages.pks`. If you create a table `db/schema_data/tables/my_table.sql`, you have to give the name `tables.sql`. When no user-defined snipped could be applied, dbFlux will check if itself is shipped with a matching snippet. All snippet extensions have to be `.sql` except `.pks|.pkb` when using package spec or body.

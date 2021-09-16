@@ -1,5 +1,10 @@
 # Change Log
 
+## [2.2.0 - 2021-09-16]
+- New feature: new command (dbFlux: Create Object) which creates a file in specific folder
+- New feature: new files will be filled by a snipped if exists for defined folder (users can overwrite that)
+- fix how a SingleSchema is recognized in XCL projects
+- fix wrong call to open config-files when configuration could not be read successfuly
 
 ## [2.1.0 - 2021-09-13]
 - some fixes concerning password validation
