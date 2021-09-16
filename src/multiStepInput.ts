@@ -45,7 +45,6 @@ const getEnvValue = (file: string, key: string): string | null => {
  * @param {string} value Value to update/insert
  */
 const setEnvValue = (file: string, key: string, value: string) => {
-	console.log(file, key, value);
   const envVars = readEnvVars(file);
   const targetLine = envVars.find((line) => line.split("=")[0] === key);
   if (targetLine !== undefined) {
@@ -62,7 +61,7 @@ const setEnvValue = (file: string, key: string, value: string) => {
 };
 
 const setLine = (file: string, content: string) => {
-	console.log('file:', file);
+
   const lines = readEnvVars(file);
   const targetLine = lines.find((line) => line === content);
   if (targetLine !== undefined) {
@@ -373,7 +372,7 @@ export async function multiStepInput(context: ExtensionContext) {
       if (message.command === "open") {
         if (workspace.workspaceFolders) {
           const filePath = path.join(workspace.workspaceFolders[0].uri.fsPath, Uri.parse(message.link).path);
-          console.log('filePath:', filePath);
+
           const uri = Uri.file(filePath);
           await window.showTextDocument(uri);
         }

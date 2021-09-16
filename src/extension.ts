@@ -20,6 +20,7 @@ import { ConfigurationManager } from "./ConfigurationManager";
 import { outputLog } from './OutputChannel';
 import { existsSync } from "fs";
 import { multiStepInput } from './multiStepInput';
+import { callSnippet, wizardCreateObject } from './wizardCreateObject';
 
 
 var which = require('which');
@@ -51,9 +52,9 @@ export function activate(context: vscode.ExtensionContext) {
     multiStepInput(context);
   }));
 
+
   // mode is defines and dbFlux or mode is dbFlow, xcl and dbConf exists
-  // TODO dbConf for dbFlux has to be checked too
-  if (mode !== undefined && ( (mode === "dbFlux") || (["dbFlow", "xcl"].includes(mode) && applyFileExists(mode)))) {
+  if (vscode.workspace.workspaceFolders && mode !== undefined && ( (mode === "dbFlux") || (["dbFlow", "xcl"].includes(mode) && applyFileExists(mode)))) {
     let projectInfos = getProjectInfos(context);
     let tooltip = "";
 
@@ -100,6 +101,36 @@ export function activate(context: vscode.ExtensionContext) {
         outputLog("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
       }));
 
+      // Command to view Config
+      context.subscriptions.push(vscode.commands.registerCommand('dbFlux.removeConfiguration', () => {
+
+        vscode.window.showInformationMessage("Do you realy want to remove you dbFlux configuration?", ... ["Yes", "No"])
+          .then((answer) => {
+            if (answer === "Yes") {
+              // Run function
+              outputLog("Removing Configuration", true);
+
+              context.workspaceState.update("dbFlux_mode", undefined);
+              context.workspaceState.update("dbFlux_DB_TNS", undefined);
+              context.workspaceState.update("dbFlux_DB_APP_USER", undefined);
+              context.workspaceState.update("dbFlux_DB_APP_PWD", undefined);
+              context.workspaceState.update("dbFlux_DB_ADMIN_USER", undefined);
+
+              context.workspaceState.update("dbFlux_PROJECT", undefined);
+              context.workspaceState.update("dbFlux_WORKSPACE", undefined);
+              context.workspaceState.update("dbFlux_DATA_SCHEMA", undefined);
+              context.workspaceState.update("dbFlux_LOGIC_SCHEMA", undefined);
+              context.workspaceState.update("dbFlux_APP_SCHEMA", undefined);
+
+              vscode.commands.executeCommand("dbFlux.reloadExtension");
+
+              vscode.window.showInformationMessage(`Configuration successfully removed`);
+            }
+          });
+
+
+      }));
+
     }
 
 
@@ -112,7 +143,13 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(myStatusBarItem);
 
 
+    context.subscriptions.push(vscode.commands.registerCommand('dbFlux.createObjectWizard', async () => {
+      wizardCreateObject(context);
+    }));
 
+    context.subscriptions.push( vscode.workspace.onDidOpenTextDocument(function(document){
+      callSnippet(vscode.workspace.workspaceFolders![0].uri.fsPath, document);
+    }));
 
     // Compile
     let sqlPlusCommand = vscode.commands.registerCommand("dbFlux.compileFile", async () => {
@@ -133,7 +170,6 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         const insideSetup = matchRuleShort(fileName, '*/db/_setup/*');
-        console.log('insideSetup:', insideSetup);
 
         // now check connection infos
         if (insideSetup) {
@@ -449,7 +485,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Reset Password
     const resetPwdCommand = vscode.commands.registerCommand("dbFlux.resetPassword", async () => {
-      CompileTaskStore.getInstance().appPwd = undefined;
+      CompileTaskStore.getInstance().appPwd   = undefined;
+      CompileTaskStore.getInstance().adminPwd = undefined;
       vscode.window.showInformationMessage("dbFlux: Password succefully reset");
     });
     context.subscriptions.push(resetPwdCommand);

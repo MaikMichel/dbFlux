@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import { outputLog } from "./OutputChannel";
 
 
 export class ShellHelper {
@@ -15,7 +16,7 @@ export class ShellHelper {
 
         childProcess.stdout.on("data", function (data) {
           if (data.toString().trim() !== "") {
-            console.log(data.toString().trim());
+           outputLog(data.toString().trim());
           }
         });
 
@@ -23,7 +24,7 @@ export class ShellHelper {
           if (data.toString().trim() !== "") {
             retObj.status = false;
             retObj.result = "";
-            console.log(data.toString().trim());
+            outputLog(data.toString().trim());
           }
         });
 
@@ -32,7 +33,7 @@ export class ShellHelper {
           resolve(retObj);
         });
       } catch (err) {
-        console.log(executePath);
+        outputLog(executePath);
         console.error(err);
         retObj.status = false;
         retObj.result = "";

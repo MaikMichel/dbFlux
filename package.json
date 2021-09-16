@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "2.1.0",
+	"version": "2.2.0",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
@@ -30,6 +30,12 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"snippets": [
+			{
+				"language": "plsql",
+				"path": "./snippets/snippets.json"
+			}
+		],
 		"taskDefinitions": [
 			{
 				"type": "dbFlux"
@@ -63,6 +69,18 @@
 			}
 		],
 		"commands": [
+			{
+				"command": "dbFlux.createObjectWizard",
+				"title": "Create Object",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.removeConfiguration",
+				"title": "Remove dbFlux configuration from workspace",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
 			{
 				"command": "dbFlux.wizard",
 				"title": "Initialize Project structure",
@@ -130,6 +148,12 @@
 			}
 		],
 		"keybindings": [
+			{
+				"command": "dbFlux.createObjectWizard",
+				"key": "ctrl+alt+c",
+				"mac": "ctrl+alt+c",
+				"when": "inDbFlowProject"
+			},
 			{
 				"command": "dbFlux.compileFile",
 				"key": "ctrl+alt+b",

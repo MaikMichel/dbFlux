@@ -1,0 +1,190 @@
+{
+  "dbflux-constraints-check_constraints.sql" : {
+    "body": [
+      "alter table ${1:source_table} add (",
+      "  constraint ${TM_FILENAME_BASE}",
+      "  check (${2:source_column} ${3:condition})",
+      "  enable validate",
+      ");$0"
+    ]
+  },
+  "dbflux-constraints-checks.sql" : {
+    "body": [
+      "alter table ${1:source_table} add (",
+      "  constraint ${TM_FILENAME_BASE}",
+      "  check (${2:source_column} ${3:condition})",
+      "  enable validate",
+      ");$0"
+    ]
+  },
+  "dbflux-constraints-foreign_keys.sql" : {
+    "body": [
+      "alter table ${1:source_table} add (",
+      "  constraint ${TM_FILENAME_BASE}",
+      "  foreign key (${2:source_prefix}_${3:target_column})",
+      "  references ${4:target_table} (${3:target_column})",
+      "  enable validate",
+      ");$0"
+    ]
+  },
+  "dbflux-constraints-foreigns.sql" : {
+    "body": [
+      "alter table ${1:source_table} add (",
+      "  constraint ${TM_FILENAME_BASE}",
+      "  foreign key (${2:source_prefix}_${3:target_column})",
+      "  references ${4:target_table} (${3:target_column})",
+      "  enable validate",
+      ");$0"
+    ]
+  },
+  "dbflux-constraints-primary_keys.sql" : {
+    "body": [
+      "-- don't forget to create index: ../indexs/primary_key/${TM_FILENAME_BASE}.sql based on that pk",
+      "alter table ${1:source_table} add (",
+			"  constraint ${TM_FILENAME_BASE}",
+			"  primary key (${2:source_prefix}_id)",
+			"  using index ${TM_FILENAME_BASE}",
+			"  enable validate",
+			");$0"
+    ]
+  },
+  "dbflux-constraints-primaries.sql" : {
+    "body": [
+      "-- don't forget to create index: ../indexs/primary_key/${TM_FILENAME_BASE}.sql based on that pk",
+      "alter table ${1:source_table} add (",
+			"  constraint ${TM_FILENAME_BASE}",
+			"  primary key (${2:source_prefix}_id)",
+			"  using index ${TM_FILENAME_BASE}",
+			"  enable validate",
+			");$0"
+    ]
+  },
+  "dbflux-constraints-unique_keys.sql" : {
+    "body": [
+      "alter table ${1:source_table} add (",
+      "  constraint ${TM_FILENAME_BASE}",
+      "  unique(${2:source_columns})",
+      "  enable validate",
+      ");$0"
+    ]
+  },
+  "dbflux-constraints-uniques.sql" : {
+    "body": [
+      "alter table ${1:source_table} add (",
+      "  constraint ${TM_FILENAME_BASE}",
+      "  unique(${2:source_columns})",
+      "  enable validate",
+      ");$0"
+    ]
+  },
+  "dbflux-indexes-defaults.sql" : {
+    "body": [
+      "create index ${TM_FILENAME_BASE} on ${1:source_table} (",
+      "  ${2:source_columns}",
+      ") tablespace ${3:tablespace_name} logging;",
+      "$0"
+    ]
+  },
+  "dbflux-indexes-primary_keys.sql" : {
+    "body": [
+      "create unique index ${TM_FILENAME_BASE} on ${1:source_table} (",
+      "  ${2:source_column}",
+      ") tablespace ${3:tablespace_name} logging;",
+      "$0"
+    ]
+  },
+  "dbflux-indexes-primaries.sql" : {
+    "body": [
+      "create unique index ${TM_FILENAME_BASE} on ${1:source_table} (",
+      "  ${2:source_column}",
+      ") tablespace ${3:tablespace_name} logging;",
+      "$0"
+    ]
+  },
+  "dbflux-indexes-unique_keys.sql" : {
+    "body": [
+      "create unique index ${TM_FILENAME_BASE} on ${1:source_table} (",
+      "  ${2:source_column}",
+      ") tablespace ${3:tablespace_name} logging;",
+      "$0"
+    ]
+  },
+  "dbflux-indexes-uniques.sql" : {
+    "body": [
+      "create unique index ${TM_FILENAME_BASE} on ${1:source_table} (",
+      "  ${2:source_column}",
+      ") tablespace ${3:tablespace_name} logging;",
+      "$0"
+    ]
+  },
+  "dbflux-tables.sql" : {
+    "body": [
+      "create table ${TM_FILENAME_BASE} (",
+			"  ${2:prefix}_id               number                    not null,",
+			"  ${2:prefix}_",
+			"  ... ",
+			"  ${2:prefix}_created_at       date                      not null,",
+			"  ${2:prefix}_created_by       varchar2(250 char)        not null,",
+			"  ${2:prefix}_modified_at      date                      not null,",
+			"  ${2:prefix}_modified_by      varchar2(250 char)        not null",
+			");",
+			"",
+			"comment on table ${TM_FILENAME_BASE} is 'Content of table';",
+			"comment on column ${TM_FILENAME_BASE}.${2:prefix}_id is 'PrimaryKey for table ${TM_FILENAME_BASE}';"
+    ]
+  },
+  "dbflux-views.sql" : {
+    "body" : [
+      "create or replace view ${TM_FILENAME_BASE} as ",
+      "select *",
+      "  from ${1:schema}.${2:table}",
+      "/"
+    ]
+  },
+  "dbflux-sources-packages.pks" : {
+    "body": [
+      "create or replace package ${TM_FILENAME_BASE} is",
+      "  ",
+      "end;",
+      "/"
+    ]
+  },
+  "dbflux-sources-packages.pkb" : {
+    "body": [
+      "create or replace package body ${TM_FILENAME_BASE} is",
+      "  ",
+      "end;",
+      "/"
+    ]
+  },
+  "dbflux-sources-triggers.sql" : {
+    "body": [
+      "create or replace trigger ${TM_FILENAME_BASE}",
+      "    before insert or update or delete",
+      "    on ${1:table}",
+      "    for each row",
+      "begin",
+      "  null;",
+      "end ${TM_FILENAME_BASE};",
+      "/"
+    ]
+  },
+  "dbflux-sources-functions.sql" : {
+    "body": [
+      "create or replace function ${TM_FILENAME_BASE} (${2:param_name} ${3:param_type}) return ${1:return_type}",
+      "begin",
+      "  null;",
+      "end ${TM_FILENAME_BASE};",
+      "/"
+    ]
+  },
+  "dbflux-sources-procedures.sql" : {
+    "body": [
+      "create or replace procedure ${TM_FILENAME_BASE} (${1:param_name} ${2:param_type})",
+      "begin",
+      "  null;",
+      "end ${TM_FILENAME_BASE};",
+      "/"
+    ]
+  }
+}
