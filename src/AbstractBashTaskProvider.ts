@@ -238,8 +238,8 @@ function getProjectInfosFromXCL():IProjectInfos {
 
     if (buildYml) {
       projectInfos.appSchema    = buildYml.xcl.users.schema_app;
-      projectInfos.logicSchema  = buildYml.xcl.users.schema_logic;
-      projectInfos.dataSchema   = buildYml.xcl.users.schema_data;
+      projectInfos.logicSchema  = buildYml.xcl.users.schema_logic?buildYml.xcl.users.schema_logic:projectInfos.appSchema;
+      projectInfos.dataSchema   = buildYml.xcl.users.schema_data?buildYml.xcl.users.schema_data:projectInfos.appSchema;
 
       projectInfos.useProxy = mustUseProxy(projectInfos);
     }
@@ -248,7 +248,7 @@ function getProjectInfosFromXCL():IProjectInfos {
       const applyYml = yaml.parse(fs.readFileSync(path.join(f, `.xcl/env.yml`)).toString());
 
       if (applyYml) {
-        projectInfos.dbAppUser = buildYml.xcl.users.user_deployment;
+        projectInfos.dbAppUser = projectInfos.useProxy?buildYml.xcl.users.user_deployment:buildYml.xcl.users.schema_app;
         projectInfos.dbTns     = applyYml.connection;
         projectInfos.dbAppPwd  = applyYml.password;
       }
@@ -281,7 +281,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
 
     vscode.window.showErrorMessage(dbConnMsg, "Open configuration").then(selection => {
       if (selection) {
-        vscode.commands.executeCommand("dbFlux.openApplyFile");
+        vscode.commands.executeCommand("dbFlux.showConfig");
       }
     });
   }
@@ -305,7 +305,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
     vscode.window.showErrorMessage(schemaMsg, "Open configuration").then(selection => {
 
       if (selection) {
-        vscode.commands.executeCommand("dbFlux.openBuildFile");
+        vscode.commands.executeCommand("dbFlux.showConfig");
       }
     });
   }
