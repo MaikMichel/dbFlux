@@ -33,7 +33,7 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 
 
 #### Demo - Create an object
-![Creating an Object](images/screen-rec-vscode-init-create-object.gif)
+![Creating an Object](images/screen-rec-vscode-create-object.gif)
 
 ## Prerequisites
 
