@@ -166,7 +166,6 @@ export function getDBFlowMode(context: vscode.ExtensionContext):string | undefin
 
     if (retValue === undefined) {
       retValue = context.workspaceState.get("dbFlux_mode");
-      outputLog("retValue: " + retValue);
     }
   }
 

@@ -96,6 +96,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         outputLog("PROJECT: " + context.workspaceState.get("dbFlux_PROJECT"));
         outputLog("WORKSPACE: " + context.workspaceState.get("dbFlux_WORKSPACE"));
+        outputLog("APEX_USER: " + context.workspaceState.get("dbFlux_APEX_USER"));
         outputLog("DATA_SCHEMA: " + context.workspaceState.get("dbFlux_DATA_SCHEMA"));
         outputLog("LOGIC_SCHEMA: " + context.workspaceState.get("dbFlux_LOGIC_SCHEMA"));
         outputLog("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));

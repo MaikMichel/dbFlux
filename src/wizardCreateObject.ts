@@ -292,7 +292,7 @@ export function callSnippet(wsPath:string, document:TextDocument, prefix:string|
       restComponents.pop();
       const snippetName = (prefix?prefix+'-':'') + restComponents.join('-') + path.parse(file).ext;
 
-      outputLog(`snippetName to look for: snippetName`);
+      outputLog(`snippetName to look for: ${snippetName}`);
 
       commands.executeCommand('editor.action.selectAll').then( function () {
         commands.executeCommand('editor.action.insertSnippet',

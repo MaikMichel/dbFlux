@@ -92,6 +92,10 @@ export async function multiStepInput(context: ExtensionContext) {
 		dbConnection: string;
 		dbAdminUser: string;
 		dbAppPwd: string;
+
+		createWorkspace: QuickPickItem;
+		developerName: string;
+		apexSchemaName: string;
 	}
 
 	async function collectInputs() {
@@ -101,6 +105,7 @@ export async function multiStepInput(context: ExtensionContext) {
 			state.projectName = context.workspaceState.get("dbFlux_PROJECT") || "";
 			state.dbConnection = context.workspaceState.get("dbFlux_DB_TNS") || "";
 			state.dbAdminUser = context.workspaceState.get("dbFlux_DB_ADMIN_USER") || "";
+			state.apexSchemaName = context.workspaceState.get("dbFlux_APEX_USER") || "";
 		}
 
 		await MultiStepInput.run(input => inputProjectName(input, state));
@@ -171,15 +176,56 @@ export async function multiStepInput(context: ExtensionContext) {
 		state.dbAdminUser = await input.showInputBox({
 			title,
 			step: 5,
-			totalSteps: 5,
+			totalSteps: 6,
 			value: state.dbAdminUser || 'system',
 			prompt: 'Enter name of an Admin-User (sys, admin, ...)',
 			validate: validateValueNotRequiered,
 			shouldResume: shouldResume
 		});
 
+		return (input: MultiStepInput) => inputCreateWorkspace(input, state);
 	}
 
+	async function inputCreateWorkspace(input: MultiStepInput, state: Partial<State>) {
+		const answers = [{label:"Yes",}, {label:"No"}];
+		state.createWorkspace = await input.showQuickPick({
+			title,
+			step: 6,
+			totalSteps: 6,
+			placeholder: 'Would you like to create workspace script?',
+			items: answers,
+			activeItem: answers[0],
+			shouldResume: shouldResume
+		});
+
+		return (input: MultiStepInput) => inputApexSchemaName(input, state);
+	}
+
+	async function inputApexSchemaName(input: MultiStepInput, state: Partial<State>) {
+		state.apexSchemaName = await input.showInputBox({
+			title,
+			step: 7,
+			totalSteps: 7,
+			value: state.apexSchemaName || 'APEX_210100',
+			prompt: 'Enter name of APEX-Schema',
+			validate: validateValueIsRequiered,
+			shouldResume: shouldResume
+		});
+
+		return (input: MultiStepInput) => inputDevAdminName(input, state);
+	}
+
+	async function inputDevAdminName(input: MultiStepInput, state: Partial<State>) {
+		state.developerName = await input.showInputBox({
+			title,
+			step: 7,
+			totalSteps: 7,
+			value: 'wsadmin',
+			prompt: 'Enter name of workspace user (Admin/Developer) you want to create',
+			validate: validateValueIsRequiered,
+			shouldResume: shouldResume
+		});
+	}
 
 	function shouldResume() {
 		// Could show a notification with the option to resume.
@@ -266,7 +312,9 @@ export async function multiStepInput(context: ExtensionContext) {
 				"apex" : "",
 				"db" : {
 					["_setup"]: {
-						users: ""
+						users: "",
+						workspaces: "",
+						workspace_users: ""
 					},
 					[dataSchema] : schemaDef,
 					[logicSchema] : schemaDef,
@@ -290,7 +338,8 @@ export async function multiStepInput(context: ExtensionContext) {
 	const fcontent = {
 		"title" : "dbFlux - Initialization summary",
 		"files" : [],
-		"userFile": ""
+		"userFile": "",
+		"installFile": ""
 	};
 
 	async function writeUserScritps(state: State) {
@@ -341,6 +390,53 @@ export async function multiStepInput(context: ExtensionContext) {
 				setLine(gitIgnore, relativeFile);
 			}
 
+
+			if (state.createWorkspace.label === "Yes") {
+				{
+					const relativeFile = `db/_setup/workspaces/create_workspace_${state.projectName}.sql`;
+					const workspaceFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
+					const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "create_workspace.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+					const content = {
+						"app_schema": `${state.projectName}_app`,
+						"workspace": state.projectName,
+						"apex_user": state.apexSchemaName,
+					};
+
+					fs.writeFileSync(workspaceFile, template(content));
+					(fcontent.files as string[]).push(relativeFile);
+				}
+
+				{
+					const relativeFile = `db/_setup/workspace_users/create_user_${state.developerName}.sql`;
+					const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
+					const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "create_workspace_user.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+					const content = {
+						"app_schema": `${state.projectName}_app`,
+						"workspace": state.projectName,
+						"apex_user": state.apexSchemaName,
+						"user_name": state.developerName,
+					};
+
+					fs.writeFileSync(userFile, template(content));
+					(fcontent.files as string[]).push(relativeFile);
+				}
+			}
+
+			{
+				const relativeFile = `db/_setup/install.sql`;
+				const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
+
+				// create a install.sql
+				let content = "";
+				(fcontent.files as string[]).forEach(file => {
+					content += `@@${file}\n`;
+				});
+
+				fs.writeFileSync(userFile, content);
+				fcontent.installFile = relativeFile;
+
+			}
+
 		}
 	}
 
@@ -387,10 +483,6 @@ export async function multiStepInput(context: ExtensionContext) {
 
 	async function writeConfigFiles(state: State) {
 		if (workspace.workspaceFolders) {
-			const applyFilePath = path.resolve(workspace.workspaceFolders[0].uri.fsPath, "apply.env");
-			const buildFilePath = path.resolve(workspace.workspaceFolders[0].uri.fsPath, "build.env");
-			const gitignore = path.resolve(workspace.workspaceFolders[0].uri.fsPath, ".gitignore");
-
 			context.workspaceState.update("dbFlux_mode", "dbFlux");
 				context.workspaceState.update("dbFlux_DB_TNS", state.dbConnection);
 			if (state.projectType.label === "MultiSchema") {
@@ -415,6 +507,7 @@ export async function multiStepInput(context: ExtensionContext) {
 			}
 
 				context.workspaceState.update("dbFlux_WORKSPACE", state.projectName.toLowerCase());
+				context.workspaceState.update("dbFlux_APEX_USER", state.apexSchemaName.toUpperCase());
 
 		}
 
