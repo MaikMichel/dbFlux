@@ -15,6 +15,13 @@ export function getTargetPathFromFileName(inAppID: string, sourceFile: string) {
   return sourceFile.split('static/f'+inAppID+'/src/')[1];
 }
 
+export function getStaticReference(sourceFile: string) {
+  const inAppID = getApplicationIdFromPath(sourceFile);
+  const targetPath = getTargetPathFromFileName(inAppID, sourceFile);
+
+  return "#APP_IMAGES#" + targetPath.replace(".js.sql", "#MIN#.js").replace(".css.sql", "#MIN#.css");
+}
+
 export function changeExtension(filename: string, extension: string): string {
   let ext: string = path.extname(filename);
   let root: string = filename.substring(0, filename.length - ext.length);

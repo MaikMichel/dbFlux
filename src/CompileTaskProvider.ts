@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationManager } from "./ConfigurationManager";
-import { getActiveFileUri, groupByKey, matchRuleShort } from "./utilities";
+import { getActiveFileUri, getStaticReference, groupByKey, matchRuleShort } from "./utilities";
 import { AbstractBashTaskProvider, IBashInfos } from "./AbstractBashTaskProvider";
 
 
@@ -25,6 +25,7 @@ interface ICompileInfos extends IBashInfos {
   appConn:            string;
   appFile:            string;
   coloredOutput:      string;
+  additionalOutput:   string;
 }
 
 export class CompileTaskProvider extends AbstractBashTaskProvider implements vscode.TaskProvider {
@@ -66,24 +67,25 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
       CompileTaskProvider.dbFluxType,
       new vscode.ShellExecution(definition.runner.runFile, {
         env: {
-          DBFLOW_DBTNS:           definition.runner.connectionTns,
-          DBFLOW_DBUSER:          definition.runner.connectionUser,
-          DBFLOW_DBPASS:          definition.runner.connectionPass,
-          DBFLOW_FILE:            definition.runner.activeFile,
-          DBFLOW_WSPACE:          definition.runner.relativeWSPath,
-          DBFLOW_SQLCLI:          definition.runner.executableCli,
-          DBFLOW_MOVEYN:          definition.runner.moveYesNo,
-          DBFLOW_ENABLE_WARNINGS: definition.runner.enableWarnings,
+          DBFLOW_DBTNS:             definition.runner.connectionTns,
+          DBFLOW_DBUSER:            definition.runner.connectionUser,
+          DBFLOW_DBPASS:            definition.runner.connectionPass,
+          DBFLOW_FILE:              definition.runner.activeFile,
+          DBFLOW_WSPACE:            definition.runner.relativeWSPath,
+          DBFLOW_SQLCLI:            definition.runner.executableCli,
+          DBFLOW_MOVEYN:            definition.runner.moveYesNo,
+          DBFLOW_ENABLE_WARNINGS:   definition.runner.enableWarnings,
+          DBFLOW_ADDITIONAL_OUTOUT: definition.runner.additionalOutput,
 
-          DBFLOW_CONN_DATA:       definition.runner.dataConn,
-          DBFLOW_CONN_LOGIC:      definition.runner.logicConn,
-          DBFLOW_CONN_APP:        definition.runner.appConn,
+          DBFLOW_CONN_DATA:         definition.runner.dataConn,
+          DBFLOW_CONN_LOGIC:        definition.runner.logicConn,
+          DBFLOW_CONN_APP:          definition.runner.appConn,
 
-          DBFLOW_FILE_DATA:       definition.runner.dataFile,
-          DBFLOW_FILE_LOGIC:      definition.runner.logicFile,
-          DBFLOW_FILE_APP:        definition.runner.appFile,
+          DBFLOW_FILE_DATA:         definition.runner.dataFile,
+          DBFLOW_FILE_LOGIC:        definition.runner.logicFile,
+          DBFLOW_FILE_APP:          definition.runner.appFile,
 
-          DBFLOW_COLOR_ON:        definition.runner.coloredOutput
+          DBFLOW_COLOR_ON:          definition.runner.coloredOutput
         },
       }),
       ["$dbflux-plsql"]
@@ -120,6 +122,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
       if (matchRuleShort(runner.activeFile, "*/static/f*/src*") && fs.existsSync(runner.activeFile + ".sql")) {
         runner.activeFile += ".sql";
         runner.moveYesNo = "YES";
+        runner.additionalOutput = "Reference file by using: " + getStaticReference(runner.activeFile);
       }
 
 

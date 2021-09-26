@@ -54,7 +54,7 @@ export class Terserer {
 
         return Promise.resolve(true);
 
-      } catch (error) {
+      } catch (error:any) {
         const { message } = error;
 
         console.error("dbFlux/terser: " + message);

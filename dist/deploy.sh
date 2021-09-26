@@ -222,6 +222,10 @@ else
 
     echo
   fi
+
+  if [[ -n $DBFLOW_ADDITIONAL_OUTOUT ]]; then
+    echo -e ${BCYAN}${DBFLOW_ADDITIONAL_OUTOUT}${NC}
+  fi
   echo -e "-----------------------------------------------------"
   echo
 
