@@ -1,5 +1,9 @@
 # Change Log
 
+## [2.3.0 - 2021-09-26]
+- Add option to create workspace and workspace user when initializing projectfolder
+- Additionaly output reference to static file when upload from static-subfolder
+
 ## [2.2.0 - 2021-09-16]
 - New feature: new command (dbFlux: Create Object) which creates a file in specific folder
 - New feature: new files will be filled by a snipped if exists for defined folder (users can overwrite that)
