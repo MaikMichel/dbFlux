@@ -36,6 +36,10 @@ export class ConfigurationManager {
     return this.get<boolean>("showWarningMessages.AfterCompilation");
   }
 
+  static getFocusProblemPanelWhenExists():boolean {
+    return this.get<boolean>("showWarningMessages.FocusProblemPanelWhenExists");
+  }
+
   static getWarningsToExclude():string[] {
     return this.get<string[]>("showWarningMessages.AfterCompilationExcludingFollowingCodes");
   }

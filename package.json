@@ -194,6 +194,12 @@
 						"description": "Which CLI should be used to compile your source to specified database. Please make sure to set binaries to path",
 						"scope": "window"
 					},
+					"dbFlux.showWarningMessages.FocusProblemPanelWhenExists": {
+						"type": "boolean",
+						"default": true,
+						"description": "If set to true additional the problem panel gets focus",
+						"scope": "window"
+					},
 					"dbFlux.showWarningMessages.AfterCompilation": {
 						"type": "boolean",
 						"default": false,

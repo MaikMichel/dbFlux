@@ -96,7 +96,6 @@ export function activate(context: vscode.ExtensionContext) {
 
         outputLog("PROJECT: " + context.workspaceState.get("dbFlux_PROJECT"));
         outputLog("WORKSPACE: " + context.workspaceState.get("dbFlux_WORKSPACE"));
-        outputLog("APEX_USER: " + context.workspaceState.get("dbFlux_APEX_USER"));
         outputLog("DATA_SCHEMA: " + context.workspaceState.get("dbFlux_DATA_SCHEMA"));
         outputLog("LOGIC_SCHEMA: " + context.workspaceState.get("dbFlux_LOGIC_SCHEMA"));
         outputLog("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
@@ -227,7 +226,33 @@ export function activate(context: vscode.ExtensionContext) {
 
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
             if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) ) {
+
+              // call the compile Task itself
               vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+
+              // when configured, the problem panel will be focused
+              if (ConfigurationManager.getFocusProblemPanelWhenExists()) {
+                let myEvent = vscode.languages.onDidChangeDiagnostics(event => {
+                      const myUri = vscode.window.activeTextEditor?.document.uri;
+                      if (myUri) {
+                        let matched = false;
+                        for (const euri of event.uris) {
+                          if (euri.path === myUri?.path) {
+                            matched = true;
+                          }
+                        }
+
+                        const diagnostics = vscode.languages.getDiagnostics(myUri);
+                        if (matched && diagnostics && diagnostics.length > 0) {
+                          vscode.commands.executeCommand("workbench.action.problems.focus");
+                          myEvent.dispose();
+                        }
+                      }
+                  // }
+                });
+
+              }
+
             } else if (insideStatics && ['js'].includes(fileExtension.toLowerCase())) {
               const tersered = new Terserer(fileName);
               const success = await tersered.genFile();

@@ -91,6 +91,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements vsc
       ["$dbflux-plsql"]
     );
     _task.presentationOptions.echo = false;
+    _task.presentationOptions.focus = true;
     return _task;
   }
 
