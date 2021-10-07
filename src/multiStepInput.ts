@@ -398,8 +398,7 @@ export async function multiStepInput(context: ExtensionContext) {
 					const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "create_workspace.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 					const content = {
 						"app_schema": `${state.projectName}_app`,
-						"workspace": state.projectName,
-						"apex_user": state.apexSchemaName,
+						"workspace": state.projectName
 					};
 
 					fs.writeFileSync(workspaceFile, template(content));
@@ -413,7 +412,6 @@ export async function multiStepInput(context: ExtensionContext) {
 					const content = {
 						"app_schema": `${state.projectName}_app`,
 						"workspace": state.projectName,
-						"apex_user": state.apexSchemaName,
 						"user_name": state.developerName,
 					};
 
