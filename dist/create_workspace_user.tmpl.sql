@@ -8,9 +8,6 @@ PROMPT  ==   CREATE APEX User {{user_name}}
 PROMPT  =============================================================================
 PROMPT
 
-
-PROMPT Change session to APEX_USER
-ALTER SESSION SET CURRENT_SCHEMA = {{apex_user}};
 set serveroutput on
 
 Declare

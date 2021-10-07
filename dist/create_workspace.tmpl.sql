@@ -8,10 +8,6 @@ PROMPT  ==   CREATE WORKSPACE {{workspace}}
 PROMPT  =============================================================================
 PROMPT
 
-
-PROMPT Change session to APEX_USER
-ALTER SESSION SET CURRENT_SCHEMA = {{apex_user}};
-
 declare
   v_workspace_id number;
 begin
