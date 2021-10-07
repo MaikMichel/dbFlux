@@ -1,5 +1,10 @@
 # Change Log
 
+
+## [2.4.0 - 2021-09-26]
+- fix workspace creation scripts, no reference to APEX Schema
+- Add option to focus problem panel when errors or warnings exists
+
 ## [2.3.0 - 2021-09-26]
 - Add option to create workspace and workspace user when initializing projectfolder
 - Additionaly output reference to static file when upload from static-subfolder
