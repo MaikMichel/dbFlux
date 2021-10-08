@@ -177,7 +177,7 @@ export async function multiStepInput(context: ExtensionContext) {
 			title,
 			step: 5,
 			totalSteps: 6,
-			value: state.dbAdminUser || 'system',
+			value: state.dbAdminUser || 'sys',
 			prompt: 'Enter name of an Admin-User (sys, admin, ...)',
 			validate: validateValueNotRequiered,
 			shouldResume: shouldResume
@@ -195,20 +195,6 @@ export async function multiStepInput(context: ExtensionContext) {
 			placeholder: 'Would you like to create workspace script?',
 			items: answers,
 			activeItem: answers[0],
-			shouldResume: shouldResume
-		});
-
-		return (input: MultiStepInput) => inputApexSchemaName(input, state);
-	}
-
-	async function inputApexSchemaName(input: MultiStepInput, state: Partial<State>) {
-		state.apexSchemaName = await input.showInputBox({
-			title,
-			step: 7,
-			totalSteps: 7,
-			value: state.apexSchemaName || 'APEX_210100',
-			prompt: 'Enter name of APEX-Schema',
-			validate: validateValueIsRequiered,
 			shouldResume: shouldResume
 		});
 
