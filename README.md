@@ -10,7 +10,7 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 - Runs additionaly with dbFlow and XCL configurations
 - Create a project specific folder structure
 - Automatic call snippet on new files
-
+- Split or join files, when content is seperated "-- File: "
 
 #### Demo - Compiling PL/SQL Package
 ![Compile PL/SQL Demo](images/screen-rec-vscode-compile-plsql.gif)
@@ -34,6 +34,10 @@ Using this extension enables you to develop Oracle APEX applications in a simple
 
 #### Demo - Create an object
 ![Creating an Object](images/screen-rec-vscode-create-object.gif)
+
+#### Demo - Split or join files
+![Split or join files](images/screen-rec-vscode-split-to-files.gif)
+
 
 ## Prerequisites
 
@@ -147,3 +151,30 @@ Furthermore, you can define what admin-user you are using (system, sys, ...). Al
 
 By running the command: `dbFlux: Create object` (Ctrl+Alt+C) you are now able to create an object in a specific folder directly. If a snippet is defined for that folder it will be applied afterward. Some simple snippets will ship with dbFlux. Snippets can always be overridden.
 dbFlux will search for a snippet with a name specified by all folders sibling from schema level `db/schema/`. For example, if you want a snippet to be applied when creating a package spec `db/schema_logic/sources/packages/my_logic.pks` you have to create a snippet with the name `sources-packages.pks`. If you create a table `db/schema_data/tables/my_table.sql`, you have to give the name `tables.sql`. When no user-defined snipped could be applied, dbFlux will check if itself is shipped with a matching snippet. All snippet extensions have to be `.sql` except `.pks|.pkb` when using package spec or body.
+
+
+#### Split or join files
+
+During development sometimes it is easier to keep all DDL commands to create a table and the corresponding constraints in a single file. So you can place a special seperator in front of the script and by using command `dbFlux: Split File` (Ctrl+Alt+S) you can split these scripts to separate files. To get or join all thes files you can now just use command `dbFlux: Join Files` (Ctrl+Alt+J) to load all files into a single one. Here is a short example:
+
+```sql
+create table test (
+  id number
+);
+
+-- File: ../indexes/primaries/test_id_pk.sql
+create unique index test_id_pk on test
+(ntz_id)
+tablespace indx
+logging;
+
+-- File: ../constraints/primaries/test_id_pk.sql
+alter table test add (
+  constraint test_id_pk
+  primary key (id)
+  using index test_id_pk
+  enable validate
+);
+```
+
+You have to use "**-- File: ../relative/path/to/file.sql**" to set the marker for seperation.

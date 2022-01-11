@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "2.4.1",
+	"version": "2.5.0",
 	"engines": {
 		"vscode": "^1.55.0"
 	},
@@ -69,6 +69,18 @@
 			}
 		],
 		"commands": [
+			{
+				"command": "dbFlux.splitToFiles",
+				"title": "Split File",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.joinFiles",
+				"title": "Join Files",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
 			{
 				"command": "dbFlux.createObjectWizard",
 				"title": "Create Object",
@@ -148,6 +160,18 @@
 			}
 		],
 		"keybindings": [
+			{
+				"command": "dbFlux.splitToFiles",
+				"key": "ctrl+alt+s",
+				"mac": "ctrl+alt+s",
+				"when": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.joinFiles",
+				"key": "ctrl+alt+j",
+				"mac": "ctrl+alt+j",
+				"when": "inDbFlowProject"
+			},
 			{
 				"command": "dbFlux.createObjectWizard",
 				"key": "ctrl+alt+c",

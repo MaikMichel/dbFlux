@@ -1,6 +1,9 @@
 # Change Log
 
 
+## [2.5.0 - 2022-01-11]
+- Add commands to split or join files, when content is seperated by "-- File: ../relative/path/to/file.sql"
+
 ## [2.4.0 - 2021-09-26]
 - fix workspace creation scripts, no reference to APEX Schema
 - Add option to focus problem panel when errors or warnings exists

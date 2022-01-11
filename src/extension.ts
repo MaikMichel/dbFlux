@@ -18,9 +18,10 @@ import { CompileTaskStore } from "./CompileTaskStore";
 import { TestTaskStore } from "./TestTaskStore";
 import { ConfigurationManager } from "./ConfigurationManager";
 import { outputLog } from './OutputChannel';
-import { existsSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { multiStepInput } from './multiStepInput';
 import { callSnippet, wizardCreateObject } from './wizardCreateObject';
+import {} from "fs";
 
 
 var which = require('which');
@@ -516,6 +517,86 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage("dbFlux: Password succefully reset");
     });
     context.subscriptions.push(resetPwdCommand);
+
+    const FILE_SEPARATION = "-- File: ";
+    let splitted = false;
+    // Separate parts of a file, when reference with something like that: -- File: ../xx/yy/ff.sql
+    // So split content by "-- File: " and write to relative filename which has to start with ".."
+    let splitToFilesCommand = vscode.commands.registerCommand("dbFlux.splitToFiles", async () => {
+      projectInfos = getProjectInfos(context);
+
+      const fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
+      const dirName = path.dirname(fileName);
+      const fileArray:String[] = [];
+
+      // read file
+      const splittedContent = readFileSync(fileName, "utf-8").split(FILE_SEPARATION);
+
+      // loop over content
+      splittedContent.forEach(function(content, index){
+
+        // get lines and filename
+        if (content.startsWith("../")) {
+          const lines = content.split("\n");
+          const newFileName = lines[0];
+          lines.shift();
+          if (lines.length > 0 && lines[0] !== "") {
+            console.log('lines ', lines.length, lines);
+            writeFileSync(dirName + '/' + newFileName, lines.join("\n"));
+            fileArray.push(newFileName);
+            splitted = true;
+          }
+        }
+      });
+
+      if (splitted) {
+        writeFileSync(fileName, splittedContent[0] + FILE_SEPARATION + fileArray.join("\n" + FILE_SEPARATION) + "\n");
+        vscode.window.showInformationMessage("dbFlux: file successfully splitted");
+      } else {
+        vscode.window.showWarningMessage("dbFlux: nothing found to split by! You have to put -- File: ../relative/path/to/file.sql below contend to be splitted");
+      }
+    });
+
+    context.subscriptions.push(splitToFilesCommand);
+
+    let joined = false;
+
+    // Join from Files
+    let joinFiles = vscode.commands.registerCommand("dbFlux.joinFiles", async () => {
+      projectInfos = getProjectInfos(context);
+
+      const fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
+      const dirName = path.dirname(fileName);
+
+      // read file
+      const splittedContent = readFileSync(fileName, "utf-8").split(FILE_SEPARATION);
+
+
+      // loop over content
+      splittedContent.forEach(function(content, index){
+        if (content.startsWith("../")) {
+          const readFileName = dirName + '/' + content.replace('\n', '');
+
+          if (existsSync(readFileName)) {
+            const fileContent = readFileSync(readFileName, "utf-8");
+            splittedContent[index] = content + fileContent;
+            joined = true;
+          }
+        }
+      });
+
+
+      if (joined) {
+        writeFileSync(fileName, splittedContent.join(FILE_SEPARATION));
+        vscode.window.showInformationMessage("dbFlux: files successfully joined");
+      } else {
+        vscode.window.showWarningMessage("dbFlux: nothing found to join! You have to use: -- File: ../relative/path/to/file.sql to refer to files which should be joined");
+      }
+
+    });
+
+    context.subscriptions.push(joinFiles);
+
 
   } else {
     outputLog("no dbFlux configured");
