@@ -75,14 +75,15 @@ export abstract class AbstractBashTaskProvider {
 
   getDBUserFromPath(pathName: string, projectInfos: IProjectInfos): string {
     let returnDBUser: string|undefined = projectInfos.appSchema.toLowerCase(); // sql File inside static or rest
+    const lowerPathName = pathName.toLowerCase();
 
-    if (pathName.includes("db" + path.posix.sep + projectInfos.dataSchema.toLowerCase())) {
+    if (lowerPathName.includes("db" + path.posix.sep + projectInfos.dataSchema.toLowerCase() + path.posix.sep)) {
       returnDBUser = projectInfos.dataSchema.toLowerCase();
-    } else if (pathName.includes("db" + path.posix.sep + projectInfos.logicSchema.toLowerCase())) {
+    } else if (lowerPathName.includes("db" + path.posix.sep + projectInfos.logicSchema.toLowerCase() + path.posix.sep)) {
       returnDBUser = projectInfos.logicSchema.toLowerCase();
-    } else if (  pathName.includes("db" + path.posix.sep + projectInfos.appSchema.toLowerCase())
-              || pathName.includes("apex" + path.posix.sep + "f")
-              || pathName.includes("rest" + path.posix.sep + "modules")) {
+    } else if (  lowerPathName.includes("db" + path.posix.sep + projectInfos.appSchema.toLowerCase() + path.posix.sep)
+              || lowerPathName.includes("apex" + path.posix.sep + "f")
+              || lowerPathName.includes("rest" + path.posix.sep + "modules")) {
       returnDBUser = projectInfos.appSchema.toLowerCase();
     }
     return returnDBUser;
@@ -321,7 +322,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
 }
 
 function mustUseProxy(projectInfos:IProjectInfos) : boolean {
-  const allSchemas = [projectInfos.dataSchema, projectInfos.logicSchema, projectInfos.dataSchema];
+  const allSchemas = [projectInfos.dataSchema, projectInfos.logicSchema, projectInfos.appSchema];
   const uniqueSchemas = [...new Set(allSchemas)];
 
   return uniqueSchemas.length > 1;
