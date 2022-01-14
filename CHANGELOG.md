@@ -1,6 +1,9 @@
 # Change Log
 
 
+## [2.5.1 - 2022-01-11]
+- Fix resolving DBSchema from path
+
 ## [2.5.0 - 2022-01-11]
 - Add commands to split or join files, when content is seperated by "-- File: ../relative/path/to/file.sql"
 
