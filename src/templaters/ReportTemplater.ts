@@ -2,7 +2,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as Handlebars from "handlebars";
 import * as vscode from "vscode";
-import { getApplicationIdFromPath, getTargetPathFromFileName } from "./utilities";
 
 export class ReportTemplater {
   private sourceContent: string;

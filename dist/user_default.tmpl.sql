@@ -64,6 +64,9 @@ grant execute on sys.dbms_rls to {{data_schema}};
 
 grant create any context to {{data_schema}};
 
+alter user {{data_schema}}
+  grant connect through {{proxy_user}};
+
+prompt
+prompt
 prompt **********************************************************************
-prompt
-prompt

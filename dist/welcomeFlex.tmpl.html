@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+    <html lang="en">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <!--link rel='stylesheet' href='${uri}' /-->
+          <title>{{title}}</title>
+      </head>
+      <body>
+        <h1>{{title}}</h1>
+        <p>dbFlux has just created the initial directory structure. In the folder <code>db/_setup</code> you will now find the following file(s)</p>
+        <ul>
+          {{#each this.files}}
+          <li><a href='file:///{{{this}}}'>{{{this}}}</a></li>
+          {{/each}}
+        </ul>
+
+        <p>When you add a <b>Schema</b>, a <b>Workspace</b>, a <b>REST Module</b> or an <b>APEX App</b> then a folder is created inside this structure.<br/>
+          Additionally you get the files to create the schema and workspace files inside the _setup folder. So your are able
+          to create the counterparts inside the database itself. These file swill be syncronized with the file <a href='file:///{{installFile}}'>{{installFile}}</a>. </p>
+
+          <h2>Attention - Be carfull</h2>
+          <p style="font-size: large; color: red;">Scripts provided will drop existing Users / Schemas !!!</p>
+
+          <p>But you can always modify these scripts. <code>{{userFile}}</code> was automatically added to <a href="file:///.gitignore"><em>.gitignore</em></a>, because the password you specified was saved here</p>
+
+
+          <p>You have specified to use <b>FLEX Mode</b> so your directory structure should now use the following rules:</p>
+          <small>
+            <table>
+              <tr>
+                <td><b>Folders</b></td><td><b>Note</b></td>
+              </tr>
+              <tr><td>apex/schema_name[*]/workspace_name[*]/f[*]</td><td>All Application are to exported in the "f"-folders under their corresponding workspace and default schema</td></tr>
+              <tr><td>db</td><td>Each Schema which will hold objects or data will be inside that folder</td></tr>
+              <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;_setup</td><td>This folder is to store admin files/scripts to create necessary dependencies like users oder workspaces </td></tr>
+              <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;schema_name[*]</td><td>You can place n Schema inside de folder</td></tr>
+              <tr><td>rest/schema_name[*]/</td><td>All your ORDS specific files goes here</td></tr>
+              <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;access</td><td>This is the place to store scripts to concering roles or acls</td></tr>
+              <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;modules/module[*]</td><td>Here are all modules exported</td></tr>
+              <tr><td>static/schema_name[*]/workspace_name[*]/f[*]/src</td><td>Your static application files will be stored inside the "f"-folders. These files will be uploaded to your application static files, when you build them</td></tr>
+              <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;css</td><td>Before uploading css-files will be uglified/minified</td></tr>
+              <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;img</td><td>Just for uploading images</td></tr>
+              <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;js</td><td>Before uploading js-file will be minified and source map are created too</td></tr>
+              <tr><td></td><td></td></tr>
+            </table>
+          </small>
+
+        <h2>Have fun developing with <em>dbFlux</em>.</h2>
+        <p>You can find more documentation on github at: <a href="https://github.com/MaikMichel/dbFlux">https://github.com/MaikMichel/dbFlux</a></p>
+        <script language="javascript">
+          const vscode = acquireVsCodeApi();
+
+          for (const link of document.querySelectorAll('a[href^="file:"]')) {
+              link.addEventListener('click', () => {
+                  vscode.postMessage({
+                      command: "open",
+                      link: link.getAttribute('href'),
+                  });
+              });
+          }
+        </script>
+      </body>
+    </html>

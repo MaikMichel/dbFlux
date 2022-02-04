@@ -1,43 +1,27 @@
-import * as vscode from "vscode";
+import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, window, workspace } from "vscode";
 
-import * as path from "path";
-import { CompileTaskProvider } from "./CompileTaskProvider";
+import { basename, join } from "path";
+import { CompileTaskProvider, registerCompileFileCommand, registerCompileSchemasCommand } from "./provider/CompileTaskProvider";
+import { ExportTaskProvider, registerExportAPEXCommand } from "./provider/ExportTaskProvider";
 
-import { Terserer } from "./Terserer";
-import { matchRuleShort } from "./utilities";
-import { Uglifyer } from "./Uglifyer";
-import { ExportTaskProvider } from "./ExportTaskProvider";
-import { ExportTaskStore } from "./ExportTaskStore";
-import { RestTaskStore } from "./RestTaskStore";
-import { RestTaskProvider } from "./RestTaskProvider";
-import { SimpleUploader } from "./SimpleUploader";
-import { getDBFlowMode, getProjectInfos } from "./AbstractBashTaskProvider";
-import { TestTaskProvider } from "./TestTaskProvider";
-import { ReportTemplater } from "./ReportTemplater";
-import { CompileTaskStore } from "./CompileTaskStore";
-import { TestTaskStore } from "./TestTaskStore";
-import { ConfigurationManager } from "./ConfigurationManager";
-import { outputLog } from './OutputChannel';
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { multiStepInput } from './multiStepInput';
-import { callSnippet, wizardCreateObject } from './wizardCreateObject';
-import {} from "fs";
+import { registerExportRESTCommand, RestTaskProvider } from "./provider/RestTaskProvider";
+import { applyFileExists, getDBFlowMode, getProjectInfos } from "./provider/AbstractBashTaskProvider";
+import { registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand, TestTaskProvider } from "./provider/TestTaskProvider";
+import { removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
+import { outputLog } from './helper/OutputChannel';
+import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
+import { callSnippet, createObjectWizard } from './wizards/CreateObjectWizard';
+import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
+import { CompileSchemasProvider } from "./provider/CompileSchemasProvider";
 
 
-var which = require('which');
+export function activate(context: ExtensionContext) {
+  // get Mode
+  const dbFluxMode = getDBFlowMode(context);
 
 
-
-
-
-
-let myStatusBarItem: vscode.StatusBarItem;
-
-export function activate(context: vscode.ExtensionContext) {
-
-  const mode = getDBFlowMode(context);
-
-  context.subscriptions.push(vscode.commands.registerCommand("dbFlux.reloadExtension", (_) => {
+  // Add Command reloadExtension > which reloads the extendion itself
+  context.subscriptions.push(commands.registerCommand("dbFlux.reloadExtension", async () => {
     deactivate();
     for (const sub of context.subscriptions) {
       try {
@@ -49,568 +33,135 @@ export function activate(context: vscode.ExtensionContext) {
     activate(context);
   }));
 
-  context.subscriptions.push(vscode.commands.registerCommand('dbFlux.wizard', async () => {
-    multiStepInput(context);
-  }));
+  // Add Command wizard > create Initial Project Structure and DB Scripts
+  context.subscriptions.push(commands.registerCommand('dbFlux.initializeProject', async () =>  initializeProjectWizard(context)));
 
 
-  // mode is defines and dbFlux or mode is dbFlow, xcl and dbConf exists
-  if (vscode.workspace.workspaceFolders && mode !== undefined && ( (mode === "dbFlux") || (["dbFlow", "xcl"].includes(mode) && applyFileExists(mode)))) {
-    let projectInfos = getProjectInfos(context);
-    let tooltip = "";
+  // Following makes only sense, when project is allready configured
+  if (   workspace.workspaceFolders
+      && dbFluxMode !== undefined
+      && ( (dbFluxMode === "dbFlux") || (["dbFlow", "xcl"].includes(dbFluxMode)
+      && applyFileExists(dbFluxMode)))) {
 
-    outputLog(`dbFlux-Mode is ${mode}`);
-    vscode.commands.executeCommand("setContext", "inDbFlowProject", true);
 
-    if (["dbFlow", "xcl"].includes(mode) && vscode.workspace.workspaceFolders) {
 
-      let applyFileName = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, mode === "dbFlow"?"apply.env":".xcl/env.yml");
-      let buildFileName = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, mode === "dbFlow"?"build.env":"xcl.yml");
+    const projectInfos = getProjectInfos(context);
 
-      tooltip = `dbFlux: configuration found (${path.basename(buildFileName)}/${path.basename(applyFileName)})`;
+    // statusbaritem to indicate we can use dbFlux
+    const myStatusBarItem: StatusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 100);
+    myStatusBarItem.command = 'dbFlux.showConfig';
+    myStatusBarItem.text = `$(database) ${dbFluxMode}`;
+
+
+    outputLog(`dbFlux-Mode is ${dbFluxMode} and FlexMode is ${projectInfos.isFlexMode}`);
+    commands.executeCommand("setContext", "inDbFlowProject", true);
+    commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
+
+
+    if (["dbFlow", "xcl"].includes(dbFluxMode) && workspace.workspaceFolders) {
+      const applyFileName = join(workspace.workspaceFolders[0].uri.fsPath, dbFluxMode === "dbFlow"?"apply.env":".xcl/env.yml");
+      const buildFileName = join(workspace.workspaceFolders[0].uri.fsPath, dbFluxMode === "dbFlow"?"build.env":"xcl.yml");
+      myStatusBarItem.tooltip = `dbFlux: configuration found (${basename(buildFileName)}/${basename(applyFileName)})`;
+
       // Command to open build and applyFiles
-      context.subscriptions.push(vscode.commands.registerCommand('dbFlux.showConfig', () => {
-
-          vscode.workspace.openTextDocument(vscode.Uri.file(applyFileName)).then(doc => {
-            vscode.window.showTextDocument(doc, {preview: false});
-          });
-
-
-          vscode.workspace.openTextDocument(vscode.Uri.file(buildFileName)).then(doc => {
-            vscode.window.showTextDocument(doc, {preview: false, viewColumn: vscode.ViewColumn.Beside});
-          });
-
-      }));
+      context.subscriptions.push(commands.registerCommand('dbFlux.showConfig', () => showConfig(applyFileName, buildFileName)));
 
     } else {
-      tooltip = `dbFlux: configuration found in workspaceState`;
+      myStatusBarItem.tooltip = `dbFlux: configuration found in workspaceState`;
 
-      // Command to view Config
-      context.subscriptions.push(vscode.commands.registerCommand('dbFlux.showConfig', () => {
+      // Command to view dbFlux - Config
+      context.subscriptions.push(commands.registerCommand('dbFlux.showConfig', () => showDBFluxConfig(context)));
 
-        outputLog("Outputting Configuration", true);
-
-        outputLog("DB_TNS: " + context.workspaceState.get("dbFlux_DB_TNS"));
-        outputLog("DB_APP_USER: " + context.workspaceState.get("dbFlux_DB_APP_USER"));
-        outputLog("DB_APP_PWD: " + context.workspaceState.get("dbFlux_DB_APP_PWD"));
-        outputLog("DB_ADMIN_USER: " + context.workspaceState.get("dbFlux_DB_ADMIN_USER"));
-
-        outputLog("PROJECT: " + context.workspaceState.get("dbFlux_PROJECT"));
-        outputLog("WORKSPACE: " + context.workspaceState.get("dbFlux_WORKSPACE"));
-        outputLog("DATA_SCHEMA: " + context.workspaceState.get("dbFlux_DATA_SCHEMA"));
-        outputLog("LOGIC_SCHEMA: " + context.workspaceState.get("dbFlux_LOGIC_SCHEMA"));
-        outputLog("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
-      }));
-
-      // Command to view Config
-      context.subscriptions.push(vscode.commands.registerCommand('dbFlux.removeConfiguration', () => {
-
-        vscode.window.showInformationMessage("Do you realy want to remove you dbFlux configuration?", ... ["Yes", "No"])
-          .then((answer) => {
-            if (answer === "Yes") {
-              // Run function
-              outputLog("Removing Configuration", true);
-
-              context.workspaceState.update("dbFlux_mode", undefined);
-              context.workspaceState.update("dbFlux_DB_TNS", undefined);
-              context.workspaceState.update("dbFlux_DB_APP_USER", undefined);
-              context.workspaceState.update("dbFlux_DB_APP_PWD", undefined);
-              context.workspaceState.update("dbFlux_DB_ADMIN_USER", undefined);
-
-              context.workspaceState.update("dbFlux_PROJECT", undefined);
-              context.workspaceState.update("dbFlux_WORKSPACE", undefined);
-              context.workspaceState.update("dbFlux_DATA_SCHEMA", undefined);
-              context.workspaceState.update("dbFlux_LOGIC_SCHEMA", undefined);
-              context.workspaceState.update("dbFlux_APP_SCHEMA", undefined);
-
-              vscode.commands.executeCommand("dbFlux.reloadExtension");
-
-              vscode.window.showInformationMessage(`Configuration successfully removed`);
-            }
-          });
-
-
-      }));
+      // Command to remove dbFlux - Config
+      context.subscriptions.push(commands.registerCommand('dbFlux.removeConfiguration', () => removeDBFluxConfig(context)));
 
     }
 
-
-    // statusbaritem to indicate we can use dbFlux
-    myStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-    myStatusBarItem.command = 'dbFlux.showConfig';
-    myStatusBarItem.text = `$(database) ${mode}`;
-    myStatusBarItem.tooltip = tooltip;
+    // just show the item
     myStatusBarItem.show();
     context.subscriptions.push(myStatusBarItem);
 
+    // ============= COMMANDS =============
 
-    context.subscriptions.push(vscode.commands.registerCommand('dbFlux.createObjectWizard', async () => {
-      wizardCreateObject(context);
-    }));
+    // Add Command: Create an Object by Wizard => Choose a folder and name your file
+    context.subscriptions.push(commands.registerCommand('dbFlux.createObjectWizard', async () => createObjectWizard(context)));
 
-    context.subscriptions.push( vscode.workspace.onDidOpenTextDocument(function(document){
-      callSnippet(vscode.workspace.workspaceFolders![0].uri.fsPath, document);
-    }));
+    // Add Command to call a snippet when File is opened
+    context.subscriptions.push( workspace.onDidOpenTextDocument((document) => callSnippet(workspace.workspaceFolders![0].uri.fsPath, document)));
+
 
     // Compile
-    let sqlPlusCommand = vscode.commands.registerCommand("dbFlux.compileFile", async () => {
-      projectInfos = getProjectInfos(context);
-
-      if (projectInfos.isValid) {
-
-        // check what file has to build
-        const tmpClipboard = await vscode.env.clipboard.readText();
-        let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
-
-        if (fileName === undefined) {
-          await vscode.commands.executeCommand('copyFilePath');
-          fileName = await vscode.env.clipboard.readText();
-          fileName = fileName.split('\n')[0].split(path.sep).join(path.posix.sep)!;
-
-          await vscode.env.clipboard.writeText(tmpClipboard);
-        }
-
-        const insideSetup = matchRuleShort(fileName, '*/db/_setup/*');
-
-        // now check connection infos
-        if (insideSetup) {
-          if (!projectInfos.dbAdminUser) {
-            if (!CompileTaskStore.getInstance().adminUser) {
-              CompileTaskStore.getInstance().adminUser  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Admin user name for connection: ${projectInfos.dbTns}` , placeHolder: "admin"});
-            } else {
-              if (CompileTaskStore.getInstance().adminUser?.length === 0) {
-                CompileTaskStore.getInstance().adminUser = undefined;
-              }
-            }
-          } else {
-            CompileTaskStore.getInstance().adminUser = projectInfos.dbAdminUser;
-          }
-
-          if (!projectInfos.dbAdminPwd) {
-            if (!CompileTaskStore.getInstance().adminPwd) {
-              CompileTaskStore.getInstance().adminPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAdminUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-            } else {
-              if (CompileTaskStore.getInstance().adminPwd?.length === 0) {
-                CompileTaskStore.getInstance().adminPwd = undefined;
-              }
-            }
-          } else {
-            CompileTaskStore.getInstance().adminPwd = projectInfos.dbAdminPwd;
-          }
-
-
-        } else {
-          if (!projectInfos.dbAppPwd) {
-            if (!CompileTaskStore.getInstance().appPwd) {
-              CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-            } else {
-              if (CompileTaskStore.getInstance().appPwd?.length === 0) {
-                CompileTaskStore.getInstance().appPwd = undefined;
-              }
-            }
-          } else {
-            CompileTaskStore.getInstance().appPwd = projectInfos.dbAppPwd;
-          }
-        }
-
-        if (   (    insideSetup
-            && (    CompileTaskStore.getInstance().adminPwd  !== undefined
-                 && CompileTaskStore.getInstance().adminUser !== undefined))
-            ||  (    !insideSetup
-             && (    CompileTaskStore.getInstance().appPwd  !== undefined ))
-                 ) {
-
-          const insideStatics = matchRuleShort(fileName, '*/static/f*/src/*');
-          const insideReports = matchRuleShort(fileName, '*/reports/*');
-          const fileExtension:string = ""+fileName.split('.').pop();
-          const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
-
-          which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) ) {
-
-              // call the compile Task itself
-              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
-
-              // when configured, the problem panel will be focused
-              if (ConfigurationManager.getFocusProblemPanelWhenExists()) {
-                let myEvent = vscode.languages.onDidChangeDiagnostics(event => {
-                      const myUri = vscode.window.activeTextEditor?.document.uri;
-                      if (myUri) {
-                        let matched = false;
-                        for (const euri of event.uris) {
-                          if (euri.path === myUri?.path) {
-                            matched = true;
-                          }
-                        }
-
-                        const diagnostics = vscode.languages.getDiagnostics(myUri);
-                        if (matched && diagnostics && diagnostics.length > 0) {
-                          vscode.commands.executeCommand("workbench.action.problems.focus");
-                          myEvent.dispose();
-                        }
-                      }
-                  // }
-                });
-
-              }
-
-            } else if (insideStatics && ['js'].includes(fileExtension.toLowerCase())) {
-              const tersered = new Terserer(fileName);
-              const success = await tersered.genFile();
-              if ( success) {
-                vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
-              } else {
-                vscode.window.showErrorMessage("dbFlux/terser: "+ tersered.getLastErrorMessage());
-              }
-
-            } else if (insideStatics && ['css'].includes(fileExtension.toLowerCase())) {
-              const uglifyer = new Uglifyer(fileName);
-              uglifyer.genFile();
-              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
-            } else if (insideStatics) {
-              const simpleUploader = new SimpleUploader(fileName);
-              simpleUploader.genFile();
-              vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
-            } else if (insideReports) {
-              const reportTemplater = new ReportTemplater(fileName);
-              reportTemplater.genFile();
-              // vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
-            } else {
-              vscode.window.showWarningMessage('Current filetype is not supported by dbFlux ...');
-            }
-          }).catch(() => {
-            vscode.window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
-          });
-
-        } else {
-          vscode.window.showWarningMessage('incomplete credentials provided ... nothing to do ...');
-        }
-      }
-    });
-
-    context.subscriptions.push(sqlPlusCommand);
-
-    const oraTaskProvider: CompileTaskProvider = new CompileTaskProvider(context);
-    const oraTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlux", oraTaskProvider);
-    context.subscriptions.push(oraTaskProviderDisposable);
-
+    context.subscriptions.push(registerCompileFileCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileTaskProvider(context)));
 
 
     // Export APEX
-    const exportCommand = vscode.commands.registerCommand("dbFlux.exportAPEX", async () => {
-      projectInfos = getProjectInfos(context);
-      if (projectInfos.isValid) {
-
-        if (!projectInfos.dbAppPwd) {
-          if (!CompileTaskStore.getInstance().appPwd) {
-            CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-          } else {
-            if (CompileTaskStore.getInstance().appPwd?.length === 0) {
-              CompileTaskStore.getInstance().appPwd = undefined;
-            }
-          }
-        } else {
-          CompileTaskStore.getInstance().appPwd = projectInfos.dbAppPwd;
-        }
+    context.subscriptions.push(registerExportAPEXCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportTaskProvider(context)));
 
 
-
-
-        if (CompileTaskStore.getInstance().appPwd  !== undefined) {
-          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID();
-
-          which('sql').then(async () => {
-            await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportAPEX");
-          }).catch(() => {
-            vscode.window.showErrorMessage('dbFlux: No executable "sql" found on path!');
-          });
-
-
-        }
-      }
-    });
-
-
-    context.subscriptions.push(exportCommand);
-
-
-    const expTaskProvider: ExportTaskProvider = new ExportTaskProvider(context);
-    const expTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlux", expTaskProvider);
-    context.subscriptions.push(expTaskProviderDisposable);
+    // Enable FLEX Mode
+    context.subscriptions.push(registerEnableFlexModeCommand(projectInfos, context));
 
     // Add APEX App
-    const addApplicationCommand = vscode.commands.registerCommand("dbFlux.addAPP", async () => {
-      ExportTaskStore.getInstance().addApplication(await ExportTaskStore.getInstance().getNewApplication());
+    context.subscriptions.push(registerAddApplicationCommand(projectInfos, context));
 
-    });
-    context.subscriptions.push(addApplicationCommand);
+    // Add Workspace Folder
+    context.subscriptions.push(registerAddWorkspaceCommand(projectInfos, context));
+
+    // Add Schema Folder
+    context.subscriptions.push(registerAddSchemaCommand(projectInfos, context));
 
     // Add static app folder
-    const addStaticAppFolder = vscode.commands.registerCommand("dbFlux.addStaticFolder", async () => {
-      ExportTaskStore.getInstance().addStaticFolder(await ExportTaskStore.getInstance().getNewApplication());
-
-    });
-    context.subscriptions.push(addStaticAppFolder);
+    context.subscriptions.push(registerAddStaticApplicationFolderCommand(projectInfos, context));
 
     // Add report type folder
-    const addReportTypeFolder = vscode.commands.registerCommand("dbFlux.addReportFolder", async () => {
-      ExportTaskStore.getInstance().addReportTypeFolder(await ExportTaskStore.getInstance().getReportType());
-
-    });
-    context.subscriptions.push(addReportTypeFolder);
-
-    // Export REST
-    const restCommand = vscode.commands.registerCommand("dbFlux.exportREST", async () => {
-      projectInfos = getProjectInfos(context);
-      if (projectInfos.isValid) {
-
-        if (!projectInfos.dbAppPwd) {
-          if (!CompileTaskStore.getInstance().appPwd) {
-            CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-          } else {
-            if (CompileTaskStore.getInstance().appPwd?.length === 0) {
-              CompileTaskStore.getInstance().appPwd = undefined;
-            }
-          }
-        } else {
-          CompileTaskStore.getInstance().appPwd = projectInfos.dbAppPwd;
-        }
-
-
-        if (CompileTaskStore.getInstance().appPwd  !== undefined) {
-
-          which('sql').then(async () => {
-            RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule();
-
-            await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportREST");
-          }).catch(() => {
-            vscode.window.showErrorMessage('dbFlux: No executable "sql" found on path!');
-          });
-        }
-      }
-    });
-    context.subscriptions.push(restCommand);
-
-    const restTaskProvider: RestTaskProvider = new RestTaskProvider(context);
-    const restTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlux", restTaskProvider);
-    context.subscriptions.push(restTaskProviderDisposable);
-
+    context.subscriptions.push(registerAddReportTypeFolderCommand());
 
     // Add REST Modul
-    const addRestModulCommand = vscode.commands.registerCommand("dbFlux.addREST", async () => {
-      RestTaskStore.getInstance().addRestModul(await RestTaskStore.getInstance().getNewRestModule());
-
-    });
-    context.subscriptions.push(addRestModulCommand);
+    context.subscriptions.push(registerAddRESTModuleCommand(projectInfos, context));
 
 
-
-    // run tests
-    const testCommand = vscode.commands.registerCommand("dbFlux.executeTests", async () => {
-      projectInfos = getProjectInfos(context);
-      if (projectInfos.isValid) {
-        if (!projectInfos.dbAppPwd) {
-          if (!CompileTaskStore.getInstance().appPwd) {
-            CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-          } else {
-            if (CompileTaskStore.getInstance().appPwd?.length === 0) {
-              CompileTaskStore.getInstance().appPwd = undefined;
-            }
-          }
-        } else {
-          CompileTaskStore.getInstance().appPwd = projectInfos.dbAppPwd;
-        }
+    // Export REST
+    context.subscriptions.push(registerExportRESTCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new RestTaskProvider(context)));
 
 
-        if (CompileTaskStore.getInstance().appPwd  !== undefined) {
-
-              if (projectInfos.useProxy) {
-                TestTaskStore.getInstance().selectedSchemas = await vscode.window.showQuickPick([projectInfos.dataSchema, projectInfos.logicSchema, projectInfos.appSchema], {
-                  canPickMany: true, placeHolder: 'Choose Schema to run your tests'
-                });
-              }
-
-              which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-                await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTests");
-              }).catch(() => {
-                vscode.window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
-              });
-        }
-      }
-    });
-    context.subscriptions.push(testCommand);
-
-    const testTaskProvider: TestTaskProvider = new TestTaskProvider(context, "executeTests");
-    const testTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlux", testTaskProvider);
-    context.subscriptions.push(testTaskProviderDisposable);
+    // run tests on selected Schemas
+    context.subscriptions.push(registerExecuteTestsTaskCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTests")));
 
 
-
-    // run test against package
-    const testPackageTaskProvider: TestTaskProvider = new TestTaskProvider(context, "executeTestPackage");
-    const testPackageTaskCommand = vscode.commands.registerCommand("dbFlux.executeTestPackage", async () => {
-      projectInfos = getProjectInfos(context);
-      if (projectInfos.isValid) {
-
-        // check what file has to build
-        const tmpClipboard = await vscode.env.clipboard.readText();
-        let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
-
-        if (fileName === undefined) {
-          await vscode.commands.executeCommand('copyFilePath');
-          fileName = await vscode.env.clipboard.readText();
-          fileName = fileName.split('\n')[0].split(path.sep).join(path.posix.sep)!;
-
-          await vscode.env.clipboard.writeText(tmpClipboard);
-        }
-
-
-
-        // now check connection infos
-        if (!projectInfos.dbAppPwd) {
-          if (!CompileTaskStore.getInstance().appPwd) {
-            CompileTaskStore.getInstance().appPwd  = await vscode.window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfos.dbAppUser}@${projectInfos.dbTns}` , placeHolder: "Password", password: true});
-          } else {
-            if (CompileTaskStore.getInstance().appPwd?.length === 0) {
-              CompileTaskStore.getInstance().appPwd = undefined;
-            }
-          }
-        } else {
-          CompileTaskStore.getInstance().appPwd = projectInfos.dbAppPwd;
-        }
-
-
-        if (CompileTaskStore.getInstance().appPwd  !== undefined){
-
-
-
-            // const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
-            const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
-            const fileExtension:string = ""+fileName.split('.').pop();
-            const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
-
-
-            if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideTests)) {
-              which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-                TestTaskStore.getInstance().selectedSchemas = [testPackageTaskProvider.getDBUserFromPath(fileName, projectInfos)];
-                TestTaskStore.getInstance().fileName = fileName;
-                vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTestPackage");
-              }).catch(() => {
-                vscode.window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
-              });
-            } else {
-              vscode.window.showWarningMessage('Current filetype is not supported by dbFlux ...');
-            }
-        }
-      }
-    });
-    context.subscriptions.push(testPackageTaskCommand);
-
-    const testPackageTaskProviderDisposable = vscode.tasks.registerTaskProvider("dbFlux", testPackageTaskProvider);
-    context.subscriptions.push(testPackageTaskProviderDisposable);
+    // run test against current package
+    context.subscriptions.push(registerExecuteTestPackageCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTestPackage")));
 
 
     // Reset Password
-    const resetPwdCommand = vscode.commands.registerCommand("dbFlux.resetPassword", async () => {
-      CompileTaskStore.getInstance().appPwd   = undefined;
-      CompileTaskStore.getInstance().adminPwd = undefined;
-      vscode.window.showInformationMessage("dbFlux: Password succefully reset");
-    });
-    context.subscriptions.push(resetPwdCommand);
-
-    const FILE_SEPARATION = "-- File: ";
-    let splitted = false;
-    // Separate parts of a file, when reference with something like that: -- File: ../xx/yy/ff.sql
-    // So split content by "-- File: " and write to relative filename which has to start with ".."
-    let splitToFilesCommand = vscode.commands.registerCommand("dbFlux.splitToFiles", async () => {
-      projectInfos = getProjectInfos(context);
-
-      const fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
-      const dirName = path.dirname(fileName);
-      const fileArray:String[] = [];
-
-      // read file
-      const splittedContent = readFileSync(fileName, "utf-8").split(FILE_SEPARATION);
-
-      // loop over content
-      splittedContent.forEach(function(content, index){
-
-        // get lines and filename
-        if (content.startsWith("../")) {
-          const lines = content.split("\n");
-          const newFileName = lines[0];
-          lines.shift();
-          if (lines.length > 0 && lines[0] !== "") {
-            console.log('lines ', lines.length, lines);
-            writeFileSync(dirName + '/' + newFileName, lines.join("\n"));
-            fileArray.push(newFileName);
-            splitted = true;
-          }
-        }
-      });
-
-      if (splitted) {
-        writeFileSync(fileName, splittedContent[0] + FILE_SEPARATION + fileArray.join("\n" + FILE_SEPARATION) + "\n");
-        vscode.window.showInformationMessage("dbFlux: file successfully splitted");
-      } else {
-        vscode.window.showWarningMessage("dbFlux: nothing found to split by! You have to put -- File: ../relative/path/to/file.sql below contend to be splitted");
-      }
-    });
-
-    context.subscriptions.push(splitToFilesCommand);
-
-    let joined = false;
-
-    // Join from Files
-    let joinFiles = vscode.commands.registerCommand("dbFlux.joinFiles", async () => {
-      projectInfos = getProjectInfos(context);
-
-      const fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
-      const dirName = path.dirname(fileName);
-
-      // read file
-      const splittedContent = readFileSync(fileName, "utf-8").split(FILE_SEPARATION);
+    context.subscriptions.push(registerResetPasswordCommand());
 
 
-      // loop over content
-      splittedContent.forEach(function(content, index){
-        if (content.startsWith("../")) {
-          const readFileName = dirName + '/' + content.replace('\n', '');
+    // compile selected Schemas
+    context.subscriptions.push(registerCompileSchemasCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileSchemasProvider(context, "compileSchemas")));
 
-          if (existsSync(readFileName)) {
-            const fileContent = readFileSync(readFileName, "utf-8");
-            splittedContent[index] = content + fileContent;
-            joined = true;
-          }
-        }
-      });
+    // Separate parts of a file, when reference with something like that: -- File: xx/yy/ff.sql
+    // So split content by "-- File: " and write to path underneath db/schema
+    context.subscriptions.push(registerSplitToFilesCommand(projectInfos));
 
-
-      if (joined) {
-        writeFileSync(fileName, splittedContent.join(FILE_SEPARATION));
-        vscode.window.showInformationMessage("dbFlux: files successfully joined");
-      } else {
-        vscode.window.showWarningMessage("dbFlux: nothing found to join! You have to use: -- File: ../relative/path/to/file.sql to refer to files which should be joined");
-      }
-
-    });
-
-    context.subscriptions.push(joinFiles);
+    // Join from Files (read them and put content after marker "-- File: ")
+    context.subscriptions.push(registerJoinFromFilesCommand(projectInfos));
 
 
   } else {
     outputLog("no dbFlux configured");
 
-    vscode.commands.executeCommand("setContext", "inDbFlowProject", false);
+    commands.executeCommand("setContext", "inDbFlowProject", false);
     return;
   }
 
 }
 
+
 // this method is called when your extension is deactivated
 export function deactivate() {}
-
-function applyFileExists(pMode:string) {
-  return vscode.workspace.workspaceFolders
-       && existsSync(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, pMode === "dbFlow"?"apply.env":".xcl/env.yml"));
-}

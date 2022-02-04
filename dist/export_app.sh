@@ -31,14 +31,15 @@ export CUSTOM_JDBC="-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none
 
 echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
 echo -e "${BYELLOW}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
-echo -e "${BYELLOW}ApplicationID:${NC} ${WHITE}${DBFLOW_APPID}${NC}"
+echo -e "${BYELLOW}AppID:${NC}       ${WHITE}${DBFLOW_APPID}${NC}"
 
-echo -e " ${BLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Application ${DBFLOW_APPID} ... ${NC}"
+echo -e " ${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Application ${DBFLOW_APPID} to ${DBFLOW_APPFOLDER} ${NC}"
 
-cd apex
+cd ${DBFLOW_APPFOLDER}
 sql -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
   apex export -applicationid ${DBFLOW_APPID} -split -skipExportDate
 !
-rm f${DBFLOW_APPID}.sql
+
+[[ -f f${DBFLOW_APPID}.sql ]] && rm f${DBFLOW_APPID}.sql
 
 echo -e "${GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"

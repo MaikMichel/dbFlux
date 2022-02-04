@@ -1,13 +1,11 @@
 import * as path from "path";
-import * as vscode from "vscode";
-import * as fs from "fs";
 import * as dotenv from "dotenv";
-import { existsSync } from "fs";
-import { matchRuleShort } from "./utilities";
+import { chmodSync, existsSync, PathLike, readdirSync, readFileSync } from "fs";
+import { getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import * as yaml from 'yaml';
-import * as os from 'os';
-import { CompileTaskStore } from "./CompileTaskStore";
-import { outputLog } from "./OutputChannel";
+import { CompileTaskStore } from "../stores/CompileTaskStore";
+import { outputLog } from "../helper/OutputChannel";
+import { commands, ExtensionContext, QuickPickItem, Uri, window, workspace } from "vscode";
 
 export interface IBashInfos {
   runFile:        string;
@@ -18,24 +16,24 @@ export interface IBashInfos {
   projectInfos:   IProjectInfos;
 }
 
-interface IProjectInfos {
+export interface IProjectInfos {
+  projectName: string|undefined;
   appSchema: string;
   logicSchema: string;
   dataSchema: string;
-  useProxy: boolean;
   dbAppUser: string;
   dbAppPwd: string|undefined;
   dbAdminUser: string|undefined;
   dbAdminPwd: string|undefined;
   dbTns: string;
   isValid: boolean;
-
+  isFlexMode: boolean;
 }
 
 export abstract class AbstractBashTaskProvider {
-  context: vscode.ExtensionContext;
+  context: ExtensionContext;
 
-  constructor(context: vscode.ExtensionContext) {
+  constructor(context: ExtensionContext) {
     this.context = context;
   }
 
@@ -50,11 +48,11 @@ export abstract class AbstractBashTaskProvider {
     let file = path.join(pathname, filename);
     let filePath = pathname;
 
-    if (vscode.workspace.workspaceFolders !== undefined) {
-      const wsf = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    if (workspace.workspaceFolders !== undefined) {
+      const wsf = workspace.workspaceFolders[0].uri.fsPath;
       let i = 0;
 
-      while ((i < 10 || file.indexOf(wsf) > 0) && !fs.existsSync(file)) {
+      while ((i < 10 || file.indexOf(wsf) > 0) && !existsSync(file)) {
         i++;
         const folders = filePath.split(path.posix.sep);
         folders.pop();
@@ -65,7 +63,7 @@ export abstract class AbstractBashTaskProvider {
       throw new Error("not workspacefolder opened");
     }
 
-    if (!fs.existsSync(file)) {
+    if (!existsSync(file)) {
       throw new Error(filename + " not found");
     }
 
@@ -73,28 +71,15 @@ export abstract class AbstractBashTaskProvider {
   }
 
 
-  getDBUserFromPath(pathName: string, projectInfos: IProjectInfos): string {
-    let returnDBUser: string|undefined = projectInfos.appSchema.toLowerCase(); // sql File inside static or rest
-    const lowerPathName = pathName.toLowerCase();
 
-    if (lowerPathName.includes("db" + path.posix.sep + projectInfos.dataSchema.toLowerCase() + path.posix.sep)) {
-      returnDBUser = projectInfos.dataSchema.toLowerCase();
-    } else if (lowerPathName.includes("db" + path.posix.sep + projectInfos.logicSchema.toLowerCase() + path.posix.sep)) {
-      returnDBUser = projectInfos.logicSchema.toLowerCase();
-    } else if (  lowerPathName.includes("db" + path.posix.sep + projectInfos.appSchema.toLowerCase() + path.posix.sep)
-              || lowerPathName.includes("apex" + path.posix.sep + "f")
-              || lowerPathName.includes("rest" + path.posix.sep + "modules")) {
-      returnDBUser = projectInfos.appSchema.toLowerCase();
-    }
-    return returnDBUser;
-  }
 
   buildConnectionUser(projectInfos: IProjectInfos, currentPath: string): string {
-    let dbSchemaFolder = this.getDBUserFromPath(currentPath, projectInfos);
-    if (currentPath.includes("db" + path.posix.sep + "_setup")) {
+    let dbSchemaFolder = getDBUserFromPath(currentPath, projectInfos);
+
+    if (dbSchemaFolder === "_setup") {
       return projectInfos.dbAdminUser+"".toLowerCase();
     } else {
-      if (!projectInfos.useProxy) {
+      if (projectInfos.dbAppUser.toLowerCase() === dbSchemaFolder) {
         return `${projectInfos.dbAppUser}`;
       } else {
         return `${projectInfos.dbAppUser}[${dbSchemaFolder}]`;
@@ -107,11 +92,14 @@ export abstract class AbstractBashTaskProvider {
   }
 
 
-   setInitialCompileInfo(execFileName:string, fileUri: vscode.Uri, runnerInfo:IBashInfos):void {
+   setInitialCompileInfo(execFileName:string, fileUri: Uri, runnerInfo:IBashInfos):void {
     let projectInfos: IProjectInfos = getProjectInfos(this.context);
     const activeFile = fileUri.fsPath.split(path.sep).join(path.posix.sep);
 
-    runnerInfo.runFile  = path.resolve(__dirname, "..", "dist", execFileName).split(path.sep).join(path.posix.sep);
+    runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", execFileName).split(path.sep).join(path.posix.sep);
+    if (existsSync(runnerInfo.runFile)) {
+      chmodSync(runnerInfo.runFile, 0o755);
+    }
     runnerInfo.cwd      = path.dirname(activeFile);
 
     runnerInfo.connectionTns  = projectInfos.dbTns;
@@ -122,7 +110,7 @@ export abstract class AbstractBashTaskProvider {
     if (matchRuleShort(runnerInfo.connectionPass, "${*}") ||
         matchRuleShort(runnerInfo.connectionUser, "${*}") ||
         matchRuleShort(runnerInfo.connectionPass, "${*}")) {
-      vscode.window.showErrorMessage("dbFlux: Sourcing or parameters not supported");
+      window.showErrorMessage("dbFlux: Sourcing or parameters not supported");
       throw new Error("dbFlux: Sourcing or parameters not supported");
     }
   }
@@ -138,7 +126,7 @@ export abstract class AbstractBashTaskProvider {
   }
 }
 
-export function getProjectInfos(context: vscode.ExtensionContext) {
+export function getProjectInfos(context: ExtensionContext) {
   let projectInfos: IProjectInfos = {} as IProjectInfos;
   if (getDBFlowMode(context) === "dbFlux") {
     projectInfos = getProjectInfosFromDBFlux(context);
@@ -150,10 +138,10 @@ export function getProjectInfos(context: vscode.ExtensionContext) {
   return projectInfos;
 }
 
-export function getDBFlowMode(context: vscode.ExtensionContext):string | undefined {
+export function getDBFlowMode(context: ExtensionContext):string | undefined {
   let retValue: string | undefined = undefined;
-  if (vscode.workspace.workspaceFolders !== undefined) {
-    const workspaceFolder = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  if (workspace.workspaceFolders !== undefined) {
+    const workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
     const knownBuildFiles = ["xcl.yml", "build.env"];
 
     for (let buildFileName of knownBuildFiles) {
@@ -171,13 +159,18 @@ export function getDBFlowMode(context: vscode.ExtensionContext):string | undefin
   }
 
   return retValue;
-
 }
+
+export function applyFileExists(pMode:string) {
+  return workspace.workspaceFolders
+       && existsSync(path.join(workspace.workspaceFolders[0].uri.fsPath, pMode === "dbFlow"?"apply.env":".xcl/env.yml"));
+}
+
 
 function getProjectInfosFromDBFlow():IProjectInfos {
   const projectInfos: IProjectInfos = {} as IProjectInfos;
-  if (vscode.workspace.workspaceFolders !== undefined) {
-    const f = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  if (workspace.workspaceFolders !== undefined) {
+    const f = workspace.workspaceFolders[0].uri.fsPath;
 
     const applyEnv = dotenv.config({ path: path.join(f, "apply.env")});
     const buildEnv = dotenv.config({ path: path.join(f, "build.env")});
@@ -195,8 +188,8 @@ function getProjectInfosFromDBFlow():IProjectInfos {
       projectInfos.logicSchema  = buildEnv.parsed.LOGIC_SCHEMA;
       projectInfos.dataSchema   = buildEnv.parsed.DATA_SCHEMA;
 
-      projectInfos.useProxy = mustUseProxy(projectInfos);
-
+      projectInfos.isFlexMode  = (buildEnv.parsed.FLEX_MODE?.toUpperCase() === "TRUE");
+      projectInfos.projectName = buildEnv.parsed.PROJECT;
     }
   }
 
@@ -205,9 +198,9 @@ function getProjectInfosFromDBFlow():IProjectInfos {
   return projectInfos;
 }
 
-function getProjectInfosFromDBFlux(context: vscode.ExtensionContext):IProjectInfos {
+function getProjectInfosFromDBFlux(context: ExtensionContext):IProjectInfos {
   const projectInfos: IProjectInfos = {} as IProjectInfos;
-  if (vscode.workspace.workspaceFolders !== undefined) {
+  if (workspace.workspaceFolders !== undefined) {
 
       projectInfos.dbAppUser   = context.workspaceState.get("dbFlux_DB_APP_USER")!;
       projectInfos.dbAppPwd    = context.workspaceState.get("dbFlux_DB_APP_PWD");
@@ -219,8 +212,9 @@ function getProjectInfosFromDBFlux(context: vscode.ExtensionContext):IProjectInf
       projectInfos.logicSchema  = context.workspaceState.get("dbFlux_LOGIC_SCHEMA")!;
       projectInfos.dataSchema   = context.workspaceState.get("dbFlux_DATA_SCHEMA")!;
 
-      projectInfos.useProxy = mustUseProxy(projectInfos);
 
+      projectInfos.isFlexMode   = context.workspaceState.get("dbFlux_FLEX_MODE") === true;
+      projectInfos.projectName  = context.workspaceState.get("dbFlux_PROJECT");
 
   }
 
@@ -231,24 +225,25 @@ function getProjectInfosFromDBFlux(context: vscode.ExtensionContext):IProjectInf
 
 function getProjectInfosFromXCL():IProjectInfos {
   const projectInfos: IProjectInfos = {} as IProjectInfos;
-  if (vscode.workspace.workspaceFolders !== undefined) {
-    const f = vscode.workspace.workspaceFolders[0].uri.fsPath;
+  if (workspace.workspaceFolders !== undefined) {
+    const f = workspace.workspaceFolders[0].uri.fsPath;
 
-    const buildYml = yaml.parse(fs.readFileSync(path.join(f, "xcl.yml")).toString());
+    const buildYml = yaml.parse(readFileSync(path.join(f, "xcl.yml")).toString());
 
     if (buildYml) {
       projectInfos.appSchema    = buildYml.xcl.users.schema_app;
       projectInfos.logicSchema  = buildYml.xcl.users.schema_logic?buildYml.xcl.users.schema_logic:projectInfos.appSchema;
       projectInfos.dataSchema   = buildYml.xcl.users.schema_data?buildYml.xcl.users.schema_data:projectInfos.appSchema;
 
-      projectInfos.useProxy = mustUseProxy(projectInfos);
+      projectInfos.isFlexMode   = (buildYml.xcl.users.flex_mod === true);
+      projectInfos.projectName  = buildYml.xcl.project;
     }
 
-    if (fs.existsSync(path.join(f, `.xcl/env.yml`))) {
-      const applyYml = yaml.parse(fs.readFileSync(path.join(f, `.xcl/env.yml`)).toString());
+    if (existsSync(path.join(f, `.xcl/env.yml`))) {
+      const applyYml = yaml.parse(readFileSync(path.join(f, `.xcl/env.yml`)).toString());
 
       if (applyYml) {
-        projectInfos.dbAppUser = projectInfos.useProxy?buildYml.xcl.users.user_deployment:buildYml.xcl.users.schema_app;
+        projectInfos.dbAppUser = buildYml.xcl.users.user_deployment;
         projectInfos.dbTns     = applyYml.connection;
         projectInfos.dbAppPwd  = applyYml.password;
       }
@@ -274,38 +269,38 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
     (User: ${projectInfos.dbAppUser},
     Connection: ${projectInfos.dbTns})
     `;
-    vscode.window.setStatusBarMessage("$(testing-error-icon) dbFlux > Connection configuration incomplete!");
+    window.setStatusBarMessage("$(testing-error-icon) dbFlux > Connection configuration incomplete!");
     setTimeout(function(){
-      vscode.window.setStatusBarMessage("");
+      window.setStatusBarMessage("");
     }, 4000);
 
-    vscode.window.showErrorMessage(dbConnMsg, "Open configuration").then(selection => {
+    window.showErrorMessage(dbConnMsg, "Open configuration").then(selection => {
       if (selection) {
-        vscode.commands.executeCommand("dbFlux.showConfig");
+        commands.executeCommand("dbFlux.showConfig");
       }
     });
   }
 
-  if (
+  if (!projectInfos.isFlexMode && (
     (projectInfos.appSchema === undefined || !projectInfos.appSchema || projectInfos.appSchema.length === 0) ||
     (projectInfos.logicSchema === undefined || !projectInfos.logicSchema || projectInfos.logicSchema.length === 0) ||
     (projectInfos.dataSchema === undefined || !projectInfos.dataSchema || projectInfos.dataSchema.length === 0)
-  ) {
+  )) {
     schemaMsg = `Schema configuration incomplete! Please check your configuration!
     (DATA: ${projectInfos.dataSchema},
     LOGIC: ${projectInfos.logicSchema},
     APP: ${projectInfos.appSchema})
     `;
 
-    vscode.window.setStatusBarMessage("$(testing-error-icon) dbFlux > Schema configuration incomplete!");
+    window.setStatusBarMessage("$(testing-error-icon) dbFlux > Schema configuration incomplete!");
     setTimeout(function(){
-      vscode.window.setStatusBarMessage("");
+      window.setStatusBarMessage("");
     }, 4000);
 
-    vscode.window.showErrorMessage(schemaMsg, "Open configuration").then(selection => {
+    window.showErrorMessage(schemaMsg, "Open configuration").then(selection => {
 
       if (selection) {
-        vscode.commands.executeCommand("dbFlux.showConfig");
+        commands.executeCommand("dbFlux.showConfig");
       }
     });
   }
@@ -321,9 +316,48 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
 
 }
 
-function mustUseProxy(projectInfos:IProjectInfos) : boolean {
-  const allSchemas = [projectInfos.dataSchema, projectInfos.logicSchema, projectInfos.appSchema];
-  const uniqueSchemas = [...new Set(allSchemas)];
 
-  return uniqueSchemas.length > 1;
+export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos): string {
+  let returnDBUser: string = ""; // sql File inside static or rest
+  const wsRoot = getWorkspaceRootPath().toLowerCase()+path.posix.sep;
+  const lowerPathName = pathName.toLowerCase().replace(wsRoot, "");
+  const lowerPathParts = lowerPathName.split(path.posix.sep);
+
+
+
+
+  if (lowerPathParts[0] === "db") {
+    returnDBUser = lowerPathParts[1];
+  } else if (["apex", "rest"].includes(lowerPathParts[0])) {
+    if (projectInfos.isFlexMode) {
+      returnDBUser = lowerPathParts[1];
+    } else {
+      returnDBUser = projectInfos.appSchema.toLowerCase();
+    }
+  } else {
+
+    if (projectInfos.appSchema) {
+      returnDBUser = projectInfos.appSchema.toLowerCase();
+    }
+  }
+
+  return returnDBUser;
+}
+
+export async function getDBSchemaFolders():Promise<QuickPickItem[]> {
+  if (workspace.workspaceFolders){
+      const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
+      const sourceDB = path.join(wsRoot, "db");
+
+      const getSchemaFolders = (source: PathLike) =>
+      readdirSync(source, { withFileTypes: true })
+      .filter((dirent) => {
+        return dirent.isDirectory() && !["_setup", "sys", "dist", ".hooks"].includes(dirent.name);
+      })
+      .map((dirent) => dirent.name);
+
+      return getSchemaFolders(sourceDB).map(function(element){return {"label":element, "description":"db/"+element , "alwaysShow": true};});
+
+  }
+  return [{label: "", description:""}];
 }

@@ -34,7 +34,7 @@ echo -e "${BYELLOW}REST Modul:${NC}  ${WHITE}${DBFLOW_RESTMODULE}${NC}"
 
 echo -e " ${BLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting REST Module ${DBFLOW_RESTMODULE} ... ${NC}"
 
-cd rest/modules
+cd ${DBFLOW_MODULEFOLDER}
 if [[ ${DBFLOW_RESTMODULE} == "SCHEMA" ]]; then
   sql -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
     spool ${DBFLOW_RESTMODULE}.modules.sql

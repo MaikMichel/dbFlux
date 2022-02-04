@@ -1,6 +1,21 @@
 # Change Log
 
 
+## [3.0.0 - 2022-02-??]
+- New Feature FlexMode Mode
+  - Add variable Schema on top level folders
+    - apex
+    - db
+    - rest
+    - static
+  - Add workspace folders underneath apex
+  > ... see Documentation for additional help
+- New Command `Compile selected Schemas`
+- Rewritten codebase
+- Split and Join Files are now works without relative path prefix
+- Includes Snippets for index and constraint creation
+- new Subfolder `patch` inside `dml` and `ddl`, so pre and post go here on new projects
+
 ## [2.5.1 - 2022-01-11]
 - Fix resolving DBSchema from path
 
