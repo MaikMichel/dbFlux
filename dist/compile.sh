@@ -40,7 +40,7 @@ CONN_ARRY=( "$@" )
 
 
 for arg in "${CONN_ARRY[@]}"; do
-  echo -e "${BCYAN}Compiling Connection ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} ${NC}"
+  echo -e "${BCYAN}Compiling Connection ${arg}}@${DBFLOW_DBTNS} ${NC}"
 
   ${DBFLOW_SQLCLI} -s -l ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
 

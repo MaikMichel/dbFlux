@@ -7,11 +7,12 @@
 import { QuickPickItem, window, ExtensionContext, Uri, workspace, commands, ViewColumn } from 'vscode';
 import { createDirectoryPath, getWorkspaceRootPath } from '../helper/utilities';
 import * as path from "path";
-import * as fs from "fs";
+
+import * as fs from "fs-extra";
 import * as os from "os";
 import * as Handlebars from "handlebars";
 import { getDBFlowMode, IProjectInfos } from '../provider/AbstractBashTaskProvider';
-import { existsSync, mkdirSync, PathLike, readdirSync } from 'fs';
+import { existsSync, mkdirSync, PathLike, readdirSync, renameSync } from 'fs';
 import { CompileTaskStore } from '../stores/CompileTaskStore';
 import { MultiStepInput } from './InputFlowAction';
 
@@ -20,7 +21,7 @@ import { MultiStepInput } from './InputFlowAction';
 // read .env file & convert to array
 const readEnvVars = (file:string) => {
 	if (fs.existsSync(file)) {
-		return fs.readFileSync(file, "utf-8").split(os.EOL);
+		return fs.readFileSync(file, "utf-8").split(/\r?\n/);
   } else {
 		return [];
 	}
@@ -42,14 +43,13 @@ const getEnvValue = (file: string, key: string): string | null => {
 /**
  * Updates value for existing key or creates a new key=value line
  *
- * This function is a modified version of https://stackoverflow.com/a/65001580/3153583
- *
  * @param {string} key Key to update/insert
  * @param {string} value Value to update/insert
  */
 const setEnvValue = (file: string, key: string, value: string) => {
   const envVars = readEnvVars(file);
   const targetLine = envVars.find((line) => line.split("=")[0] === key);
+
   if (targetLine !== undefined) {
     // update existing line
     const targetLineIndex = envVars.indexOf(targetLine);
@@ -79,6 +79,10 @@ const setLine = (file: string, content: string) => {
 };
 
 export const dbFolderDef = [{
+	".hooks": {
+		pre: "",
+		post: ""
+	},
 	"constraints": {
 		"checks": "",
 		"foreigns": "",
@@ -87,7 +91,6 @@ export const dbFolderDef = [{
 	},
 	"contexts": "",
 	"ddl": {
-		"base": "",
 		"init": "",
 		"patch": {
 			"post": "",
@@ -118,9 +121,10 @@ export const dbFolderDef = [{
 		"types": "",
 	},
 	"views": "",
-	"tables": "",
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	"tables_ddl": "",
+	"tables": {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		"tables_ddl": ""
+	},
 	"tests": {
 		"packages": ""
 	}
@@ -313,8 +317,16 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 			const appSchema = state.projectName + "_app";
 
 			const folderDef:any = {
+				".hooks": {
+						pre: "",
+						post: ""
+				},
 				"apex" : "",
 				"db" : {
+					".hooks": {
+						pre: "",
+						post: ""
+					},
 					["_setup"]: {
 						users: "",
 						workspaces: ""
@@ -323,6 +335,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 					[logicSchema] : schemaDef,
 					[appSchema] : schemaDef,
 					},
+				"reports": "",
 				"rest": "",
 				"static": ""
 			};
@@ -353,6 +366,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 		if (workspace.workspaceFolders) {
 
 			const gitIgnore = path.resolve(workspace.workspaceFolders![0].uri.fsPath, ".gitignore");
+			setLine(gitIgnore, '**/dist');
 
 			if (state.projectType.label === "SingleSchema"){
 				// write schema-user
@@ -402,7 +416,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 	}
 
 	function getWebviewContent(content:any, state: State) {
-    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", state.projectType.label==="FlexSchema" ? "welcomeFlex.tmpl.html": "welcome.tmpl.html").split(path.sep).join('/'), "utf8"));
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", state.projectType.label==="FlexSchema" ? "welcomeFlex.tmpl.html": "welcome.tmpl.html").split(path.sep).join('/'), "utf8"));
     return template(content);
   }
 
@@ -497,7 +511,7 @@ export function writeCreateWorkspaceAdminScript(workspaceName:string, workspaceA
 	{
 		const relativeFile = `db/_setup/workspaces/${workspaceName}/create_01_user_${workspaceAdminName}.sql`;
 		const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-		const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "create_workspace_user.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+		const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "create_workspace_user.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 		const content = {
 			"app_schema": primaryWorkspaceSchema,
 			"workspace": workspaceName,
@@ -517,13 +531,14 @@ export function writeCreateWorkspaceScript(workspaceName:string, primaryWorkspac
 	// create folder
 	if (!existsSync(wsPath)) {
 		mkdirSync(wsPath, { recursive: true });
+		commands.executeCommand('revealInExplorer', Uri.file(wsPath));
 	}
 
 	// Create script
 	{
 		const relativeFile = `${relativePath}/create_00_workspace.sql`;
 		const workspaceFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-		const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "create_workspace.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+		const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "create_workspace.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 		const content = {
 			"app_schema": primaryWorkspaceSchema,
 			"workspace": workspaceName
@@ -537,7 +552,7 @@ export function writeCreateWorkspaceScript(workspaceName:string, primaryWorkspac
 function writeProxyUserCreationScript(projectName:string, proxyPassword:string) : string {
 	const relativeFile = `db/_setup/users/00_create_${projectName}_depl.sql`;
 	const proxyUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "user_proxy.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_proxy.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 	const content = {
 		"proxy_user": `${projectName}_depl`,
 		"db_app_pwd": proxyPassword
@@ -550,7 +565,7 @@ function writeProxyUserCreationScript(projectName:string, proxyPassword:string) 
 function writeSingleUserCreationScript(projectName:string, singlePassword:string) : string {
 	const relativeFile = `db/_setup/users/01_create_${projectName}_app.sql`;
 	const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 	const content = {
 		"data_schema": `${projectName}_app`,
 		"db_app_pwd": singlePassword
@@ -570,7 +585,7 @@ export function writeUserCreationScript(index: number, schema: string, projectNa
 
 	const relativeFile = `db/_setup/users/0${idx}_create_${schema}.sql`;
 	const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "dist", "user_default.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_default.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 	const content = {
 		"data_schema": schema,
 		"proxy_user": `${projectName}_depl`,
@@ -586,15 +601,36 @@ export async function enableFlexMode(context: ExtensionContext, projectInfos:IPr
 	if (mode === "xcl") {
 		window.showErrorMessage('dbFlux: xcl does not support FlexMode, yet!');
 	} else {
-		window.showInformationMessage("Do you realy want to enable FlexMode? This is not reverable!", ... ["Yes", "No"])
-			.then((answer) => {
+		window.showInformationMessage("Do you realy want to enable FlexMode? This is not revertable!", ... ["Yes", "No"])
+			.then(async (answer) => {
 				if (answer === "Yes") {
+					const wsName = projectInfos.workspace?projectInfos.workspace:projectInfos.projectName!;
+					const wsRoot = getWorkspaceRootPath();
+
+					// temp store
+					renameSync(path.join(wsRoot, 'apex'), path.join(wsRoot, 'tempa_'+wsName));
+					renameSync(path.join(wsRoot, 'static'), path.join(wsRoot, 'temps_'+wsName));
+					renameSync(path.join(wsRoot, 'rest'), path.join(wsRoot, 'tempr_'+wsName));
+
+					// create schemafolders inside apex, rest and static
+					mkdirSync(path.join(wsRoot, 'apex', projectInfos.appSchema.toLowerCase()), {recursive:true});
+					mkdirSync(path.join(wsRoot, 'rest'), {recursive:true});
+					mkdirSync(path.join(wsRoot, 'static', projectInfos.appSchema.toLowerCase()), {recursive:true});
+
+					// restore
+					renameSync(path.join(wsRoot, 'tempa_'+wsName), path.join(wsRoot, 'apex', projectInfos.appSchema.toLowerCase(), wsName));
+					renameSync(path.join(wsRoot, 'temps_'+wsName), path.join(wsRoot, 'static', projectInfos.appSchema.toLowerCase(), wsName));
+					renameSync(path.join(wsRoot, 'tempr_'+wsName), path.join(wsRoot, 'rest', projectInfos.appSchema.toLowerCase()));
+
+
 					if (mode === "dbFlow"){
-						const file = path.join(getWorkspaceRootPath(), "build.env");
+						const file = path.join(wsRoot, "build.env");
 						setEnvValue(file, "FLEX_MODE", "TRUE");
 					} else if (mode === "dbFlux"){
 						context.workspaceState.update("dbFlux_FLEX_MODE", true);
 					}
+
+					window.showInformationMessage("Your Project is now in FlexMode!");
 					commands.executeCommand("dbFlux.reloadExtension");
 				}
 			});

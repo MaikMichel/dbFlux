@@ -128,7 +128,11 @@ export async function createObjectWizard(context: ExtensionContext) {
 
       for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
         for (let folderItem of walkSync(schemaPath)) {
-          folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+          const folderString = (folderItem as string);
+          if (folderString.includes("tables" + path.sep + "tables_ddl")) {
+            folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/').replace("tables/tables_ddl", "tables"));
+          }
+          folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
         }
       }
 

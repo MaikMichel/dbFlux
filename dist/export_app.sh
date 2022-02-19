@@ -26,7 +26,7 @@ BYELLOW="\033[1;33m"      # Yellow
 export NLS_LANG="GERMAN_GERMANY.AL32UTF8"
 export NLS_DATE_FORMAT="DD.MM.YYYY HH24:MI:SS"
 export JAVA_TOOL_OPTIONS="-Duser.language=en -Duser.region=US -Dfile.encoding=UTF-8"
-export CUSTOM_JDBC="-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none"
+export CUSTOM_JDBC="-XX:TieredStopAtLevel=1 -Xverify:none"
 
 
 echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
@@ -35,11 +35,24 @@ echo -e "${BYELLOW}AppID:${NC}       ${WHITE}${DBFLOW_APPID}${NC}"
 
 echo -e " ${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Application ${DBFLOW_APPID} to ${DBFLOW_APPFOLDER} ${NC}"
 
-cd ${DBFLOW_APPFOLDER}
-sql -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
-  apex export -applicationid ${DBFLOW_APPID} -split -skipExportDate
+# only when target folder exists
+if [[ -d ${DBFLOW_APPFOLDER} ]]; then
+  cd ${DBFLOW_APPFOLDER}
+
+  # remove folder when exists
+  if [[ -d f${DBFLOW_APPID} ]]; then
+    rm -rf f${DBFLOW_APPID}
+  fi
+
+  # the export itself
+  sql -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
+    apex export -applicationid ${DBFLOW_APPID} -split -skipExportDate
 !
 
-[[ -f f${DBFLOW_APPID}.sql ]] && rm f${DBFLOW_APPID}.sql
+  # remove the full export file
+  [[ -f f${DBFLOW_APPID}.sql ]] && rm f${DBFLOW_APPID}.sql
 
-echo -e "${GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
+  echo -e "${GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
+else
+  echo -e "${RED}$(date '+%d.%m.%Y %H:%M:%S') >> application folder ${DBFLOW_APPFOLDER} does not exist ${NC}"
+fi

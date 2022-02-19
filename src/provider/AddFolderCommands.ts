@@ -51,7 +51,7 @@ export async function addAPEXApp(context: ExtensionContext, folder:string) {
       step: 2,
       totalSteps: 2,
       value: state.appID || '',
-      prompt: 'Enter ObjectName',
+      prompt: 'Enter Application ID',
       validate: validateValueIsRequiered,
       shouldResume: shouldResume
     });
@@ -136,7 +136,7 @@ export function addApplication(appID: string, folder: string) {
 
     if (!existsSync(dirName)){
       mkdirSync(dirName, { recursive: true });
-
+      commands.executeCommand('revealInExplorer', Uri.file(dirName));
       window.showInformationMessage(`Folder: ${folder}/f${appID} created. At next export you can export the application.`);
     }
 
@@ -155,6 +155,7 @@ export function addStaticFolder(appID: string, folder: string) {
       mkdirSync(path.join(dirName, "css"));
       mkdirSync(path.join(dirName, "img"));
 
+      commands.executeCommand('revealInExplorer', Uri.file(dirName));
       window.showInformationMessage(`Folder: "${staticFolder}" created. Just place your JavaScript, CSS or any other file here, to build and upload`);
     }
   }
@@ -267,7 +268,7 @@ export function addRestModul(modulName: string, folder: string) {
 
     if (!existsSync(dirName)){
       mkdirSync(dirName, { recursive: true });
-
+      commands.executeCommand('revealInExplorer', Uri.file(dirName));
       window.showInformationMessage(`Folder: ${folder}/modules/${modulName} created. At next export you can export the module.`);
     }
 
@@ -362,6 +363,7 @@ export function addWorkspaceFolder(workspaceName: string, schema: string) {
       const dirName:string = path.join(wsRootPath.uri.fsPath, element, `/${workspaceName}`);
       if (!existsSync(dirName)){
         mkdirSync(dirName, { recursive: true });
+        commands.executeCommand('revealInExplorer', Uri.file(dirName));
       }
     });
 
@@ -401,19 +403,19 @@ export async function addSchema(context: ExtensionContext) {
   async function collectInputs() {
     const state = {} as Partial<State>;
 
-    await MultiStepInput.run(input => pickSchemas(input, state));
+    await MultiStepInput.run(input => pickAMainFolder(input, state));
     return state as State;
   }
 
-  const title = 'ADD Schema Folder';
+  const title = 'ADD Schema';
 
-  async function pickSchemas(input: MultiStepInput, state: Partial<State>) {
+  async function pickAMainFolder(input: MultiStepInput, state: Partial<State>) {
     const folders:QuickPickItem[] = await getMainFolders();
     state.folders = await input.showQuickPick({
       title,
       step: 1,
       totalSteps: 2,
-      placeholder: 'Pick a schema',
+      placeholder: 'Select one or more target folder',
       canSelectMany: true,
       items: folders,
       activeItem: folders[1],
@@ -489,6 +491,7 @@ function addMainFolders(schema: string, folders: any, projectInfos:IProjectInfos
           if (!existsSync(dirName)){
             mkdirSync(dirName, { recursive: true });
             foldersCreated.push(wsPath.description);
+            commands.executeCommand('revealInExplorer', Uri.file(dirName));
           }
 
           // create db folder structure
@@ -593,7 +596,7 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
 
     const fileArray:String[] = [];
     let splitted = false;
-    console.log('ConfigurationManager.fileSeparation:', ConfigurationManager.fileSeparation);
+
     // read file
     const splittedContent = readFileSync(fileName, "utf-8").split(ConfigurationManager.fileSeparation);
 
@@ -655,6 +658,35 @@ export function registerJoinFromFilesCommand(projectInfos: IProjectInfos) {
       window.showInformationMessage("dbFlux: files successfully joined");
     } else {
       window.showWarningMessage("dbFlux: nothing found to join! You have to use: -- File: ../relative/path/to/file.sql to refer to files which should be joined");
+    }
+  });
+}
+
+export function registerOpenSpecOrBody() {
+  return commands.registerCommand("dbFlux.openSpecOrBody", async () => {
+    const fileName = window.activeTextEditor?.document.fileName;
+    if (fileName) {
+      const extension = path.extname(fileName);
+      if ([".pks", ".pkb"].includes(extension.toLowerCase())) {
+        let extensionNew = "xxx";
+        if (extension === ".pks") {
+          extensionNew = ".pkb";
+        } else if (extension === ".PKS") {
+          extensionNew = ".PKB";
+        } else if (extension === ".pkb") {
+          extensionNew = ".pks";
+        } else if (extension === ".PKB") {
+          extensionNew = ".PKS";
+        }
+
+        const fileNameNew = fileName.replace(extension, extensionNew);
+
+        if (existsSync(fileNameNew)) {
+          workspace.openTextDocument(Uri.file(fileNameNew)).then(doc => {
+            window.showTextDocument(doc, {preview: false});
+          });
+        }
+      }
     }
   });
 }

@@ -39,7 +39,7 @@
   },
   "dbflux-constraints-primary_keys.sql" : {
     "body": [
-      "-- don't forget to create index: ../indexs/primary_key/${TM_FILENAME_BASE}.sql based on that pk",
+      "-- don't forget to create index: indexs/primary_key/${TM_FILENAME_BASE}.sql based on that pk",
       "alter table ${1:source_table} add (",
 			"  constraint ${TM_FILENAME_BASE}",
 			"  primary key (${2:source_prefix}_id)",
@@ -50,7 +50,7 @@
   },
   "dbflux-constraints-primaries.sql" : {
     "body": [
-      "-- don't forget to create index: ../indexs/primary_key/${TM_FILENAME_BASE}.sql based on that pk",
+      "-- don't forget to create index: indexs/primary_key/${TM_FILENAME_BASE}.sql based on that pk",
       "alter table ${1:source_table} add (",
 			"  constraint ${TM_FILENAME_BASE}",
 			"  primary key (${2:source_prefix}_id)",
@@ -186,25 +186,25 @@
       "end ${TM_FILENAME_BASE};",
       "/"
     ]
-  },"dbflux-tables-constraint-primaries": {
+  },"dbflux-tables-constraint-pk": {
 		"scope": "plsql,sql",
 		"prefix": "dbf.tbl.con.pk",
 		"body": [
-			"-- File: ../constraints/primaries/${TM_FILENAME_BASE}_${1:table_prefix}_id_pk.sql",
+			"-- File: constraints/primaries/${TM_FILENAME_BASE}_${1:table_prefix}_id_pk.sql",
 			"alter table ${TM_FILENAME_BASE} add (",
 			"  constraint ${1:table_prefix}_id_pk",
 			"  primary key (${1:table_prefix}_id)",
-			"  using index ${1:table_prefix}_id_pk",
+			"  using index ${TM_FILENAME_BASE}_${1:table_prefix}_id_pk",
 			"  enable validate",
 			");$0"
 		],
 		"description": "Add a primary key constraint from tablescript to split later"
 	},
-	"dbflux-tables-constraint-foreigns": {
+	"dbflux-tables-constraint-fk": {
 		"scope": "plsql,sql",
 		"prefix": "dbf.tbl.con.fk",
 		"body": [
-		"-- File: ../constraints/foreigns/${TM_FILENAME_BASE}_${1:source_table_prefix}_${2:target_table_column}.sql",
+		"-- File: constraints/foreigns/${TM_FILENAME_BASE}_${1:source_table_prefix}_${2:target_table_column}.sql",
 		"alter table ${TM_FILENAME_BASE} add (",
 		"  constraint ${TM_FILENAME_BASE}_${1:source_table_prefix}_${2:target_table_column}_fk",
 		"  foreign key (${1:source_table_prefix}_${2:target_table_column})",
@@ -214,11 +214,11 @@
 		],
 		"description": "Add a foreign key constraint from tablescript to split later"
 	},
-	"dbflux-tables-constraint-uniques": {
+	"dbflux-tables-constraint-uk": {
 		"scope": "plsql,sql",
 		"prefix": "dbf.tbl.con.uk",
 		"body": [
-		"-- File: ../constraints/uniques/${TM_FILENAME_BASE}_${1:source_column}_uk.sql",
+		"-- File: constraints/uniques/${TM_FILENAME_BASE}_${1:source_column}_uk.sql",
 		"alter table ${TM_FILENAME_BASE} add (",
 		"  constraint ${TM_FILENAME_BASE}_${1:source_column}_uk",
 		"  unique (${1:source_column})",
@@ -227,11 +227,11 @@
 		],
 		"description": "Add a unique key constraint from tablescript to split later"
 	},
-	"dbflux-tables-constraint-checks": {
+	"dbflux-tables-constraint-cc": {
 		"scope": "plsql,sql",
 		"prefix": "dbf.tbl.con.cc",
 		"body": [
-		"-- File: ../constraints/checks/${TM_FILENAME_BASE}_${1:source_columns}_cc.sql",
+		"-- File: constraints/checks/${TM_FILENAME_BASE}_${1:source_columns}_cc.sql",
 		"alter table ${TM_FILENAME_BASE} add (",
 		"  constraint ${TM_FILENAME_BASE}_${1:source_columns}_cc",
 		"  check (${1:source_columns} ${2:condition})",
@@ -244,11 +244,11 @@
 		"scope": "plsql,sql",
 		"prefix": "dbf.tbl.idx.pk",
 		"body": [
-		"-- File: ../indexes/primaries/${TM_FILENAME_BASE}_${1:source_column}_pk.sql",
-		"create unique index ${TM_FILENAME_BASE}_${1:source_column}_pk on ${TM_FILENAME_BASE} (",
+		"-- File: indexes/primaries/${TM_FILENAME_BASE}_${1:source_column}_pk.sql",
+		"create unique index ${TM_FILENAME_BASE}_${1:source_column}_pk on ${TM_FILENAME_BASE} ",
 		"  (${1:source_column})",
 		"  logging",
-		");$0"
+		";$0"
 		],
 		"description": "Add a unique index for pk purposes from tablescript to split later"
 	},
@@ -256,11 +256,11 @@
 		"scope": "plsql,sql",
 		"prefix": "dbf.tbl.idx.uk",
 		"body": [
-		"-- File: ../indexes/uniques/${TM_FILENAME_BASE}_${1:source_column}_uk.sql",
-		"create unique index ${TM_FILENAME_BASE}_${1:source_column}_uk on ${TM_FILENAME_BASE} (",
+		"-- File: indexes/uniques/${TM_FILENAME_BASE}_${1:source_column}_uk.sql",
+		"create unique index ${TM_FILENAME_BASE}_${1:source_column}_uk on ${TM_FILENAME_BASE} ",
 		"  (${1:source_column})",
 		"  logging",
-		");$0"
+		";$0"
 		],
 		"description": "Add a unique index from tablescript to split later"
 	},
@@ -268,11 +268,11 @@
 		"scope": "plsql,sql",
 		"prefix": "dbf.tbl.idx.df",
 		"body": [
-		"-- File: ../indexes/defaults/${TM_FILENAME_BASE}_${1:source_column}_df.sql",
-		"create index ${TM_FILENAME_BASE}_${1:source_column}_df on ${TM_FILENAME_BASE} (",
+		"-- File: indexes/defaults/${TM_FILENAME_BASE}_${1:source_column}_df.sql",
+		"create index ${TM_FILENAME_BASE}_${1:source_column}_df on ${TM_FILENAME_BASE} ",
 		"  (${1:source_column})",
 		"  logging",
-		");$0"
+		";$0"
 		],
 		"description": "Add a non unique index from tablescript to split later"
 	}

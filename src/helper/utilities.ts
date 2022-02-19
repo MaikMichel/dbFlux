@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import { existsSync, mkdirSync, readdirSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, realpathSync} from "fs";
 
 export function matchRuleShort(str:string, rule:string) {
   var escapeRegex = (str:string) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
@@ -37,7 +37,8 @@ export function getWorkspaceRootPath():string {
 export function getApplicationIdFromPath(sourceFile: string, isFlexMode: boolean) {
   if (isFlexMode) {
     // */static/scheman_name/workspace_name/f_with_app_id/src/*
-    const parts = sourceFile.replace(getWorkspaceRootPath()+"/", "").split("/");
+    const wsRoot = getWorkspaceRootPath();
+    const parts = sourceFile.replace(wsRoot+"/", "").split("/");
     const appID = parts[3].substring(1);
     return appID;
   } else {
@@ -133,7 +134,13 @@ export async function getWorkingFile() {
     const tmpClipboard = await vscode.env.clipboard.readText();
     await vscode.commands.executeCommand('copyFilePath');
     fileName = await vscode.env.clipboard.readText();
-    fileName = fileName.split('\n')[0].split(path.sep).join(path.posix.sep)!;
+
+    const fileParts = fileName.split('\n')[0].split(path.sep);
+    if (fileParts[0].includes(":")) {
+      fileParts[0] = fileParts[0].toLowerCase();
+    }
+
+    fileName = fileParts.join(path.posix.sep)!;
 
     await vscode.env.clipboard.writeText(tmpClipboard);
   }

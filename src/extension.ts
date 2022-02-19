@@ -11,7 +11,7 @@ import { removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/Confi
 import { outputLog } from './helper/OutputChannel';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard } from './wizards/CreateObjectWizard';
-import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
+import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { CompileSchemasProvider } from "./provider/CompileSchemasProvider";
 
 
@@ -56,6 +56,7 @@ export function activate(context: ExtensionContext) {
     outputLog(`dbFlux-Mode is ${dbFluxMode} and FlexMode is ${projectInfos.isFlexMode}`);
     commands.executeCommand("setContext", "inDbFlowProject", true);
     commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
+    commands.executeCommand("setContext", "existsAppSchemas", );
 
 
     if (["dbFlow", "xcl"].includes(dbFluxMode) && workspace.workspaceFolders) {
@@ -151,6 +152,9 @@ export function activate(context: ExtensionContext) {
 
     // Join from Files (read them and put content after marker "-- File: ")
     context.subscriptions.push(registerJoinFromFilesCommand(projectInfos));
+
+    // Open SpecOrBody
+    context.subscriptions.push(registerOpenSpecOrBody());
 
 
   } else {

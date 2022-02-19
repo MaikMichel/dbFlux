@@ -28,6 +28,7 @@ export interface IProjectInfos {
   dbTns: string;
   isValid: boolean;
   isFlexMode: boolean;
+  workspace: string|undefined;
 }
 
 export abstract class AbstractBashTaskProvider {
@@ -115,15 +116,6 @@ export abstract class AbstractBashTaskProvider {
     }
   }
 
-  getConnectionType(conn: string, compInfos: IBashInfos):string{
-    if (matchRuleShort(conn, `${compInfos.projectInfos.dbAppUser}[${compInfos.projectInfos.dataSchema}]/*`)) {
-      return AbstractBashTaskProvider.CONN_DATA;
-    } else if (matchRuleShort(conn, `${compInfos.projectInfos.dbAppUser}[${compInfos.projectInfos.logicSchema}]/*`)) {
-      return AbstractBashTaskProvider.CONN_LOGIC;
-    } else {
-      return AbstractBashTaskProvider.CONN_APP;
-    }
-  }
 }
 
 export function getProjectInfos(context: ExtensionContext) {
@@ -190,6 +182,7 @@ function getProjectInfosFromDBFlow():IProjectInfos {
 
       projectInfos.isFlexMode  = (buildEnv.parsed.FLEX_MODE?.toUpperCase() === "TRUE");
       projectInfos.projectName = buildEnv.parsed.PROJECT;
+      projectInfos.workspace   = buildEnv.parsed.WORKSPACE;
     }
   }
 
@@ -215,6 +208,7 @@ function getProjectInfosFromDBFlux(context: ExtensionContext):IProjectInfos {
 
       projectInfos.isFlexMode   = context.workspaceState.get("dbFlux_FLEX_MODE") === true;
       projectInfos.projectName  = context.workspaceState.get("dbFlux_PROJECT");
+      projectInfos.workspace    = context.workspaceState.get("dbFlux_WORKSPACE");
 
   }
 
@@ -324,11 +318,9 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos)
   const lowerPathParts = lowerPathName.split(path.posix.sep);
 
 
-
-
   if (lowerPathParts[0] === "db") {
     returnDBUser = lowerPathParts[1];
-  } else if (["apex", "rest"].includes(lowerPathParts[0])) {
+  } else if (["apex", "rest", "static"].includes(lowerPathParts[0])) {
     if (projectInfos.isFlexMode) {
       returnDBUser = lowerPathParts[1];
     } else {

@@ -26,12 +26,8 @@ interface ICompileInfos extends IBashInfos {
   executableCli:      string;
   moveYesNo:          string;
   enableWarnings:     string;
-  dataConn:           string;
-  dataFile:           string;
-  logicConn:          string;
-  logicFile:          string;
-  appConn:            string;
-  appFile:            string;
+  trgRunsConn:        string;
+  trgRunsFile:        string;
   coloredOutput:      string;
   additionalOutput:   string;
 }
@@ -85,13 +81,8 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
           DBFLOW_ENABLE_WARNINGS:   definition.runner.enableWarnings,
           DBFLOW_ADDITIONAL_OUTPUT: definition.runner.additionalOutput,
 
-          DBFLOW_CONN_DATA:         definition.runner.dataConn,
-          DBFLOW_CONN_LOGIC:        definition.runner.logicConn,
-          DBFLOW_CONN_APP:          definition.runner.appConn,
-
-          DBFLOW_FILE_DATA:         definition.runner.dataFile,
-          DBFLOW_FILE_LOGIC:        definition.runner.logicFile,
-          DBFLOW_FILE_APP:          definition.runner.appFile,
+          DBFLOW_CONN_RUNS:         definition.runner.trgRunsConn,
+          DBFLOW_FILE_RUNS:         definition.runner.trgRunsFile,
 
           DBFLOW_COLOR_ON:          definition.runner.coloredOutput
         },
@@ -162,26 +153,8 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
       }
     });
 
-    const myGroupedList = groupByKey(myList, "connection");
-
-
-    Object.keys(myGroupedList).forEach((key: any) => {
-      const connType = this.getConnectionType(key, compInfos);
-
-      // const files = myGroupedList[key].map((obj: { file: string; }) => obj.file).join(` "${compInfos.relativeWSPath}",`) + ` "${compInfos.relativeWSPath}"`;
-      const files = myGroupedList[key].map((obj: { file: string; }) => obj.file).join(",");
-      if ( connType === CompileTaskProvider.CONN_DATA) {
-        compInfos.dataConn = key;
-        compInfos.dataFile = files;
-      } else if ( connType === CompileTaskProvider.CONN_LOGIC) {
-        compInfos.logicConn = key;
-        compInfos.logicFile = files;
-      } else if ( connType === CompileTaskProvider.CONN_APP) {
-        compInfos.appConn = key;
-        compInfos.appFile = files;
-      }
-
-    });
+    compInfos.trgRunsConn = myList.map((elem)=>elem.connection).join(',');
+    compInfos.trgRunsFile = myList.map((elem)=>elem.file).join(',');
 
   }
 

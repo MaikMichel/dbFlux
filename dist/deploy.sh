@@ -145,80 +145,27 @@ else
     mv ${DBFLOW_FILE} ${target}
   fi
 
-  if [[ -n ${DBFLOW_CONN_DATA} ]]; then
+  if [[ -n ${DBFLOW_CONN_RUNS} ]]; then
     echo
-    echo -e "${BCYAN}Running additional files in DATA-SCHEMA${NC}"
+    echo -e "${BLUE}Running additional files ... ${NC}"
 
-    IFS=',' read -r -a array <<< "${DBFLOW_FILE_DATA}"
+    IFS=',' read -r -a connection <<< "${DBFLOW_CONN_RUNS}"
+    IFS=',' read -r -a files <<< "${DBFLOW_FILE_RUNS}"
 
-    ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_DATA} <<!
-    $(
-      for element in "${settings[@]}"
-      do
-        echo "$element"
-      done
-    )
+    for i in "${!connection[@]}"; do
+      ${DBFLOW_SQLCLI} -s -l ${connection[$i]} <<!
+      $(
+        for element in "${settings[@]}"
+        do
+          echo "$element"
+        done
 
-    $(
-      for element in "${array[@]}"
-      do
-        echo "Prompt:: calling $element"
-        echo "$element"
-      done
-    )
+        echo "Prompt:: calling ${files[$i]}"
+        echo "${files[$i]}"
+      )
+
 !
-
-    echo
-  fi
-
-  if [[ -n ${DBFLOW_CONN_LOGIC} ]]; then
-    echo
-    echo -e "${BCYAN}Running additional files in LOGIC-SCHEMA${NC}"
-
-    IFS=',' read -r -a array <<< "${DBFLOW_FILE_LOGIC}"
-
-    ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_LOGIC} <<!
-    $(
-      for element in "${settings[@]}"
-      do
-        echo "$element"
-      done
-    )
-
-    $(
-      for element in "${array[@]}"
-      do
-        echo "Prompt:: calling $element"
-        echo "$element"
-      done
-    )
-!
-
-    echo
-  fi
-
-  if [[ -n ${DBFLOW_CONN_APP} ]]; then
-    echo
-    echo -e "${BCYAN}Running additional files in APP-SCHEMA${NC}"
-
-    IFS=',' read -r -a array <<< "${DBFLOW_FILE_APP}"
-
-    ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_APP} << !
-    $(
-      for element in "${settings[@]}"
-      do
-        echo "$element"
-      done
-    )
-
-    $(
-      for element in "${array[@]}"
-      do
-        echo "Prompt:: calling $element"
-        echo "$element"
-      done
-    )
-!
+    done
 
     echo
   fi
