@@ -10,9 +10,9 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "2.5.1",
+	"version": "3.0.0",
 	"engines": {
-		"vscode": "^1.55.0"
+		"vscode": "^1.60.0"
 	},
 	"preview": false,
 	"author": {
