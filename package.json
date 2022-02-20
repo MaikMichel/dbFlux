@@ -10,9 +10,9 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "2.5.1",
+	"version": "3.0.0",
 	"engines": {
-		"vscode": "^1.55.0"
+		"vscode": "^1.60.0"
 	},
 	"preview": false,
 	"author": {
@@ -22,7 +22,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:dbFlux.wizard",
+		"onCommand:dbFlux.initializeProject",
 		"workspaceContains:build.env",
 		"workspaceContains:xcl.yml",
 		"onStartupFinished",
@@ -49,6 +49,33 @@
 					"relative",
 					"${workspaceFolder}"
 				],
+				"applyTo": "openDocuments",
+				"pattern": [
+					{
+						"regexp": "(WARNING|ERROR) (.*)",
+						"severity": 1,
+						"code": 2
+					},
+					{
+						"regexp": "(.*?):(\\d+):(\\d+)",
+						"file": 1,
+						"line": 2,
+						"column": 3
+					},
+					{
+						"regexp": "(.*)",
+						"message": 1
+					}
+				]
+			},
+			{
+				"name": "dbflux-plsql-all",
+				"owner": "external",
+				"fileLocation": [
+					"relative",
+					"${workspaceFolder}"
+				],
+				"applyTo": "allDocuments",
 				"pattern": [
 					{
 						"regexp": "(WARNING|ERROR) (.*)",
@@ -69,6 +96,11 @@
 			}
 		],
 		"commands": [
+			{
+				"command": "dbFlux.initializeProject",
+				"title": "Initialize Project structure",
+				"category": "dbFlux"
+			},
 			{
 				"command": "dbFlux.splitToFiles",
 				"title": "Split File",
@@ -94,13 +126,14 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
-				"command": "dbFlux.wizard",
-				"title": "Initialize Project structure",
-				"category": "dbFlux"
-			},
-			{
 				"command": "dbFlux.compileFile",
 				"title": "Compile current File",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.compileSchemas",
+				"title": "Compile selected Schemas",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
@@ -129,14 +162,32 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.addWorkspace",
+				"title": "Add Workspace",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && isDbFlowFlexMode"
+			},
+			{
+				"command": "dbFlux.addSchema",
+				"title": "Add Schema",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && isDbFlowFlexMode"
+			},
+			{
+				"command": "dbFlux.enableFlexMode",
+				"title": "Enable FlexMode",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && !isDbFlowFlexMode"
+			},
+			{
 				"command": "dbFlux.addStaticFolder",
-				"title": "Add static folder for APP",
+				"title": "Add APEX static folder",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
 			{
 				"command": "dbFlux.addReportFolder",
-				"title": "Add report folder with prompted type",
+				"title": "Add REPORT type",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},
@@ -157,9 +208,27 @@
 				"title": "Reset password",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.openSpecOrBody",
+				"title": "Open corresponding Spec or Body",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceFilename =~ /.pk[bs]$/"
 			}
 		],
 		"keybindings": [
+			{
+				"command": "dbFlux.openSpecOrBody",
+				"key": "ctrl+alt+o",
+				"mac": "ctrl+alt+o",
+				"when": "inDbFlowProject && resourceFilename =~ /.pk[bs]$/"
+			},
+			{
+				"command": "dbFlux.compileSchemas",
+				"key": "shift+alt+b",
+				"mac": "shift+alt+b",
+				"when": "inDbFlowProject"
+			},
 			{
 				"command": "dbFlux.splitToFiles",
 				"key": "ctrl+alt+s",
@@ -221,7 +290,7 @@
 					"dbFlux.showWarningMessages.FocusProblemPanelWhenExists": {
 						"type": "boolean",
 						"default": true,
-						"description": "If set to true additional the problem panel gets focus",
+						"description": "If problems occure after compiling, this panel get's the focus",
 						"scope": "window"
 					},
 					"dbFlux.showWarningMessages.AfterCompilation": {
@@ -232,14 +301,21 @@
 					},
 					"dbFlux.showWarningMessages.AfterCompilationExcludingFollowingCodes": {
 						"type": "array",
-						"default": ["5018",
-												"7203",
-												"6009",
-												"6010",
-												"7204",
-												"6023"
+						"default": [
+							"5018",
+							"7203",
+							"6009",
+							"6010",
+							"7204",
+							"6023"
 						],
 						"description": "Warning Codes to exclude. These values will have an effect only when Show Warning Messages is set to true",
+						"scope": "window"
+					},
+					"dbFlux.showWarningMessages.showWarningsAndErrorsWithColoredOutput": {
+						"type": "boolean",
+						"default": true,
+						"description": "Enables colored output from SQL(plus/cl) output",
 						"scope": "window"
 					},
 					"dbFlux.customTriggerRuns": {
@@ -268,7 +344,7 @@
 					"dbFlux.javaScriptModification.createAndUploadJavascriptMinifiedVersion": {
 						"type": "boolean",
 						"default": true,
-						"description": "Create a minified version or your JavaScript file",
+						"description": "Create a minified version of your JavaScript file",
 						"scope": "window"
 					},
 					"dbFlux.javaScriptModification.createAndUploadJavascriptSourceMap": {
@@ -280,22 +356,17 @@
 					"dbFlux.cssModification.createAndUploadCSSMinifiedVersion": {
 						"type": "boolean",
 						"default": true,
-						"description": "Create a minified version or your CSS file",
-						"scope": "window"
-					},
-					"dbFlux.showWarningMessages.showWarningsAndErrorsWithColoredOutput": {
-						"type": "boolean",
-						"default": true,
-						"description": "Enables colored output from SQL(plus/cl) output",
+						"description": "Create a minified version of your CSS file",
 						"scope": "window"
 					},
 					"dbFlux.extensionsWhichShouldBeHandeldBySqlCli": {
 						"type": "array",
-						"default": ["sql",
-												"pks",
-												"pkb",
-												"prc",
-												"fnc"
+						"default": [
+							"sql",
+							"pks",
+							"pkb",
+							"prc",
+							"fnc"
 						],
 						"description": "File-Extension dbFlux can compile by using either SQLPlus or SQLcl",
 						"scope": "window"
@@ -317,6 +388,7 @@
 		"test-compile": "tsc -p ./"
 	},
 	"devDependencies": {
+		"@types/fs-extra": "^9.0.13",
 		"@types/glob": "^7.1.3",
 		"@types/mocha": "^8.0.4",
 		"@types/node": "^12.11.7",
@@ -326,12 +398,13 @@
 		"esbuild": "^0.11.23",
 		"eslint": "^7.19.0",
 		"glob": "^7.1.6",
-		"mocha": "^8.2.1",
+		"mocha": "^9.2.0",
 		"typescript": "^4.1.3",
-		"vscode-test": "^1.5.0"
+		"@vscode/test-electron": "^1.6.0"
 	},
 	"dependencies": {
 		"dotenv": "^8.2.0",
+		"fs-extra": "^10.0.0",
 		"handlebars": "^4.7.7",
 		"terser": "^5.6.1",
 		"uglifycss": "0.0.29",

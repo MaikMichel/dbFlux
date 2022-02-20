@@ -39,16 +39,6 @@ grant connect to {{proxy_user}};
 alter user {{proxy_user}} default role all;
 grant create any context to {{proxy_user}};
 
-alter user {{data_schema}}
-  grant connect through {{proxy_user}};
-
-alter user {{logic_schema}}
-  grant connect through {{proxy_user}};
-
-alter user {{app_schema}}
-  grant connect through {{proxy_user}};
-
-
 prompt **********************************************************************
 prompt
 prompt

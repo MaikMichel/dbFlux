@@ -35,9 +35,9 @@ mingw64_nt-10*)
 ;;
 esac
 
+CONN_ARRY=( "$@" )
 basefl=$(basename -- "${DBFLOW_FILE2TEST}")
 extension="${basefl##*.}"
-
 
 array+=("set feedback off")
 array+=("prompt compiling schema")
@@ -53,54 +53,25 @@ if [[ -n ${DBFLOW_FILE2TEST} ]]; then
   array+=("prompt executing Tests on package: test_${base_package}")
   array+=("exec ut.run('test_${base_package}', a_color_console => true);")
 else
+  #array+=("spool SPOOLFILE")
   array+=("prompt executing Tests")
+  #array+=("exec ut.run(ut_junit_reporter());")
   array+=("exec ut.run(a_color_console => true);")
+  #array+=("spool off")
 fi
 
 
-if [[ -n ${DBFLOW_CONN_DATA} ]]; then
-  echo -e "${BCYAN}Executing tests on DATA - Schema${NC}"
+for arg in "${CONN_ARRY[@]}"; do
+  echo -e "${BCYAN}Executing tests on Connection ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} ${NC}"
 
-  ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_DATA} <<!
-   $(
+  ${DBFLOW_SQLCLI} -s -l ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
+  $(
       for element in "${array[@]}"
       do
-        echo "$element"
+        echo "${element/SPOOLFILE/"${arg}_test.xml"}"
       done
     )
 !
 
   echo
-fi
-
-if [[ -n ${DBFLOW_CONN_LOGIC} ]]; then
-  echo
-  echo -e "${BCYAN}Executing tests on LOGIC - Schema${NC}"
-
-  ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_LOGIC} <<!
-   $(
-      for element in "${array[@]}"
-      do
-        echo "$element"
-      done
-    )
-!
-
-  echo
-fi
-
-if [[ -n ${DBFLOW_CONN_APP} ]]; then
-  echo
-  echo -e "${BCYAN}Executing tests on APP - Schema${NC}"
-
-  ${DBFLOW_SQLCLI} -s -l ${DBFLOW_CONN_APP} << !
-   $(
-      for element in "${array[@]}"
-      do
-        echo "$element"
-      done
-    )
-!
-
-  echo
-fi
+done
