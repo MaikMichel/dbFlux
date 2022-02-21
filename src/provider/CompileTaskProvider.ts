@@ -198,6 +198,13 @@ export function registerCompileSchemasCommand(context: ExtensionContext) {
 
 export function registerCompileFileCommand(context: ExtensionContext) {
   return commands.registerCommand("dbFlux.compileFile", async () => {
+
+    // save file
+    let fileUri:Uri|undefined = window.activeTextEditor?.document.uri;
+    if (fileUri !== undefined) {
+      await window.activeTextEditor?.document.save();
+    }
+
     // get currenct config
     const projectInfosReloaded = getProjectInfos(context);
     const compTaskStoreInstance = CompileTaskStore.getInstance();
