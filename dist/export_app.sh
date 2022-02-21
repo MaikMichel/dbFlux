@@ -26,7 +26,7 @@ BYELLOW="\033[1;33m"      # Yellow
 export NLS_LANG="GERMAN_GERMANY.AL32UTF8"
 export NLS_DATE_FORMAT="DD.MM.YYYY HH24:MI:SS"
 export JAVA_TOOL_OPTIONS="-Duser.language=en -Duser.region=US -Dfile.encoding=UTF-8"
-export CUSTOM_JDBC="-XX:TieredStopAtLevel=1 -Xverify:none"
+export CUSTOM_JDBC="-XX:TieredStopAtLevel=1"
 
 
 echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
@@ -41,7 +41,7 @@ if [[ -d ${DBFLOW_APPFOLDER} ]]; then
 
   # remove folder when exists
   if [[ -d f${DBFLOW_APPID} ]]; then
-    rm -rf f${DBFLOW_APPID}
+    mv f${DBFLOW_APPID} f${DBFLOW_APPID}_bck
   fi
 
   # the export itself
@@ -49,10 +49,29 @@ if [[ -d ${DBFLOW_APPFOLDER} ]]; then
     apex export -applicationid ${DBFLOW_APPID} -split -skipExportDate
 !
 
-  # remove the full export file
-  [[ -f f${DBFLOW_APPID}.sql ]] && rm f${DBFLOW_APPID}.sql
+  if [[ $? -ne 0 ]]; then
+    echo -e "${RED}$(date '+%d.%m.%Y %H:%M:%S') >> something went wrong${NC}"
 
-  echo -e "${GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
+    # restore
+    if [[ -d f${DBFLOW_APPID}_bck ]]; then
+      mv f${DBFLOW_APPID}_bck f${DBFLOW_APPID}
+    fi
+
+  else
+
+    # remove the full export file
+    [[ -f f${DBFLOW_APPID}.sql ]] && rm f${DBFLOW_APPID}.sql
+
+    # remove backup
+    [[ -d f${DBFLOW_APPID}_bck ]] && rm -rf f${DBFLOW_APPID}_bck
+
+    echo -e "${GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
+  fi
+
+  # remove sqlcl history.log
+  if [[ -f history.log ]]; then
+    rm history.log
+  fi
 else
   echo -e "${RED}$(date '+%d.%m.%Y %H:%M:%S') >> application folder ${DBFLOW_APPFOLDER} does not exist ${NC}"
 fi
