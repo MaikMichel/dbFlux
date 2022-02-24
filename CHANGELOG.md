@@ -1,8 +1,11 @@
 # Change Log
 
 
+## [3.0.2 - 2022-02-21]
+- Fix Split and Join when Line Endings are CRLF
+
 ## [3.0.1 - 2022-02-21]
-- Alwasy save current file before building. This fixes css and js upload timing bug
+- Always save current file before building. This fixes css and js upload timing bug
 - Backup APP to export before removing it. In case of error, it get's retored
 
 ## [3.0.0 - 2022-02-20]

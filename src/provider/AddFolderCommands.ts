@@ -599,18 +599,19 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
 
     // read file
     const splittedContent = readFileSync(fileName, "utf-8").split(ConfigurationManager.fileSeparation);
+    const lineSpliter = splittedContent[0]?.indexOf("\r") >= 0 ? "\r\n" : "\n";
 
     // loop over content
     splittedContent.forEach(function(content, index){
        if (index > 0) {
         // get lines and filename
-        const lines = content.split("\n");
+        const lines = content.split(lineSpliter);
         const newFileName = lines[0].startsWith("../")?lines[0].substring(3):lines[0];
 
         lines.shift();
 
         if (lines.length > 0 && lines[0] !== "") {
-          writeFileSync(dirName + '/' + newFileName, lines.join("\n"));
+          writeFileSync(dirName + '/' + newFileName, lines.join(lineSpliter));
           fileArray.push(newFileName);
           splitted = true;
         }
@@ -619,7 +620,7 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
     });
 
     if (splitted) {
-      writeFileSync(fileName, splittedContent[0] + ConfigurationManager.fileSeparation + fileArray.join("\n" + ConfigurationManager.fileSeparation) + "\n");
+      writeFileSync(fileName, splittedContent[0] + ConfigurationManager.fileSeparation + fileArray.join(lineSpliter + ConfigurationManager.fileSeparation) + lineSpliter);
       window.showInformationMessage("dbFlux: file successfully splitted");
     } else {
       window.showWarningMessage("dbFlux: nothing found to split by! You have to put -- File: ../relative/path/to/file.sql below contend to be splitted");
@@ -637,11 +638,12 @@ export function registerJoinFromFilesCommand(projectInfos: IProjectInfos) {
 
     // read file
     const splittedContent = readFileSync(fileName, "utf-8").split(ConfigurationManager.fileSeparation);
+    const lineSpliter = splittedContent[0]?.indexOf("\r") >= 0 ? "\r\n" : "\n";
 
     // loop over content
     splittedContent.forEach(function(content, index){
       if (index > 0) {
-        const fName = content.replace('\n', '');
+        const fName = content.replace(lineSpliter, '');
         const readFileName = dirName + '/' + (fName.startsWith("../") ? fName.substring(3) : fName);
 
         if (existsSync(readFileName)) {
