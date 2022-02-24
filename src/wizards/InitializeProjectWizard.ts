@@ -336,7 +336,14 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 					[appSchema] : schemaDef,
 					},
 				"reports": "",
-				"rest": "",
+				"rest": {
+					"access": {
+						mapping: "",
+						roles: "",
+						privileges: ""
+					},
+					"modules": ""
+				},
 				"static": ""
 			};
 
