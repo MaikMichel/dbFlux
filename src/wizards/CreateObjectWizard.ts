@@ -8,8 +8,9 @@ import { QuickPickItem, window,ExtensionContext, Uri, workspace, commands, TextD
 import { matchRuleShort } from '../helper/utilities';
 import * as path from "path";
 import { outputLog } from '../helper/OutputChannel';
-import { PathLike, readdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, PathLike, readdirSync, writeFileSync } from 'fs';
 import { MultiStepInput } from './InputFlowAction';
+import { dbFolderDef } from './InitializeProjectWizard';
 
 
 
@@ -105,6 +106,21 @@ export async function createObjectWizard(context: ExtensionContext) {
     }
   }
 
+  function toFlatPropertyMap(obj: object, keySeparator = '/') {
+    const flattenRecursive = (obj: object, parentProperty?: string, propertyMap: Record<string, unknown> = {}) => {
+      for(const [key, value] of Object.entries(obj)){
+        const property = parentProperty ? `${parentProperty}${keySeparator}${key}` : key;
+        if(value && typeof value === 'object'){
+          flattenRecursive(value, property, propertyMap);
+        } else {
+          propertyMap[property] = value;
+        }
+      }
+      return propertyMap;
+    };
+    return flattenRecursive(obj);
+  }
+
   function rtrim(str:string, chr:string) {
     var rgxtrim = (!chr) ? new RegExp('\\s+$') : new RegExp(chr+'+$');
     return str.replace(rgxtrim, '');
@@ -118,6 +134,7 @@ export async function createObjectWizard(context: ExtensionContext) {
       const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
       const sourceDB = path.join(wsRoot, "db");
       const sourceStatic = path.join(wsRoot, "static");
+      const originalPath = Object.keys(toFlatPropertyMap(dbFolderDef[0]));
 
       const getSchemaFolders = (source: PathLike) =>
           readdirSync(source, { withFileTypes: true })
@@ -127,6 +144,18 @@ export async function createObjectWizard(context: ExtensionContext) {
           .map((dirent) => path.join(source.toString(), dirent.name));
 
       for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
+        // known structure
+        for (let opath of originalPath) {
+          const folderString = schemaPath + "/" + (opath as string);
+
+          if (folderString.includes("tables/tables_ddl")) {
+            folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/').replace("tables/tables_ddl", "tables"));
+          }
+          folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+
+        }
+
+        // real file path
         for (let folderItem of walkSync(schemaPath)) {
           const folderString = (folderItem as string);
           if (folderString.includes("tables" + path.sep + "tables_ddl")) {
@@ -170,6 +199,12 @@ export async function createObjectWizard(context: ExtensionContext) {
 
     let extension = "." + (myExt.has(dirname)?myExt.get(dirname):"sql");
     const baseF = rtrim(path.basename(fileF), fileE);
+
+    // create directory if not exists
+    const targetDir = path.join(workspace.workspaceFolders[0].uri.fsPath, state.objectType.label);
+    if (!existsSync(targetDir)) {
+      mkdirSync(targetDir, {recursive:true});
+    }
 
     // eine auf jeden Fall
     const file1 = path.join(workspace.workspaceFolders[0].uri.fsPath, state.objectType.label, baseF + extension);
