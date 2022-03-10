@@ -12,7 +12,7 @@ import * as fs from "fs-extra";
 import * as os from "os";
 import * as Handlebars from "handlebars";
 import { getDBFlowMode, IProjectInfos } from '../provider/AbstractBashTaskProvider';
-import { existsSync, mkdirSync, PathLike, readdirSync, renameSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, renameSync } from 'fs';
 import { CompileTaskStore } from '../stores/CompileTaskStore';
 import { MultiStepInput } from './InputFlowAction';
 

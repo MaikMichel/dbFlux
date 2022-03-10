@@ -6,7 +6,7 @@ import { ExportTaskProvider, registerExportAPEXCommand } from "./provider/Export
 
 import { registerExportRESTCommand, RestTaskProvider } from "./provider/RestTaskProvider";
 import { applyFileExists, getDBFlowMode, getProjectInfos } from "./provider/AbstractBashTaskProvider";
-import { registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand, TestTaskProvider } from "./provider/TestTaskProvider";
+import { openTestResult, registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand, TestTaskProvider } from "./provider/TestTaskProvider";
 import { removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
 import { outputLog } from './helper/OutputChannel';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
@@ -156,6 +156,28 @@ export function activate(context: ExtensionContext) {
     // Open SpecOrBody
     context.subscriptions.push(registerOpenSpecOrBody());
 
+
+
+    // Execute Something when task endet
+    tasks.onDidEndTask((e) => {
+      const task = e.execution.task;
+
+      if (task.definition.type === "dbFlux"){
+
+        switch (task.name) {
+          case "executeTests" : {
+            openTestResult(context);
+            break;
+          }
+          case "executeTestPackage" : {
+            openTestResult(context);
+            break;
+          }
+        }
+
+      }
+
+    }, undefined, context.subscriptions);
 
   } else {
     outputLog("no dbFlux configured");

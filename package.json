@@ -403,6 +403,7 @@
 		"@vscode/test-electron": "^1.6.0"
 	},
 	"dependencies": {
+		"ansi-to-html": "^0.7.2",
 		"dotenv": "^8.2.0",
 		"fs-extra": "^10.0.0",
 		"handlebars": "^4.7.7",

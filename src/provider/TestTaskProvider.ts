@@ -3,12 +3,14 @@
 import * as vscode from "vscode";
 import * as path from "path";
 
-import { getWorkingFile, matchRuleShort } from "../helper/utilities";
+import { getWorkingFile, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import { AbstractBashTaskProvider, getDBSchemaFolders, getDBUserFromPath, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { TestTaskStore } from "../stores/TestTaskStore";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { outputLog } from "../helper/OutputChannel";
+import { existsSync, readFileSync } from "fs";
+import { removeSync } from "fs-extra";
 
 
 const which = require('which');
@@ -177,4 +179,45 @@ export function registerExecuteTestsTaskCommand(context: vscode.ExtensionContext
       }
     }
   });
+}
+
+export function openTestResult(context: vscode.ExtensionContext){
+  const wsRoot = getWorkspaceRootPath();
+  const logFile = path.join(wsRoot, "utoutput.log");
+
+  if ( existsSync(logFile)) {
+    const logContent = readFileSync(logFile, "utf8");
+
+    var Convert = require('ansi-to-html');
+    var convert = new Convert({fg: '#FFF',
+                               bg: '#222',
+                               newline: true});
+
+    const htmlContent = convert.toHtml(logContent);
+    removeSync(logFile);
+
+    // Create and show panel
+    const panel = vscode.window.createWebviewPanel(
+      'dbFLux ',
+      'dbFlux - utPLSQL UnitTest Output',
+      vscode.ViewColumn.Beside,
+      {}
+    );
+
+    // And set its HTML content
+    panel.webview.html = /*html*/ `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cat Coding</title>
+    </head>
+    <body>
+       ${htmlContent}
+    </body>
+    </html>`;
+
+    context.subscriptions.push(vscode.window.setStatusBarMessage(`Tests completed, Showing Output as Html`));
+
+  }
 }

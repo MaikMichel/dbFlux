@@ -66,7 +66,7 @@ full_log_file="$(pwd)/${log_file}"
 touch $full_log_file
 
 for arg in "${CONN_ARRY[@]}"; do
-  echo -e "${BCYAN}Executing tests on Connection ${arg}@${DBFLOW_DBTNS} ${NC}" >> ${full_log_file}
+  echo -e "${BCYAN}Executing tests on Connection ${arg}@${DBFLOW_DBTNS} ${NC}" | tee -a ${full_log_file}
 
   ${DBFLOW_SQLCLI} -s -l ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<! | tee -a ${full_log_file}
   $(
@@ -74,7 +74,9 @@ for arg in "${CONN_ARRY[@]}"; do
       do
         echo "${element/SPOOLFILE/"${arg}_test.xml"}"
       done
+
     )
+
 !
 
   echo
