@@ -167,7 +167,7 @@ By configuring the `dbFlux.customTriggerRuns` setting you have the option to spe
 
 ```json
   ...
-  "dbFLux.customTriggerRuns": [
+  "dbFlux.customTriggerRuns": [
       {
         "triggeringExpression": "db\/your_data\/(tables|tables/tables_ddl)\/.+\\.sql",
         "runFile": "db/your_data/.hooks/post/test_a.sql",
@@ -177,6 +177,7 @@ By configuring the `dbFlux.customTriggerRuns` setting you have the option to spe
         "triggeringExpression": "db\/your_data\/(tables|tables/tables_ddl)\/.+\\.sql",
         "runFile": "db/your_logic/.hooks/post/test_b.sql"
     }
+  ]
   ...
 
 ```
