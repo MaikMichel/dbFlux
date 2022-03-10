@@ -24,7 +24,6 @@ export NLS_DATE_FORMAT="DD.MM.YYYY HH24:MI:SS"
 export LANG="de_DE.utf8"
 
 if [[ ${DBFLOW_SQLCLI} == "sql" ]]; then
-  export CUSTOM_JDBC="-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none"
   export JAVA_TOOL_OPTIONS="-Duser.language=en -Duser.region=US -Dfile.encoding=UTF-8"
 fi
 
@@ -60,11 +59,16 @@ else
   #array+=("spool off")
 fi
 
+# prepare output file
+log_file="utoutput.log"
+full_log_file="$(pwd)/${log_file}"
+[[ -f $full_log_file ]] && rm -f $full_log_file
+touch $full_log_file
 
 for arg in "${CONN_ARRY[@]}"; do
-  echo -e "${BCYAN}Executing tests on Connection ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} ${NC}"
+  echo -e "${BCYAN}Executing tests on Connection ${arg}@${DBFLOW_DBTNS} ${NC}" >> ${full_log_file}
 
-  ${DBFLOW_SQLCLI} -s -l ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
+  ${DBFLOW_SQLCLI} -s -l ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<! | tee -a ${full_log_file}
   $(
       for element in "${array[@]}"
       do
