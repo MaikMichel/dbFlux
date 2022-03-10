@@ -23,6 +23,9 @@
 	],
 	"activationEvents": [
 		"onCommand:dbFlux.initializeProject",
+		"onCommand:dbFlux.wrapLogSelection",
+		"onCommand:dbFlux.wrapLogSelection.down",
+		"onCommand:dbFlux.wrapLogSelection.up",
 		"workspaceContains:build.env",
 		"workspaceContains:xcl.yml",
 		"onStartupFinished",
@@ -214,9 +217,42 @@
 				"title": "Open corresponding Spec or Body",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject && resourceFilename =~ /.pk[bs]$/"
+			},
+			{
+				"command": "dbFlux.wrapLogSelection",
+				"title": "Wrap Selection with Logging Method",
+				"category": "dbFlux",
+				"enablement": "editorTextFocus && editorHasSelection"
+			},
+			{
+				"command": "dbFlux.wrapLogSelection.down",
+				"title": "Wrap Selection with Logging Method",
+				"category": "dbFlux",
+				"enablement": "editorTextFocus && editorHasSelection"
+			},
+			{
+				"command": "dbFlux.wrapLogSelection.up",
+				"title": "Wrap Selection with Logging Method",
+				"category": "dbFlux",
+				"enablement": "editorTextFocus && editorHasSelection"
 			}
 		],
 		"keybindings": [
+			{
+				"command": "dbFlux.wrapLogSelection",
+				"key": "ctrl+alt+w ctrl+alt+w",
+				"when": "editorTextFocus && editorHasSelection"
+			},
+			{
+				"command": "dbFlux.wrapLogSelection.down",
+				"key": "ctrl+alt+w ctrl+alt+down",
+				"when": "editorTextFocus && editorHasSelection"
+			},
+			{
+				"command": "dbFlux.wrapLogSelection.up",
+				"key": "ctrl+alt+w ctrl+alt+up",
+				"when": "editorTextFocus && editorHasSelection"
+			},
 			{
 				"command": "dbFlux.openSpecOrBody",
 				"key": "ctrl+alt+o",
@@ -370,6 +406,17 @@
 						],
 						"description": "File-Extension dbFlux can compile by using either SQLPlus or SQLcl",
 						"scope": "window"
+					},
+					"dbFlux.languageBasedLogWrappers": {
+						"type": "object",
+						"default": {
+							"javascript": "console.log('$LBL', $VAR);",
+							"typescript": "console.log('$LBL', $VAR);",
+							"plsql": "logger.log('$LBL: $VAR);'",
+							"bash": "echo \"$LBL: $$VAR\"",
+							"shellscript": "echo \"$LBL: $$VAR\""
+						},
+						"description": "Define a logging wrapper based on editor language. ex.: console.log('$LBL', $VAR);"
 					}
 				}
 			}

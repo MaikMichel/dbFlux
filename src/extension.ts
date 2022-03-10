@@ -13,6 +13,7 @@ import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPa
 import { callSnippet, createObjectWizard } from './wizards/CreateObjectWizard';
 import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { CompileSchemasProvider } from "./provider/CompileSchemasProvider";
+import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
 
 
 export function activate(context: ExtensionContext) {
@@ -35,6 +36,11 @@ export function activate(context: ExtensionContext) {
 
   // Add Command wizard > create Initial Project Structure and DB Scripts
   context.subscriptions.push(commands.registerCommand('dbFlux.initializeProject', async () =>  initializeProjectWizard(context)));
+
+  // Wrap Selection for Logging
+  context.subscriptions.push(registerWrapLogSelection());
+  context.subscriptions.push(registerWrapLogSelectionDown());
+  context.subscriptions.push(registerWrapLogSelectionUp());
 
 
   // Following makes only sense, when project is allready configured
