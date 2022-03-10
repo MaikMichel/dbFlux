@@ -310,6 +310,10 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
 
 }
 
+function isNumeric(str:string):boolean {
+  let check = !isNaN(+str);
+  return check;
+}
 
 export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos): string {
   let returnDBUser: string = ""; // sql File inside static or rest
@@ -331,6 +335,10 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos)
     if (projectInfos.appSchema) {
       returnDBUser = projectInfos.appSchema.toLowerCase();
     }
+  }
+
+  if (returnDBUser.split("_").length > 1) {
+    returnDBUser = isNumeric(returnDBUser.split("_")[0])?returnDBUser.split("_").slice(1).join("_"):returnDBUser;
   }
 
   return returnDBUser;
