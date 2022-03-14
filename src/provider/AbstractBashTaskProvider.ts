@@ -75,15 +75,15 @@ export abstract class AbstractBashTaskProvider {
 
 
   buildConnectionUser(projectInfos: IProjectInfos, currentPath: string): string {
-    let dbSchemaFolder = getDBUserFromPath(currentPath, projectInfos);
+    let dbUserFromPath = getDBUserFromPath(currentPath, projectInfos);
 
-    if (dbSchemaFolder === "_setup") {
+    if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
       return projectInfos.dbAdminUser+"".toLowerCase();
     } else {
-      if (projectInfos.dbAppUser.toLowerCase() === dbSchemaFolder) {
+      if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath) {
         return `${projectInfos.dbAppUser}`;
       } else {
-        return `${projectInfos.dbAppUser}[${dbSchemaFolder}]`;
+        return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
       }
     }
   }
@@ -321,8 +321,9 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos)
   const lowerPathName = pathName.toLowerCase().replace(wsRoot, "");
   const lowerPathParts = lowerPathName.split(path.posix.sep);
 
-
-  if (lowerPathParts[0] === "db") {
+  if (lowerPathParts[0] === "db" && lowerPathParts[1] === "_setup") {
+    returnDBUser = projectInfos.dbAdminUser!;
+  } else if (lowerPathParts[0] === "db") {
     returnDBUser = lowerPathParts[1];
   } else if (["apex", "rest", "static"].includes(lowerPathParts[0])) {
     if (projectInfos.isFlexMode) {
@@ -331,13 +332,12 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos)
       returnDBUser = projectInfos.appSchema.toLowerCase();
     }
   } else {
-
     if (projectInfos.appSchema) {
       returnDBUser = projectInfos.appSchema.toLowerCase();
     }
   }
 
-  if (returnDBUser.split("_").length > 1) {
+  if (lowerPathParts[0] !== "_setup" && returnDBUser.split("_").length > 1) {
     returnDBUser = isNumeric(returnDBUser.split("_")[0])?returnDBUser.split("_").slice(1).join("_"):returnDBUser;
   }
 
