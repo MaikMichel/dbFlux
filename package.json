@@ -412,7 +412,7 @@
 						"default": {
 							"javascript": "console.log('$LBL', $VAR);",
 							"typescript": "console.log('$LBL', $VAR);",
-							"plsql": "logger.log('$LBL: $VAR);'",
+							"plsql": "logger.log('$LBL: ' || $VAR, l_scope);",
 							"bash": "echo \"$LBL: $$VAR\"",
 							"shellscript": "echo \"$LBL: $$VAR\""
 						},

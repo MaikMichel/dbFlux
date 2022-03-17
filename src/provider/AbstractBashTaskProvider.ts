@@ -74,8 +74,8 @@ export abstract class AbstractBashTaskProvider {
 
 
 
-  buildConnectionUser(projectInfos: IProjectInfos, currentPath: string): string {
-    let dbUserFromPath = getDBUserFromPath(currentPath, projectInfos);
+  buildConnectionUser(projectInfos: IProjectInfos, currentPath: string, currentFilePath: string | undefined = undefined): string {
+    let dbUserFromPath = getDBUserFromPath(currentPath, projectInfos, currentFilePath);
 
     if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
       return projectInfos.dbAdminUser+"".toLowerCase();
@@ -104,7 +104,7 @@ export abstract class AbstractBashTaskProvider {
     runnerInfo.cwd      = path.dirname(activeFile);
 
     runnerInfo.connectionTns  = projectInfos.dbTns;
-    runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd);
+    runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd, fileUri.path);
     runnerInfo.connectionPass = runnerInfo.connectionUser === projectInfos.dbAdminUser ? CompileTaskStore.getInstance().adminPwd! : CompileTaskStore.getInstance().appPwd!;
     runnerInfo.projectInfos   = projectInfos;
 
@@ -315,13 +315,28 @@ function isNumeric(str:string):boolean {
   return check;
 }
 
-export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos): string {
+export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos, currentFilePath: string | undefined = undefined): string {
   let returnDBUser: string = ""; // sql File inside static or rest
   const wsRoot = getWorkspaceRootPath().toLowerCase()+path.posix.sep;
   const lowerPathName = pathName.toLowerCase().replace(wsRoot, "");
   const lowerPathParts = lowerPathName.split(path.posix.sep);
 
-  if (lowerPathParts[0] === "db" && lowerPathParts[1] === "_setup") {
+  if (currentFilePath !== undefined && (lowerPathParts[0] === ".hooks" || (lowerPathParts[0] === "db" && lowerPathParts[1] === ".hooks"))) {
+    const lastElement = currentFilePath.split("/").pop();
+    // check if any db schema folder is inside this file
+    getSchemaFolders(path.join(wsRoot, "db")).forEach((val)=>{
+      if (lastElement!.indexOf(val) > 0) {
+        returnDBUser = val;
+      }
+    });
+
+    // when not matched exit with error
+    if (returnDBUser.length === 0) {
+      const errorMessage = "dbFLux: Unknown schema, please use *_schema_name_*.sql to execute a hook file";
+      window.showErrorMessage(errorMessage);
+      throw new Error('errorMessage');
+    }
+  } else if (lowerPathParts[0] === "db" && lowerPathParts[1] === "_setup") {
     returnDBUser = projectInfos.dbAdminUser!;
   } else if (lowerPathParts[0] === "db") {
     returnDBUser = lowerPathParts[1];
@@ -344,17 +359,17 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos)
   return returnDBUser;
 }
 
+export const getSchemaFolders = (source: PathLike) =>
+readdirSync(source, { withFileTypes: true })
+.filter((dirent) => {
+  return dirent.isDirectory() && !["_setup", "sys", "dist", ".hooks"].includes(dirent.name);
+})
+.map((dirent) => dirent.name);
+
 export async function getDBSchemaFolders():Promise<QuickPickItem[]> {
   if (workspace.workspaceFolders){
       const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
       const sourceDB = path.join(wsRoot, "db");
-
-      const getSchemaFolders = (source: PathLike) =>
-      readdirSync(source, { withFileTypes: true })
-      .filter((dirent) => {
-        return dirent.isDirectory() && !["_setup", "sys", "dist", ".hooks"].includes(dirent.name);
-      })
-      .map((dirent) => dirent.name);
 
       return getSchemaFolders(sourceDB).map(function(element){return {"label":element, "description":"db/"+element , "alwaysShow": true};});
 
