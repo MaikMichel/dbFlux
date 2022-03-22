@@ -346,13 +346,19 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
     } else {
       returnDBUser = projectInfos.appSchema.toLowerCase();
     }
+  } else if (["reports"].includes(lowerPathParts[0])) {
+    returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
   } else {
-    if (projectInfos.appSchema) {
+    if (projectInfos.isFlexMode) {
+      returnDBUser = lowerPathParts[1];
+    } else {
       returnDBUser = projectInfos.appSchema.toLowerCase();
     }
   }
+  returnDBUser = returnDBUser?returnDBUser:"";
 
-  if ((lowerPathParts[0] !== "_setup" && lowerPathParts[0] !== ".setup") && returnDBUser.split("_").length > 1) {
+
+  if (returnDBUser && (lowerPathParts[0] !== "_setup" && lowerPathParts[0] !== ".setup") && returnDBUser.split("_").length > 1) {
     returnDBUser = isNumeric(returnDBUser.split("_")[0])?returnDBUser.split("_").slice(1).join("_"):returnDBUser;
   }
 

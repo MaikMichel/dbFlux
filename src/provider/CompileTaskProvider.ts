@@ -236,7 +236,7 @@ export function registerCompileFileCommand(context: ExtensionContext) {
         const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
 
         which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-          if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
+          if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && !(insideReports || insideReports)) {
 
             // call the compile Task itself
             commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
@@ -262,9 +262,30 @@ export function registerCompileFileCommand(context: ExtensionContext) {
             simpleUploader.genFile();
             commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
           } else if (insideReports) {
-            const reportTemplater = new ReportTemplater(fileName);
-            reportTemplater.genFile();
-            // commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+            if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
+              // Ask for schema and compile
+              const dbSchemaFolders = await getDBSchemaFolders();
+              let schemaSelected: boolean = false;
+              if (dbSchemaFolders.length > 1) {
+                const item: QuickPickItem | undefined = await window.showQuickPick(dbSchemaFolders, {
+                  canPickMany: false, placeHolder: 'Choose Schema to execute this file'
+                });
+                schemaSelected = (item !== undefined);
+                CompileTaskStore.getInstance().selectedSchemas = [item?.description!];
+              } else if (dbSchemaFolders.length === 1) {
+                schemaSelected = true;
+                CompileTaskStore.getInstance().selectedSchemas = dbSchemaFolders?.map(function (element) { return element.description!; });
+              }
+
+              if (schemaSelected) {
+                commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+              }
+              // now run
+            } else {
+              // gen file
+              const reportTemplater = new ReportTemplater(fileName);
+              reportTemplater.genFile();
+            }
           } else {
             window.showWarningMessage('Current filetype is not supported by dbFlux ...');
           }
