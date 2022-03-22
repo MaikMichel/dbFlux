@@ -87,7 +87,7 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
         const projectInfos = getProjectInfos(this.context);
         if (CompileTaskStore.getInstance().selectedSchemas) {
           runner.connectionArray = CompileTaskStore.getInstance().selectedSchemas!.map((element) =>{
-            return this.buildConnectionUser(projectInfos, element);
+            return '"' + this.buildConnectionUser(projectInfos, element) + '"';
           });
         };
         runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();

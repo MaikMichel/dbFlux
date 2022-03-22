@@ -94,7 +94,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
         const projectInfos = getProjectInfos(this.context);
         if (TestTaskStore.getInstance().selectedSchemas) {
           runner.connectionArray = TestTaskStore.getInstance().selectedSchemas!.map((element) =>{
-            return this.buildConnectionUser(projectInfos, element);
+            return '"' + this.buildConnectionUser(projectInfos, element) +'"';
           });
         };
 
