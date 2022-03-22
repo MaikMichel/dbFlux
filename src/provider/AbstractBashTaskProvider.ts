@@ -336,7 +336,7 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
       window.showErrorMessage(errorMessage);
       throw new Error('errorMessage');
     }
-  } else if (lowerPathParts[0] === "db" && lowerPathParts[1] === "_setup") {
+  } else if (lowerPathParts[0] === "db" && (lowerPathParts[1] === "_setup" || lowerPathParts[1] === ".setup")) {
     returnDBUser = projectInfos.dbAdminUser!;
   } else if (lowerPathParts[0] === "db") {
     returnDBUser = lowerPathParts[1];
@@ -352,7 +352,7 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
     }
   }
 
-  if (lowerPathParts[0] !== "_setup" && returnDBUser.split("_").length > 1) {
+  if ((lowerPathParts[0] !== "_setup" && lowerPathParts[0] !== ".setup") && returnDBUser.split("_").length > 1) {
     returnDBUser = isNumeric(returnDBUser.split("_")[0])?returnDBUser.split("_").slice(1).join("_"):returnDBUser;
   }
 
@@ -362,7 +362,7 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
 export const getSchemaFolders = (source: PathLike) =>
 readdirSync(source, { withFileTypes: true })
 .filter((dirent) => {
-  return dirent.isDirectory() && !["_setup", "sys", "dist", ".hooks"].includes(dirent.name);
+  return dirent.isDirectory() && !["_setup", ".setup", "sys", "dist", ".hooks"].includes(dirent.name);
 })
 .map((dirent) => dirent.name);
 

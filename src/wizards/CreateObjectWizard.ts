@@ -139,7 +139,7 @@ export async function createObjectWizard(context: ExtensionContext) {
       const getSchemaFolders = (source: PathLike) =>
           readdirSync(source, { withFileTypes: true })
           .filter((dirent) => {
-            return dirent.isDirectory() && dirent.name !== "_setup" && dirent.name !== "dist" && dirent.name !== ".hooks";
+            return dirent.isDirectory() && !["_setup", ".setup", "dist", ".hooks"].includes(dirent.name);
           })
           .map((dirent) => path.join(source.toString(), dirent.name));
 

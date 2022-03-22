@@ -214,7 +214,7 @@ export function registerCompileFileCommand(context: ExtensionContext) {
       // check what file has to build
       let fileName = await getWorkingFile();
 
-      const insideSetup = matchRuleShort(fileName, '*/db/_setup/*');
+      const insideSetup = (matchRuleShort(fileName, '*/db/_setup/*') || matchRuleShort(fileName, '*/db/.setup/*'));
 
       // Set password and userinfo to taskStore
       if (insideSetup) {
