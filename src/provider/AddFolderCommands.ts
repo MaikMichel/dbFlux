@@ -611,6 +611,7 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
         lines.shift();
 
         if (lines.length > 0 && lines[0] !== "") {
+          mkdirSync(path.dirname(dirName + '/' + newFileName), {recursive:true});
           writeFileSync(dirName + '/' + newFileName, lines.join(lineSpliter));
           fileArray.push(newFileName);
           splitted = true;
