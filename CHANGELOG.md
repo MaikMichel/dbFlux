@@ -1,5 +1,15 @@
 # Change Log
 
+## [3.1.0 - 2022-03-25]
+- Ask for schema, when executing a *.sql file inside reports folder
+- Exclude .setup (xcl Setup Folder) from target schemas like _setup
+- Fix Error when splitting a file none existent folders
+- Fix Error on MacOs when zsh is parsing parameters
+- You can now execute hook files (filename nust reflect a schema inside db folder)
+- You can now execute files inside _setup folder as configured admin user
+- When creating objects all possible folders are displayes (the don't have to exist at this moment)
+- You can now define logger command or dbms_output to wrap with your current selection by hitting ctrl+alt+w (up | down | w)
+
 
 ## [3.0.2 - 2022-02-21]
 - Fix Split and Join when Line Endings are CRLF
