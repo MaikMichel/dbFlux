@@ -181,7 +181,7 @@ export function registerExecuteTestsTaskCommand(context: vscode.ExtensionContext
   });
 }
 
-export function openTestResult(context: vscode.ExtensionContext){
+export function openTestResult(context: vscode.ExtensionContext, webViewTestPanel: vscode.WebviewPanel | undefined){
   const wsRoot = getWorkspaceRootPath();
   const logFile = path.join(wsRoot, "utoutput.log");
 
@@ -197,20 +197,22 @@ export function openTestResult(context: vscode.ExtensionContext){
     removeSync(logFile);
 
     // Create and show panel
-    const panel = vscode.window.createWebviewPanel(
-      'dbFLux ',
-      'dbFlux - utPLSQL UnitTest Output',
-      vscode.ViewColumn.Beside,
-      {}
-    );
+    if (!webViewTestPanel) {
+      webViewTestPanel = vscode.window.createWebviewPanel(
+        'dbFLux ',
+        'dbFlux - utPLSQL UnitTest Output',
+        vscode.ViewColumn.Beside,
+        {}
+      );
+    }
 
     // And set its HTML content
-    panel.webview.html = /*html*/ `<!DOCTYPE html>
+    webViewTestPanel.webview.html = /*html*/ `<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cat Coding</title>
+        <title>dbFLux - utPLSQL - output</title>
     </head>
     <body>
        ${htmlContent}
@@ -219,5 +221,6 @@ export function openTestResult(context: vscode.ExtensionContext){
 
     context.subscriptions.push(vscode.window.setStatusBarMessage(`Tests completed, Showing Output as Html`));
 
+    return webViewTestPanel;
   }
 }

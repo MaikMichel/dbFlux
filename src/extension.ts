@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, window, workspace } from "vscode";
+import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, WebviewPanel, window, workspace } from "vscode";
 
 import { basename, join } from "path";
 import { CompileTaskProvider, registerCompileFileCommand, registerCompileSchemasCommand } from "./provider/CompileTaskProvider";
@@ -19,6 +19,9 @@ import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLog
 export function activate(context: ExtensionContext) {
   // get Mode
   const dbFluxMode = getDBFlowMode(context);
+
+  // Panel showing TestResults
+  let webViewTestPanel: WebviewPanel | undefined = undefined;
 
 
   // Add Command reloadExtension > which reloads the extendion itself
@@ -172,15 +175,14 @@ export function activate(context: ExtensionContext) {
 
         switch (task.name) {
           case "executeTests" : {
-            openTestResult(context);
+            webViewTestPanel = openTestResult(context, webViewTestPanel);
             break;
           }
           case "executeTestPackage" : {
-            openTestResult(context);
+            webViewTestPanel = openTestResult(context, webViewTestPanel);
             break;
           }
         }
-
       }
 
     }, undefined, context.subscriptions);
