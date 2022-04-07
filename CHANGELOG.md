@@ -1,5 +1,8 @@
 # Change Log
 
+## [3.1.1 - 2022-04-07]
+- Reuse WebView when displaying output of utPLSQL Unit Tests
+
 ## [3.1.0 - 2022-03-25]
 - Ask for schema, when executing a *.sql file inside reports folder
 - Exclude .setup (xcl Setup Folder) from target schemas like _setup
