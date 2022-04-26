@@ -480,12 +480,12 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 			context.workspaceState.update("dbFlux_PROJECT", state.projectName.toLowerCase());
 			if (state.projectType.label === "MultiSchema") {
 				context.workspaceState.update("dbFlux_PROJECT_MODE", "MULTI");
-					context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
-					context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
-					context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
+				context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
+				context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
+				context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
 			} else if (state.projectType.label === "SingleSchema") {
 				context.workspaceState.update("dbFlux_PROJECT_MODE", "SINGLE");
-					context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
+				context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
 			} else if (state.projectType.label === "FlexSchema") {
 				context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
 			}
@@ -635,9 +635,9 @@ export async function enableFlexMode(context: ExtensionContext, projectInfos:IPr
 
 					if (mode === "dbFlow"){
 						const file = path.join(wsRoot, "build.env");
-						setEnvValue(file, "FLEX_MODE", "TRUE");
+						setEnvValue(file, "PROJECT_MODE", "FLEX");
 					} else if (mode === "dbFlux"){
-						context.workspaceState.update("dbFlux_FLEX_MODE", true);
+						context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
 					}
 
 					window.showInformationMessage("Your Project is now in FlexMode!");
