@@ -1,4 +1,4 @@
-import { commands, Position, Range, Selection, TextDocument, TextEditor, TextEditorEdit, TextLine, window, workspace } from "vscode";
+import { commands, Range, TextDocument, TextEditor, TextEditorEdit, TextLine, window, workspace } from "vscode";
 
 
 export function registerWrapLogSelection() {
@@ -46,8 +46,10 @@ const edit = (direction: Direction) => {
     }
 
     // position to place the cursor?
-    const tpos: Position = new Position(editor.selection.start.line, editor.document.lineAt(editor.selection.start.line).range.end.character);
-    editor.selection = new Selection(tpos, tpos);
+    // const tpos: Position = new Position(editor.selection.start.line, editor.document.lineAt(editor.selection.start.line).range.end.character);
+    // editor.selection = new Selection(tpos, tpos);
+
+    // commands.executeCommand("cursorMove", {to:"wrappedLineEnd"});
   });
 };
 
