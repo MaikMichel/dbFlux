@@ -121,6 +121,7 @@ export const dbFolderDef = [{
 		"types": "",
 	},
 	"views": "",
+	"mviews": "",
 	"tables": {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		"tables_ddl": ""
