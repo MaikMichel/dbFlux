@@ -1,5 +1,9 @@
 # Change Log
 
+## [3.1.2 - 2022-04-26]
+- Some BugFixes
+- Match handling of project mode (SINGLE|MULTI|FLEX) like dbFLow
+
 ## [3.1.1 - 2022-04-07]
 - Reuse WebView when displaying output of utPLSQL Unit Tests
 

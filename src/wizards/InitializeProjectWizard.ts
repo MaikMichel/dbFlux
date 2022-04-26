@@ -121,6 +121,7 @@ export const dbFolderDef = [{
 		"types": "",
 	},
 	"views": "",
+	"mviews": "",
 	"tables": {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		"tables_ddl": ""
@@ -215,13 +216,13 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 	}
 
 	async function inputAppPwd(input: MultiStepInput, state: Partial<State>) {
-		const appUserName = (state.projectType?.label==="SingleSchema")?state.projectName+"_app":state.projectName+"_depl";
+		const appUserName = (state.projectType?.label==="SingleSchema")?state.projectName:state.projectName+"_depl";
 		state.dbAppPwd = await input.showInputBox({
 			title,
 			step: 4,
 			totalSteps: 5,
 			value: state.dbAppPwd || '',
-			prompt: `Enter password of ${appUserName} (creation of user scripts) `,
+			prompt: `Enter password of user ${appUserName} (creation of user scripts) `,
 			validate: validateValueIsRequiered,
 			shouldResume: shouldResume,
 			password: true
@@ -260,7 +261,9 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 			canSelectMany: false
 		});
 
-		return (input: MultiStepInput) => inputDevAdminName(input, state);
+		if (state.createWorkspace && state.createWorkspace.label === "Yes") {
+			return (input: MultiStepInput) => inputDevAdminName(input, state);
+		}
 	}
 
 	async function inputDevAdminName(input: MultiStepInput, state: Partial<State>) {
@@ -314,7 +317,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
 			const dataSchema = state.projectName + "_data";
 			const logicSchema = state.projectName + "_logic";
-			const appSchema = state.projectName + "_app";
+			const appSchema = state.projectName + ((state.projectType.label !== "SingleSchema") ? "_app" : "");
 
 			const folderDef:any = {
 				".hooks": {
@@ -478,18 +481,20 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
 			context.workspaceState.update("dbFlux_PROJECT", state.projectName.toLowerCase());
 			if (state.projectType.label === "MultiSchema") {
-					context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
-					context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
-					context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
-			} if (state.projectType.label === "SingleSchema") {
-					context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_app");
-					context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_app");
-					context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
+				context.workspaceState.update("dbFlux_PROJECT_MODE", "MULTI");
+				context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
+				context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
+				context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
+			} else if (state.projectType.label === "SingleSchema") {
+				context.workspaceState.update("dbFlux_PROJECT_MODE", "SINGLE");
+				context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
+			} else if (state.projectType.label === "FlexSchema") {
+				context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
 			}
 
 			context.workspaceState.update("dbFlux_WORKSPACE", state.projectName.toLowerCase());
 			context.workspaceState.update("dbFlux_APEX_USER", state.apexSchemaName.toUpperCase());
-			context.workspaceState.update("dbFlux_FLEX_MODE", (state.projectType.label === "FlexSchema"));
+
 		}
 
 	}
@@ -570,11 +575,11 @@ function writeProxyUserCreationScript(projectName:string, proxyPassword:string) 
 }
 
 function writeSingleUserCreationScript(projectName:string, singlePassword:string) : string {
-	const relativeFile = `db/_setup/users/01_create_${projectName}_app.sql`;
+	const relativeFile = `db/_setup/users/01_create_${projectName}.sql`;
 	const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
 	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 	const content = {
-		"data_schema": `${projectName}_app`,
+		"data_schema": `${projectName}`,
 		"db_app_pwd": singlePassword
 	};
 
@@ -632,9 +637,9 @@ export async function enableFlexMode(context: ExtensionContext, projectInfos:IPr
 
 					if (mode === "dbFlow"){
 						const file = path.join(wsRoot, "build.env");
-						setEnvValue(file, "FLEX_MODE", "TRUE");
+						setEnvValue(file, "PROJECT_MODE", "FLEX");
 					} else if (mode === "dbFlux"){
-						context.workspaceState.update("dbFlux_FLEX_MODE", true);
+						context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
 					}
 
 					window.showInformationMessage("Your Project is now in FlexMode!");
