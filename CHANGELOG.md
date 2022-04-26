@@ -1,5 +1,10 @@
 # Change Log
 
+## [3.1.1 - 2022-03-25]
+- Some BugFixes
+- Match handling of project mode (SINGLE|MULTI|FLEX) like dbFLow
+
+
 ## [3.1.0 - 2022-03-25]
 - Ask for schema, when executing a *.sql file inside reports folder
 - Exclude .setup (xcl Setup Folder) from target schemas like _setup
