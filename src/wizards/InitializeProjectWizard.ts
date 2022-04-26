@@ -479,18 +479,20 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
 			context.workspaceState.update("dbFlux_PROJECT", state.projectName.toLowerCase());
 			if (state.projectType.label === "MultiSchema") {
+				context.workspaceState.update("dbFlux_PROJECT_MODE", "MULTI");
 					context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
 					context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
 					context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
-			} if (state.projectType.label === "SingleSchema") {
-					context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_app");
-					context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_app");
+			} else if (state.projectType.label === "SingleSchema") {
+				context.workspaceState.update("dbFlux_PROJECT_MODE", "SINGLE");
 					context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
+			} else if (state.projectType.label === "FlexSchema") {
+				context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
 			}
 
 			context.workspaceState.update("dbFlux_WORKSPACE", state.projectName.toLowerCase());
 			context.workspaceState.update("dbFlux_APEX_USER", state.apexSchemaName.toUpperCase());
-			context.workspaceState.update("dbFlux_FLEX_MODE", (state.projectType.label === "FlexSchema"));
+
 		}
 
 	}
