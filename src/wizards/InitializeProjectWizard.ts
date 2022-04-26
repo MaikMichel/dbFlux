@@ -573,11 +573,11 @@ function writeProxyUserCreationScript(projectName:string, proxyPassword:string) 
 }
 
 function writeSingleUserCreationScript(projectName:string, singlePassword:string) : string {
-	const relativeFile = `db/_setup/users/01_create_${projectName}_app.sql`;
+	const relativeFile = `db/_setup/users/01_create_${projectName}.sql`;
 	const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
 	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
 	const content = {
-		"data_schema": `${projectName}_app`,
+		"data_schema": `${projectName}`,
 		"db_app_pwd": singlePassword
 	};
 
