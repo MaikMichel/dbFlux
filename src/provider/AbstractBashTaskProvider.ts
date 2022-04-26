@@ -18,6 +18,7 @@ export interface IBashInfos {
 
 export interface IProjectInfos {
   projectName: string|undefined;
+  projectMode: string|undefined;
   appSchema: string;
   logicSchema: string;
   dataSchema: string;
@@ -176,12 +177,14 @@ function getProjectInfosFromDBFlow():IProjectInfos {
     }
 
     if (buildEnv.parsed) {
+      projectInfos.projectName = buildEnv.parsed.PROJECT;
+      projectInfos.projectMode  = buildEnv.parsed.PROJECT_MODE;
+
       projectInfos.appSchema    = buildEnv.parsed.APP_SCHEMA;
       projectInfos.logicSchema  = buildEnv.parsed.LOGIC_SCHEMA;
       projectInfos.dataSchema   = buildEnv.parsed.DATA_SCHEMA;
 
-      projectInfos.isFlexMode  = (buildEnv.parsed.FLEX_MODE?.toUpperCase() === "TRUE");
-      projectInfos.projectName = buildEnv.parsed.PROJECT;
+      projectInfos.isFlexMode  = (buildEnv.parsed.PROJECT_MODE?.toUpperCase() === "FLEX");
       projectInfos.workspace   = buildEnv.parsed.WORKSPACE;
     }
   }
@@ -206,8 +209,9 @@ function getProjectInfosFromDBFlux(context: ExtensionContext):IProjectInfos {
       projectInfos.dataSchema   = context.workspaceState.get("dbFlux_DATA_SCHEMA")!;
 
 
-      projectInfos.isFlexMode   = context.workspaceState.get("dbFlux_FLEX_MODE") === true;
+      projectInfos.isFlexMode   = context.workspaceState.get("dbFlux_PROJECT_MODE") === "FLEX";
       projectInfos.projectName  = context.workspaceState.get("dbFlux_PROJECT");
+      projectInfos.projectMode  = context.workspaceState.get("dbFlux_PROJECT_MODE");
       projectInfos.workspace    = context.workspaceState.get("dbFlux_WORKSPACE");
 
   }
@@ -275,28 +279,37 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
     });
   }
 
-  if (!projectInfos.isFlexMode && (
-    (projectInfos.appSchema === undefined || !projectInfos.appSchema || projectInfos.appSchema.length === 0) ||
-    (projectInfos.logicSchema === undefined || !projectInfos.logicSchema || projectInfos.logicSchema.length === 0) ||
-    (projectInfos.dataSchema === undefined || !projectInfos.dataSchema || projectInfos.dataSchema.length === 0)
-  )) {
-    schemaMsg = `Schema configuration incomplete! Please check your configuration!
-    (DATA: ${projectInfos.dataSchema},
-    LOGIC: ${projectInfos.logicSchema},
-    APP: ${projectInfos.appSchema})
-    `;
+  if (!projectInfos.isFlexMode) {
 
-    window.setStatusBarMessage("$(testing-error-icon) dbFlux > Schema configuration incomplete!");
-    setTimeout(function(){
-      window.setStatusBarMessage("");
-    }, 4000);
+    if ((projectInfos.projectMode == "MULTI") && (
+          (projectInfos.appSchema === undefined || !projectInfos.appSchema || projectInfos.appSchema.length === 0) ||
+          (projectInfos.logicSchema === undefined || !projectInfos.logicSchema || projectInfos.logicSchema.length === 0) ||
+          (projectInfos.dataSchema === undefined || !projectInfos.dataSchema || projectInfos.dataSchema.length === 0)
+        )) {
+          schemaMsg = `Schema configuration incomplete! Please check your configuration!
+          (DATA: ${projectInfos.dataSchema},
+          LOGIC: ${projectInfos.logicSchema},
+          APP: ${projectInfos.appSchema})`;
+    } else if ((projectInfos.projectMode == "SINGLE") && (
+      (projectInfos.appSchema === undefined || !projectInfos.appSchema || projectInfos.appSchema.length === 0)
+    )) {
+      schemaMsg = `Schema configuration incomplete! Please check your configuration!
+      (APP: ${projectInfos.appSchema})`;
+    }
 
-    window.showErrorMessage(schemaMsg, "Open configuration").then(selection => {
+    if (schemaMsg !== "") {
+      window.setStatusBarMessage("$(testing-error-icon) dbFlux > Schema configuration incomplete!");
+      setTimeout(function(){
+        window.setStatusBarMessage("");
+      }, 4000);
 
-      if (selection) {
-        commands.executeCommand("dbFlux.showConfig");
-      }
-    });
+      window.showErrorMessage(schemaMsg, "Open configuration").then(selection => {
+
+        if (selection) {
+          commands.executeCommand("dbFlux.showConfig");
+        }
+      });
+    }
   }
 
   if ((dbConnMsg.length + schemaMsg.length) > 0) {

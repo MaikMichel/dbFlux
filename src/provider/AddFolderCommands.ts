@@ -559,7 +559,7 @@ export function registerAddSchemaCommand(projectInfos: IProjectInfos, context: E
     if (projectInfos.isFlexMode) {
       addSchema(context);
     } else {
-      window.showWarningMessage('dbFlux: You have to enable FLEX_MODE to add a Schema');
+      window.showWarningMessage('dbFlux: You have to set Project Mode to "FLEX" to add a Schema');
     }
   });
 }
@@ -569,7 +569,7 @@ export function registerAddWorkspaceCommand(projectInfos: IProjectInfos, context
     if (projectInfos.isFlexMode) {
       addWorkspace(context);
     } else {
-      window.showWarningMessage('dbFlux: You have to enable FLEX_MODE to add a Workspace');
+      window.showWarningMessage('dbFlux: You have to set Project Mode to "FLEX" to add a Workspace');
     }
 
   });
