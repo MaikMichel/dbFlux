@@ -222,7 +222,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 			step: 4,
 			totalSteps: 5,
 			value: state.dbAppPwd || '',
-			prompt: `Enter password of ${appUserName} (creation of user scripts) `,
+			prompt: `Enter password of user ${appUserName} (creation of user scripts) `,
 			validate: validateValueIsRequiered,
 			shouldResume: shouldResume,
 			password: true
@@ -261,7 +261,9 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 			canSelectMany: false
 		});
 
-		return (input: MultiStepInput) => inputDevAdminName(input, state);
+		if (state.createWorkspace && state.createWorkspace.label === "Yes") {
+			return (input: MultiStepInput) => inputDevAdminName(input, state);
+		}
 	}
 
 	async function inputDevAdminName(input: MultiStepInput, state: Partial<State>) {
