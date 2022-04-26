@@ -216,7 +216,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 	}
 
 	async function inputAppPwd(input: MultiStepInput, state: Partial<State>) {
-		const appUserName = (state.projectType?.label==="SingleSchema")?state.projectName+"_app":state.projectName+"_depl";
+		const appUserName = (state.projectType?.label==="SingleSchema")?state.projectName:state.projectName+"_depl";
 		state.dbAppPwd = await input.showInputBox({
 			title,
 			step: 4,
