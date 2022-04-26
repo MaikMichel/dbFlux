@@ -79,10 +79,17 @@ export function showDBFluxConfig(context:ExtensionContext){
   outputLog("DB_ADMIN_USER: " + context.workspaceState.get("dbFlux_DB_ADMIN_USER"));
 
   outputLog("PROJECT: " + context.workspaceState.get("dbFlux_PROJECT"));
+  outputLog("PROJECT_MODE: " + context.workspaceState.get("dbFlux_PROJECT_MODE"));
+  if (context.workspaceState.get("dbFlux_PROJECT_MODE") === "MULTI") {
+    outputLog("DATA_SCHEMA: " + context.workspaceState.get("dbFlux_DATA_SCHEMA"));
+    outputLog("LOGIC_SCHEMA: " + context.workspaceState.get("dbFlux_LOGIC_SCHEMA"));
+    outputLog("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
+  } else if (context.workspaceState.get("dbFlux_PROJECT_MODE") === "SINGLE") {
+    outputLog("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
+  }
+
   outputLog("WORKSPACE: " + context.workspaceState.get("dbFlux_WORKSPACE"));
-  outputLog("DATA_SCHEMA: " + context.workspaceState.get("dbFlux_DATA_SCHEMA"));
-  outputLog("LOGIC_SCHEMA: " + context.workspaceState.get("dbFlux_LOGIC_SCHEMA"));
-  outputLog("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
+
 }
 
 export function removeDBFluxConfig(context:ExtensionContext){
