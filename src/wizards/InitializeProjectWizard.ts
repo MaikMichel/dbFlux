@@ -315,7 +315,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
 			const dataSchema = state.projectName + "_data";
 			const logicSchema = state.projectName + "_logic";
-			const appSchema = state.projectName + "_app";
+			const appSchema = state.projectName + ((state.projectType.label !== "SingleSchema") ? "_app" : "");
 
 			const folderDef:any = {
 				".hooks": {
