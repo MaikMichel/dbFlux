@@ -183,6 +183,14 @@ export function activate(context: ExtensionContext) {
             break;
           }
         }
+
+        // Reset when the current panel is closed
+        webViewTestPanel?.onDidDispose(() => {
+          webViewTestPanel = undefined;
+          },
+          null,
+          context.subscriptions
+        );
       }
 
     }, undefined, context.subscriptions);
