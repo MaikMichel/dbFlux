@@ -14,6 +14,7 @@ import { callSnippet, createObjectWizard } from './wizards/CreateObjectWizard';
 import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { CompileSchemasProvider } from "./provider/CompileSchemasProvider";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
+import { revealItemWizard } from "./wizards/RevealItemWizard";
 
 
 export function activate(context: ExtensionContext) {
@@ -130,6 +131,9 @@ export function activate(context: ExtensionContext) {
 
     // Add REST Modul
     context.subscriptions.push(registerAddRESTModuleCommand(projectInfos, context));
+
+    // Reveal Item
+    context.subscriptions.push(commands.registerCommand('dbFlux.gotoToFolder', async () => revealItemWizard(context)));
 
 
     // Export REST

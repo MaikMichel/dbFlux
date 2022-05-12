@@ -235,9 +235,19 @@
 				"title": "Wrap Selection with Logging Method",
 				"category": "dbFlux",
 				"enablement": "editorTextFocus && editorHasSelection"
+			},
+			{
+				"command": "dbFlux.gotoToFolder",
+				"title": "Goto folder",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
 			}
 		],
 		"keybindings": [
+			{
+				"command": "dbFlux.gotoToFolder",
+				"key": "ctrl+alt+g"
+			},
 			{
 				"command": "dbFlux.wrapLogSelection",
 				"key": "ctrl+alt+w ctrl+alt+w",
