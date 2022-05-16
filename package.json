@@ -123,6 +123,12 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.createTableDDL",
+				"title": "Create TableDDL File",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
 				"command": "dbFlux.removeConfiguration",
 				"title": "Remove dbFlux configuration from workspace",
 				"category": "dbFlux",
@@ -291,6 +297,12 @@
 				"command": "dbFlux.createObjectWizard",
 				"key": "ctrl+alt+c",
 				"mac": "ctrl+alt+c",
+				"when": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.createTableDDL",
+				"key": "ctrl+alt+c ctrl+alt+c",
+				"mac": "ctrl+alt+c ctrl+alt+c",
 				"when": "inDbFlowProject"
 			},
 			{

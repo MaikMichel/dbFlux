@@ -10,7 +10,7 @@ import { openTestResult, registerExecuteTestPackageCommand, registerExecuteTests
 import { removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
 import { outputLog } from './helper/OutputChannel';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
-import { callSnippet, createObjectWizard } from './wizards/CreateObjectWizard';
+import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
 import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { CompileSchemasProvider } from "./provider/CompileSchemasProvider";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
@@ -96,6 +96,9 @@ export function activate(context: ExtensionContext) {
 
     // Add Command: Create an Object by Wizard => Choose a folder and name your file
     context.subscriptions.push(commands.registerCommand('dbFlux.createObjectWizard', async () => createObjectWizard(context)));
+
+    // Add Command: Create a table DDL File => Choose Table from table folder
+    context.subscriptions.push(commands.registerCommand('dbFlux.createTableDDL', async () => createTableDDL(context)));
 
     // Add Command to call a snippet when File is opened
     context.subscriptions.push( workspace.onDidOpenTextDocument((document) => callSnippet(workspace.workspaceFolders![0].uri.fsPath, document)));

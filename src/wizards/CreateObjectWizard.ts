@@ -11,7 +11,7 @@ import { outputLog } from '../helper/OutputChannel';
 import { existsSync, mkdirSync, PathLike, readdirSync, writeFileSync } from 'fs';
 import { MultiStepInput } from './InputFlowAction';
 import { dbFolderDef } from './InitializeProjectWizard';
-
+import { execSync } from 'child_process';
 
 
 
@@ -281,4 +281,152 @@ export function callSnippet(wsPath:string, document:TextDocument, prefix:string|
   }
 
 
+}
+
+export async function createTableDDL(context: ExtensionContext) {
+
+  interface State {
+    title: string;
+    step: number;
+    totalSteps: number;
+
+    objectName: string;
+    objectType: QuickPickItem;
+  }
+
+  async function collectInputs() {
+    const state = {} as Partial<State>;
+
+    await MultiStepInput.run(input => pickObjectType(input, state));
+    return state as State;
+  }
+
+  const title = 'Create TableDDL File';
+
+
+
+  async function pickObjectType(input: MultiStepInput, state: Partial<State>) {
+    const objectTypes = await getAllTableFiles();
+    state.objectType = await input.showQuickPick({
+      title,
+      step: 1,
+      totalSteps: 1,
+      placeholder: 'Fuzzy pick a table',
+      items: objectTypes,
+      activeItem: objectTypes[0],
+      shouldResume: shouldResume,
+      canSelectMany: false
+    });
+  }
+
+
+  function shouldResume() {
+    // Could show a notification with the option to resume.
+    return new Promise<boolean>((resolve, reject) => {
+      // noop
+    });
+  }
+
+  async function validateValueIsRequiered(name: string) {
+    // eslint-disable-next-line eqeqeq
+    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
+  }
+
+  async function validateValueNotRequiered(name: string) {
+    // eslint-disable-next-line eqeqeq
+    return undefined;
+  }
+
+
+  function rtrim(str:string, chr:string) {
+    var rgxtrim = (!chr) ? new RegExp('\\s+$') : new RegExp(chr+'+$');
+    return str.replace(rgxtrim, '');
+  }
+
+
+  async function getAllTableFiles(): Promise<QuickPickItem[]> {
+    if (workspace.workspaceFolders){
+      let folders:string[] = [];
+
+      const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
+      const sourceDB = path.join(wsRoot, "db");
+
+      const getSchemaFolders = (source: PathLike) =>
+          readdirSync(source, { withFileTypes: true })
+          .filter((dirent) => {
+            return dirent.isDirectory() && !["_setup", ".setup", "dist", ".hooks"].includes(dirent.name);
+          })
+          .map((dirent) => path.join(source.toString(), dirent.name));
+
+      for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
+        // real file path
+        const folderPath = path.join(schemaPath, 'tables');
+        if (existsSync(folderPath)) {
+          const files = readdirSync(folderPath, { withFileTypes: true }).filter((dirent) => !dirent.isDirectory());
+
+          for (let folderItem of files) {
+            folders.push(path.join(folderPath, folderItem.name).replace(sourceDB + path.sep, '').replace(/\\/g, '/'));
+          }
+        }
+      }
+
+
+      const uniqueFolders = [...new Set(folders)];
+      const folderNames = uniqueFolders.map(function(element){return {"label":element, "description": path.parse(element).name, "alwaysShow": false};});
+
+      return folderNames;
+    }
+
+    return [{label: ""}];
+  }
+
+
+  //
+  const state = await collectInputs();
+  console.log('state', state);
+
+  if (state.objectType.label && workspace.workspaceFolders) {
+    // find max num used
+    const folderParts = state.objectType.label.replace("/tables/", "/tables/tables_ddl/").split("/");
+    folderParts.pop();
+    const regex = /\d+/g;
+    let nextNum = 0;
+
+
+    const tableDDLFolder = path.join(workspace.workspaceFolders[0].uri.fsPath, "db", folderParts.join("/"));
+
+    // document.write(matches);
+    if (existsSync(tableDDLFolder)) {
+      const files = readdirSync(tableDDLFolder, { withFileTypes: true }).filter((dirent) => {
+        return !dirent.isDirectory() && dirent.name.includes(state.objectType.description!+".");
+      });
+
+      for (let folderItem of files) {
+        if (folderItem.name.match(regex)) {
+          const num = parseInt(folderItem.name.match(regex)?.toString()!);
+          if (num > nextNum) {
+            nextNum = num;
+          }
+        }
+      }
+    } else {
+      mkdirSync(tableDDLFolder);
+    }
+
+    const newDDLFileName = path.join(tableDDLFolder, state.objectType.description! + "." + (nextNum + 1) + ".sql");
+
+    const ws:string = workspace.workspaceFolders[0].uri.fsPath;
+    const gitCommand = 'git diff --unified=0 ' + path.join("db", state.objectType.label); // + " | grep -Po '(?<=^\+)(?!\+\+).*'";
+    const output = execSync(gitCommand, { cwd:ws }).toString().split("\n").filter((line) => {
+      return line.match(/(?<=^[\+-])(?![(\+\+)(--)]).*/)
+    });
+
+
+    writeFileSync(newDDLFileName, "/** \n  Modified lines in " + state.objectType.description + ".sql\n" + "    " + output.join('\n    ') + "\n**/");
+    window.showInformationMessage(`File '${newDDLFileName}' successfully created`);
+
+    workspace.openTextDocument(Uri.file(newDDLFileName)).then(doc => {
+      window.showTextDocument(doc, {preview: false});
+    });
+  }
 }
