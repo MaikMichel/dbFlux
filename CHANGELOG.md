@@ -1,9 +1,9 @@
 # Change Log
 
-## [3.2.0 - 2022-05-16]
+## [3.2.1 - 2022-05-16]
 - New Command: "Goto folder" `Ctr+Atl+g`
   - Pick a folder and reveal it in explorer pane
-- New Command: "Create TableDDL File" `Ctrl+Alt+c Ctrl+Alt+c`
+- New Command: "Create TableDDL File" `Ctrl+Alt+d`
   - Create a DDL File based on changes of the picked table script
 
 
