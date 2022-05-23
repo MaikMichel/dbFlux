@@ -117,6 +117,12 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.reverseBuildFromFiles",
+				"title": "Scan for dependent files",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*tables$/"
+			},
+			{
 				"command": "dbFlux.createObjectWizard",
 				"title": "Create Object",
 				"category": "dbFlux",

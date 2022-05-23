@@ -1,7 +1,7 @@
 import { QuickPickItem, window, ExtensionContext, Uri, workspace, commands, ViewColumn } from 'vscode';
 
 import * as path from "path";
-import { existsSync, mkdirSync, PathLike, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { outputLog } from '../helper/OutputChannel';
 import { createDirectoryPath, getSubFolders, getWorkspaceRootPath } from '../helper/utilities';
 import { dbFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
@@ -662,6 +662,58 @@ export function registerJoinFromFilesCommand(projectInfos: IProjectInfos) {
     } else {
       window.showWarningMessage("dbFlux: nothing found to join! You have to use: -- File: ../relative/path/to/file.sql to refer to files which should be joined");
     }
+  });
+}
+
+
+
+export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos) {
+  return commands.registerCommand("dbFlux.reverseBuildFromFiles", async () => {
+    const fileName = window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
+    const tablename = path.basename(fileName).split('.')[0].toLowerCase();
+
+    console.log('tablename', tablename);
+    const wsRoot = getWorkspaceRootPath();
+    console.log('wsRoot', wsRoot);
+    const dbUser = getDBUserFromPath(fileName, projectInfos);
+    const dirName = path.join(wsRoot, "db", dbUser).replace(/\\/g, '/');
+    let joined = false;
+
+    // loop through all constraint files with the tablename
+    let files:any  = [];
+
+    const readFiles = (directory: string) => {
+      readdirSync(directory).forEach(file => {
+        const absolutFileName = path.join(directory, file);
+        if (statSync(absolutFileName).isDirectory()) return readFiles(absolutFileName);
+          else return files.push(absolutFileName);
+      });
+    }
+
+    readFiles(path.join(dirName, 'constraints'));
+    readFiles(path.join(dirName, 'indexes'));
+    readFiles(path.join(dirName, 'sources/triggers'));
+
+    files = files.filter((file:string) => {
+      if (file.toLowerCase().includes(tablename)) {
+        const fContent = readFileSync(file, "utf-8").replace(/[\r\n]+/g," ").replace(/\s{2,}/g,' ').replace(/\(/g,' (').toLowerCase();
+        return (   fContent.includes(`alter table ${tablename} add`)
+                || fContent.includes(` on ${tablename} (`)
+                || fContent.includes(` on ${tablename} for`)
+              );
+      } else {
+        return false;
+      }
+    }).map((file:string) => "-- File: " + file.replace(/\\/g, '/').replace(dirName+"/", ''));
+
+    if (files.length > 0) {
+      appendFileSync(fileName, "\n\n-- dbFux reverse scanned ... \n" + files.join("\n"));
+      window.showInformationMessage("dbFlux: files successfully scanned your files");
+    } else {
+      window.showWarningMessage("dbFlux: nothing found ... \n Files have to include tablename.");
+    }
+
+
   });
 }
 

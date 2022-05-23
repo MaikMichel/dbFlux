@@ -11,7 +11,7 @@ import { removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/Confi
 import { outputLog } from './helper/OutputChannel';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
-import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
+import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { CompileSchemasProvider } from "./provider/CompileSchemasProvider";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
 import { revealItemWizard } from "./wizards/RevealItemWizard";
@@ -168,6 +168,10 @@ export function activate(context: ExtensionContext) {
 
     // Join from Files (read them and put content after marker "-- File: ")
     context.subscriptions.push(registerJoinFromFilesCommand(projectInfos));
+
+    // Reverse build splitted File
+    context.subscriptions.push(registerReverseBuildFromFilesCommand(projectInfos));
+
 
     // Open SpecOrBody
     context.subscriptions.push(registerOpenSpecOrBody());
