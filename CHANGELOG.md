@@ -1,5 +1,14 @@
 # Change Log
 
+
+## [3.3.0 - 2022-05-23]
+- Modified Command: "Goto Folder"
+  - Now you can go to static and report folder, too
+- Modified Command: "Compile File"
+  - if your file is located outsite of (db, apex, static, rest) you are prompted to enter target schema
+- New Command: "Scan for dependent files"
+  - When you run that command (you have to focus on a table-file) dbFlux will scan your constraint, indexes and trigger folders for files that contain the tablename and place a corresponding split command to that tablescript.
+
 ## [3.2.1 - 2022-05-16]
 - New Command: "Goto folder" `Ctr+Atl+g`
   - Pick a folder and reveal it in explorer pane
