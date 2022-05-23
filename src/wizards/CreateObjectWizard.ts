@@ -33,7 +33,7 @@ export async function createObjectWizard(context: ExtensionContext) {
     return state as State;
   }
 
-  const title = 'Create Object';
+  const title = 'dbFLux: Create Object';
 
   async function inputObjectName(input: MultiStepInput, state: Partial<State>) {
     state.objectName = await input.showInputBox({
@@ -54,7 +54,7 @@ export async function createObjectWizard(context: ExtensionContext) {
       title,
       step: 1,
       totalSteps: 2,
-      placeholder: 'Pick a type',
+      placeholder: 'Fuzzy pick an object',
       items: objectTypes,
       activeItem: objectTypes[0],
       shouldResume: shouldResume,
@@ -301,7 +301,7 @@ export async function createTableDDL(context: ExtensionContext) {
     return state as State;
   }
 
-  const title = 'Create TableDDL File';
+  const title = 'dbFLux: Create TableDDL File';
 
 
 
