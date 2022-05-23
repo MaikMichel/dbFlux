@@ -359,14 +359,8 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
     } else {
       returnDBUser = projectInfos.appSchema.toLowerCase();
     }
-  } else if (["reports"].includes(lowerPathParts[0])) {
-    returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
   } else {
-    if (projectInfos.isFlexMode) {
-      returnDBUser = lowerPathParts[1];
-    } else {
-      returnDBUser = projectInfos.appSchema.toLowerCase();
-    }
+    returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
   }
   returnDBUser = returnDBUser?returnDBUser:"";
 

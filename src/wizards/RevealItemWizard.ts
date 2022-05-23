@@ -2,7 +2,7 @@
 
 import { QuickPickItem, ExtensionContext, Uri, workspace, commands} from 'vscode';
 import * as path from "path";
-import { PathLike, readdirSync } from 'fs';
+import { existsSync, PathLike, readdirSync } from 'fs';
 import { MultiStepInput } from './InputFlowAction';
 
 
@@ -62,14 +62,16 @@ export async function revealItemWizard(context: ExtensionContext) {
   }
 
   function *walkSync(dir:string):any {
-    const files = readdirSync(dir, { withFileTypes: true });
-    for (let i = 0; i < files.length; i++) {
-      if (files[i].isDirectory() && files[i].name !== "dist") {
-        // check if there is any subdir in filder
-        if (subDirExists(path.join(dir, files[i].name))){
-          yield* walkSync(path.join(dir, files[i].name));
-        } else {
-          yield path.join(dir, files[i].name);
+    if (existsSync(dir)) {
+      const files = readdirSync(dir, { withFileTypes: true });
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].isDirectory() && files[i].name !== "dist") {
+          // check if there is any subdir in filder
+          if (subDirExists(path.join(dir, files[i].name))){
+            yield* walkSync(path.join(dir, files[i].name));
+          } else {
+            yield path.join(dir, files[i].name);
+          }
         }
       }
     }
@@ -97,6 +99,7 @@ export async function revealItemWizard(context: ExtensionContext) {
       const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
       const sourceDB = path.join(wsRoot, "db");
       const sourceStatic = path.join(wsRoot, "static");
+      const sourceReports = path.join(wsRoot, "reports");
 
       const getSchemaFolders = (source: PathLike) =>
           readdirSync(source, { withFileTypes: true })
@@ -121,6 +124,14 @@ export async function revealItemWizard(context: ExtensionContext) {
           folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
         }
       }
+
+
+
+      for (let folderItem of walkSync(sourceReports)) {
+        console.log('folderItem', folderItem);
+        folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+      }
+
 
 
       const uniqueFolders = [...new Set(folders)];
