@@ -331,7 +331,7 @@ function isNumeric(str:string):boolean {
 export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos, currentFilePath: string | undefined = undefined): string {
   let returnDBUser: string = ""; // sql File inside static or rest
   const wsRoot = getWorkspaceRootPath().toLowerCase()+path.posix.sep;
-  const lowerPathName = pathName.toLowerCase().replace(wsRoot, "");
+  const lowerPathName = (pathName+"/").toLowerCase().replace(wsRoot, "");
   const lowerPathParts = lowerPathName.split(path.posix.sep);
 
   if (currentFilePath !== undefined && (lowerPathParts[0] === ".hooks" || (lowerPathParts[0] === "db" && lowerPathParts[1] === ".hooks"))) {
@@ -359,13 +359,11 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
     } else {
       returnDBUser = projectInfos.appSchema.toLowerCase();
     }
-  } else if (!["apex", "rest", "static", "db"].includes(lowerPathParts[0]) && CompileTaskStore.getInstance().selectedSchemas !== undefined){
-    returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
   } else {
-    if (projectInfos.isFlexMode) {
-      returnDBUser = lowerPathParts[1];
+    if (CompileTaskStore.getInstance().selectedSchemas) {
+      returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
     } else {
-      returnDBUser = projectInfos.appSchema.toLowerCase();
+      console.error('CompileTaskStore.getInstance().selectedSchemas', CompileTaskStore.getInstance().selectedSchemas);
     }
   }
   returnDBUser = returnDBUser?returnDBUser:"";

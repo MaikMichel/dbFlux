@@ -214,7 +214,7 @@ export function registerCompileFileCommand(context: ExtensionContext) {
       // check what file has to build
       let fileName = await getWorkingFile();
       const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
-      console.log('relativeFileName', relativeFileName);
+
 
       const insideSetup = (matchRuleShort(relativeFileName, 'db/_setup/*') || matchRuleShort(relativeFileName, 'db/.setup/*'));
       const insideDb = !insideSetup && matchRuleShort(relativeFileName, 'db/*');
@@ -285,22 +285,9 @@ export function registerCompileFileCommand(context: ExtensionContext) {
               }
 
               if (schemaSelected) {
-                console.log('CompileTaskStore.getInstance().selectedSchemas', CompileTaskStore.getInstance().selectedSchemas);
                 commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
               }
-            // if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
-            //   // Ask for schema and compile
-            //   // now run
-            // } else {
-            //   if (insideReports) {
-            //     // gen file
-            //     const reportTemplater = new ReportTemplater(fileName);
-            //     reportTemplater.genFile();
-            //   }
-            // }
           } else {
-            console.log('insideReports', insideReports);
-            console.log('extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())', extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()));
             window.showWarningMessage('Current filetype or location is not supported by dbFlux ...');
           }
 

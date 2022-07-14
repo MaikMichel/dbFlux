@@ -15,7 +15,7 @@ Prompt
 Prompt Show the details of the connection for confirmation
 select user as MY_USER, ora_database_name as DB, systimestamp as NOW
   from dual;
-  
+
 COLUMN MY_USER  CLEAR
 COLUMN DB       CLEAR
 COLUMN NOW      CLEAR
@@ -42,6 +42,8 @@ select user_errors
               || case -- file extension
                 when type = 'PACKAGE' then '.pks'
                 when type = 'PACKAGE BODY' then '.pkb'
+                when type = 'TYPE' then '.tps'
+                when type = 'TYPE BODY' then '.tpb'
                 else '.sql'
               end
               || ' '

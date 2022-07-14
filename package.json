@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "3.3.0",
+	"version": "3.4.0",
 	"engines": {
 		"vscode": "^1.60.0"
 	},
@@ -201,6 +201,18 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.exportSchema",
+				"title": "Export DB Schema into Folder",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.exportObject",
+				"title": "Export current Object into current File",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*$/"
+			},
+			{
 				"command": "dbFlux.addReportFolder",
 				"title": "Add REPORT type",
 				"category": "dbFlux",
@@ -228,7 +240,7 @@
 				"command": "dbFlux.openSpecOrBody",
 				"title": "Open corresponding Spec or Body",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceFilename =~ /.pk[bs]$/"
+				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
 			},
 			{
 				"command": "dbFlux.wrapLogSelection",
@@ -279,7 +291,7 @@
 				"command": "dbFlux.openSpecOrBody",
 				"key": "ctrl+alt+o",
 				"mac": "ctrl+alt+o",
-				"when": "inDbFlowProject && resourceFilename =~ /.pk[bs]$/"
+				"when": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
 			},
 			{
 				"command": "dbFlux.compileSchemas",
@@ -429,6 +441,8 @@
 							"sql",
 							"pks",
 							"pkb",
+							"tps",
+							"tpb",
 							"prc",
 							"fnc"
 						],

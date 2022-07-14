@@ -110,7 +110,11 @@ Begin
   for cur in (select attribute, text, line, position, name
                 from user_errors
                where attribute in ('ERROR', 'WARNING')
-                 and lower(name||decode(type, 'PACKAGE', '.pks', 'PACKAGE BODY', '.pkb', '.${extension}')) = lower('${basefl}')
+                 and lower(name||decode(type, 'PACKAGE', '.pks',
+                                              'PACKAGE BODY', '.pkb',
+                                              'TYPE', '.tps',
+                                              'TYPE BODY', '.tpb',
+                                              '.${extension}')) = lower('${basefl}')
                order by type, name, line, position)
   loop
     l_errors_exists := true;

@@ -34,61 +34,63 @@ export class ExportTaskStore {
       const rootPath = workspace.workspaceFolders[0].uri.fsPath;
       const source = path.join(rootPath, "apex");
       // const reg = /^\d{2}_/;
-
-      // Neu
-      const getSchemaFolders = (source: PathLike) =>
-          readdirSync(source, { withFileTypes: true })
-          .filter((dirent) => {
-            return dirent.isDirectory();
-          })
-          .map((dirent) => dirent.name);
-
-      const getWorkspaces = (source: PathLike, subFolders:string[]):string[] => {
-        let folders:string[] = [];
-
-        subFolders.forEach(folder => {
-          const folderPath = path.join(source.toString(), folder);
-             const workspaces =
-               readdirSync(folderPath, { withFileTypes: true })
-                .filter((dirent) => {
-                  return dirent.isDirectory();
-                })
-                .map((dirent) => {
-                  return folderPath + path.sep + dirent.name;
-                });
-              folders = folders.concat(workspaces);
-        });
+      if (existsSync(source)) {
 
 
-         return folders;
-      };
+        // Neu
+        const getSchemaFolders = (source: PathLike) =>
+            readdirSync(source, { withFileTypes: true })
+            .filter((dirent) => {
+              return dirent.isDirectory();
+            })
+            .map((dirent) => dirent.name);
 
-      const getApplications = (workspaceFolder:string[]):string[] => {
-        let apps:string[] = [];
+        const getWorkspaces = (source: PathLike, subFolders:string[]):string[] => {
+          let folders:string[] = [];
 
-        workspaceFolder.forEach(wsPath => {
-
-             const localApps =
-               readdirSync(wsPath, { withFileTypes: true })
-                .filter((dirent) => {
-                  return dirent.isDirectory() && dirent.name.toLowerCase().startsWith("f");
-                })
-                .map((dirent) => {
-                  // return relative Path to app
-                  return path.join(wsPath, dirent.name).replace(rootPath + path.sep, "").replace(/\\/g, '/');
-                });
-
-              apps = apps.concat(localApps);
-        });
-
-        return apps;
-      };
+          subFolders.forEach(folder => {
+            const folderPath = path.join(source.toString(), folder);
+              const workspaces =
+                readdirSync(folderPath, { withFileTypes: true })
+                  .filter((dirent) => {
+                    return dirent.isDirectory();
+                  })
+                  .map((dirent) => {
+                    return folderPath + path.sep + dirent.name;
+                  });
+                folders = folders.concat(workspaces);
+          });
 
 
-      const apps = projectInfos.isFlexMode ? getApplications(getWorkspaces(source, getSchemaFolders(source))):getApplications([source]);
-      value = await window.showQuickPick(apps, { placeHolder: "Select Application to export" });
+          return folders;
+        };
 
-      // value = value?.substring(1);
+        const getApplications = (workspaceFolder:string[]):string[] => {
+          let apps:string[] = [];
+
+          workspaceFolder.forEach(wsPath => {
+
+              const localApps =
+                readdirSync(wsPath, { withFileTypes: true })
+                  .filter((dirent) => {
+                    return dirent.isDirectory() && dirent.name.toLowerCase().startsWith("f");
+                  })
+                  .map((dirent) => {
+                    // return relative Path to app
+                    return path.join(wsPath, dirent.name).replace(rootPath + path.sep, "").replace(/\\/g, '/');
+                  });
+
+                apps = apps.concat(localApps);
+          });
+
+          return apps;
+        };
+
+
+        const apps = projectInfos.isFlexMode ? getApplications(getWorkspaces(source, getSchemaFolders(source))):getApplications([source]);
+        value = await window.showQuickPick(apps, { placeHolder: "Select Application to export" });
+
+      }
     }
 
     return value;

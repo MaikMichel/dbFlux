@@ -131,6 +131,14 @@ export const dbFolderDef = [{
 	}
 }];
 
+export const restFolderDef = [{
+	"access": {
+		mapping: "",
+		roles: "",
+		privileges: ""
+	},
+	"modules": ""
+}];
 
 
 /**
@@ -357,6 +365,11 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 				delete folderDef.db[dataSchema];
 				delete folderDef.db[logicSchema];
 				delete folderDef.db[appSchema];
+
+				delete folderDef.rest.access;
+				delete folderDef.rest.modules;
+				folderDef.rest = "";
+
 			}
 
 			createDirectoryPath(folderDef, "/", workspace.workspaceFolders[0].uri.fsPath) ;

@@ -1,6 +1,15 @@
 # Change Log
 
 
+
+## [3.4.0 - 2022-07-14]
+- Fix: Path Problem on Windows with upper or lower driveletter
+- Fix: Blank Lines when splitting and joining table files
+- Feature: Scan for dependent files will place the files in correct order like dbFlow does
+- Feature: Add support or type spec and body (.tps, .tpb)
+- Feature: Reveal REST Folder when GotoFolder is executed
+- Feature: Export Schema or Object implemented
+
 ## [3.3.0 - 2022-05-23]
 - Modified Command: "Goto Folder"
   - Now you can go to static and report folder, too

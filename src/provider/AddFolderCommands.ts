@@ -4,7 +4,7 @@ import * as path from "path";
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { outputLog } from '../helper/OutputChannel';
 import { createDirectoryPath, getSubFolders, getWorkspaceRootPath } from '../helper/utilities';
-import { dbFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
+import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
 import { getDBUserFromPath, getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
 import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { ConfigurationManager } from '../helper/ConfigurationManager';
@@ -498,6 +498,10 @@ function addMainFolders(schema: string, folders: any, projectInfos:IProjectInfos
           if (wsPath.description === "db") {
             createDirectoryPath(dbFolderDef, "/", dirName) ;
           }
+
+          if (wsPath.description === "rest") {
+            createDirectoryPath(restFolderDef, "/", dirName) ;
+          }
         }
       });
 
@@ -612,7 +616,7 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
 
         if (lines.length > 0 && lines[0] !== "") {
           mkdirSync(path.dirname(dirName + '/' + newFileName), {recursive:true});
-          writeFileSync(dirName + '/' + newFileName, lines.join(lineSpliter));
+          writeFileSync(dirName + '/' + newFileName, lines.join(lineSpliter).trim());
           fileArray.push(newFileName);
           splitted = true;
         }
@@ -649,7 +653,7 @@ export function registerJoinFromFilesCommand(projectInfos: IProjectInfos) {
 
         if (existsSync(readFileName)) {
           const fileContent = readFileSync(readFileName, "utf-8");
-          splittedContent[index] = content + fileContent;
+          splittedContent[index] = content + fileContent + "\n";
           joined = true;
         }
       }
@@ -672,9 +676,9 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
     const fileName = window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
     const tablename = path.basename(fileName).split('.')[0].toLowerCase();
 
-    console.log('tablename', tablename);
+
     const wsRoot = getWorkspaceRootPath();
-    console.log('wsRoot', wsRoot);
+
     const dbUser = getDBUserFromPath(fileName, projectInfos);
     const dirName = path.join(wsRoot, "db", dbUser).replace(/\\/g, '/');
     let joined = false;
@@ -690,13 +694,20 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
       });
     }
 
-    readFiles(path.join(dirName, 'constraints'));
-    readFiles(path.join(dirName, 'indexes'));
+    readFiles(path.join(dirName, 'indexes/primaries'));
+    readFiles(path.join(dirName, 'indexes/uniques'));
+    readFiles(path.join(dirName, 'indexes/defaults'));
+
+    readFiles(path.join(dirName, 'constraints/primaries'));
+    readFiles(path.join(dirName, 'constraints/uniques'));
+    readFiles(path.join(dirName, 'constraints/foreigns'));
+    readFiles(path.join(dirName, 'constraints/checks'));
+
     readFiles(path.join(dirName, 'sources/triggers'));
 
     files = files.filter((file:string) => {
       if (file.toLowerCase().includes(tablename)) {
-        const fContent = readFileSync(file, "utf-8").replace(/[\r\n]+/g," ").replace(/\s{2,}/g,' ').replace(/\(/g,' (').toLowerCase();
+        const fContent = readFileSync(file, "utf-8").replace(/[\r\n]+/g," ").replace(/\s{2,}/g,' ').replace(/\(/g,' (').toLowerCase().replace(/ +(?= )/g,'');
         return (   fContent.includes(`alter table ${tablename} add`)
                 || fContent.includes(` on ${tablename} (`)
                 || fContent.includes(` on ${tablename} for`)
@@ -722,7 +733,7 @@ export function registerOpenSpecOrBody() {
     const fileName = window.activeTextEditor?.document.fileName;
     if (fileName) {
       const extension = path.extname(fileName);
-      if ([".pks", ".pkb"].includes(extension.toLowerCase())) {
+      if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
         let extensionNew = "xxx";
         if (extension === ".pks") {
           extensionNew = ".pkb";
@@ -732,6 +743,14 @@ export function registerOpenSpecOrBody() {
           extensionNew = ".pks";
         } else if (extension === ".PKB") {
           extensionNew = ".PKS";
+        } else if (extension === ".tps") {
+          extensionNew = ".tpb";
+        } else if (extension === ".TPS") {
+          extensionNew = ".TPB";
+        } else if (extension === ".tpb") {
+          extensionNew = ".tps";
+        } else if (extension === ".TPB") {
+          extensionNew = ".TPS";
         }
 
         const fileNameNew = fileName.replace(extension, extensionNew);

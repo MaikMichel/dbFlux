@@ -6,6 +6,7 @@ import { ExportTaskStore } from "../stores/ExportTaskStore";
 import { AbstractBashTaskProvider, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
+import { WSAEINVALIDPROCTABLE } from "constants";
 
 const which = require('which');
 
@@ -33,8 +34,10 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
   async getExpTasks(): Promise<Task[]> {
     const result: Task[] = [];
 
-    const runTask: ISQLExportInfos = this.prepExportInfos(ExportTaskStore.getInstance().expID);
-    result.push(this.createExpTask(this.createExpTaskDefinition("exportAPEX", runTask)));
+    if (ExportTaskStore.getInstance().expID) {
+      const runTask: ISQLExportInfos = this.prepExportInfos(ExportTaskStore.getInstance().expID);
+      result.push(this.createExpTask(this.createExpTaskDefinition("exportAPEX", runTask)));
+    }
 
     return Promise.resolve(result);
   }
@@ -108,6 +111,8 @@ export function registerExportAPEXCommand(context: ExtensionContext) {
 
           if (ExportTaskStore.getInstance().expID !== undefined) {
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportAPEX");
+          } else {
+            window.setStatusBarMessage('dbFlux: No Application found or selected', 2000);
           }
         }).catch(() => {
           window.showErrorMessage('dbFlux: No executable "sql" found on path!');
