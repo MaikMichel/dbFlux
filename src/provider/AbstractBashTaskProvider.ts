@@ -331,7 +331,7 @@ function isNumeric(str:string):boolean {
 export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos, currentFilePath: string | undefined = undefined): string {
   let returnDBUser: string = ""; // sql File inside static or rest
   const wsRoot = getWorkspaceRootPath().toLowerCase()+path.posix.sep;
-  const lowerPathName = pathName.toLowerCase().replace(wsRoot, "");
+  const lowerPathName = (pathName+"/").toLowerCase().replace(wsRoot, "");
   const lowerPathParts = lowerPathName.split(path.posix.sep);
 
   if (currentFilePath !== undefined && (lowerPathParts[0] === ".hooks" || (lowerPathParts[0] === "db" && lowerPathParts[1] === ".hooks"))) {
@@ -360,7 +360,11 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
       returnDBUser = projectInfos.appSchema.toLowerCase();
     }
   } else {
-    returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
+    if (CompileTaskStore.getInstance().selectedSchemas) {
+      returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
+    } else {
+      console.error('CompileTaskStore.getInstance().selectedSchemas', CompileTaskStore.getInstance().selectedSchemas);
+    }
   }
   returnDBUser = returnDBUser?returnDBUser:"";
 

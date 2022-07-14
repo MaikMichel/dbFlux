@@ -1,6 +1,9 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { existsSync, mkdirSync, readdirSync, realpathSync} from "fs";
+import { platform } from "os";
+
+const isWindows = platform() === 'win32'
 
 export function matchRuleShort(str:string, rule:string) {
   var escapeRegex = (str:string) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
@@ -30,10 +33,28 @@ export function getWorkspaceRootPath():string {
   let wsf = "";
   if (vscode.workspace.workspaceFolders !== undefined) {
     wsf = vscode.workspace.workspaceFolders[0].uri.fsPath.replace(/\\/g, '/');
+    wsf = toUpperDriverLetter(wsf);
   }
   return wsf;
-
 }
+
+export function toUpperDriverLetter(wsf: string) {
+  let filePath = ltrim(wsf, '/');
+  if (isWindows && path.isAbsolute(filePath)) {
+    const segments = filePath.split('/');
+    const first = segments.shift()?.toUpperCase();
+    filePath = first + '/' + segments.join('/');
+  }
+  return filePath;
+}
+
+export function ltrim (s:string, c:string) {
+  if (c === "]") c = "\\]";
+  if (c === "^") c = "\\^";
+  if (c === "\\") c = "\\\\";
+  return s.replace(new RegExp("^[" + c + "]+|[" + c + "]+$", "g"), "");
+}
+
 export function getApplicationIdFromPath(sourceFile: string, isFlexMode: boolean) {
   if (isFlexMode) {
     // */static/scheman_name/workspace_name/f_with_app_id/src/*
@@ -88,7 +109,6 @@ export async function getActiveFileUri():Promise<vscode.Uri | undefined>{
 
     fileName = fileName.split('\n')[0];
     fileUri = vscode.Uri.file(fileName);
-
   } else {
     fileUri = vscode.window.activeTextEditor.document.uri;
   }
@@ -144,5 +164,50 @@ export async function getWorkingFile() {
 
     await vscode.env.clipboard.writeText(tmpClipboard);
   }
-  return fileName;
+  return toUpperDriverLetter(fileName);
+}
+
+function getRelativePartsFromFile(filePath:string):string[] {
+  const wsRoot = getWorkspaceRootPath() + "/";
+  const withoutRoot = toUpperDriverLetter(filePath).replace(wsRoot, "");
+  const parts = withoutRoot.split("/");
+  return parts;
+}
+
+export function getSchemaFromFile(filePath:string):string {
+  const parts:string[] = getRelativePartsFromFile(filePath);
+
+  if (parts[0] === "db") {
+    return parts[1]
+  }
+
+  throw new Error("Unknown directory structur (getSchemaFromFile) first part is not 'db != '" + parts[0]);
+}
+
+export function getObjectTypeFromFile(filePath:string):string {
+  const parts:string[] = getRelativePartsFromFile(filePath);
+
+  if (parts[0] === "db") {
+    parts.shift();
+    parts.shift();
+    parts.pop();
+
+  return parts.join('/');
+  }
+
+  throw new Error("Unknown directory structur (getObjectTypeFromFile) first part is not 'db != '" + parts[0]);
+
+}
+
+export function getObjectNameFromFile(filePath:string):string {
+  const parts:string[] = getRelativePartsFromFile(filePath);
+
+  if (parts[0] === "db") {
+    return path.basename(filePath);
+  } else {
+    console.log('parts[0]', parts[0]);
+  }
+
+  throw new Error("Unknown directory structur (getObjectNameFromFile) first part is not 'db != '" + parts[0]);
+
 }
