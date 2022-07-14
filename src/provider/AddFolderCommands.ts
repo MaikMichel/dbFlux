@@ -672,9 +672,9 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
     const fileName = window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
     const tablename = path.basename(fileName).split('.')[0].toLowerCase();
 
-    console.log('tablename', tablename);
+
     const wsRoot = getWorkspaceRootPath();
-    console.log('wsRoot', wsRoot);
+
     const dbUser = getDBUserFromPath(fileName, projectInfos);
     const dirName = path.join(wsRoot, "db", dbUser).replace(/\\/g, '/');
     let joined = false;
@@ -690,13 +690,20 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
       });
     }
 
-    readFiles(path.join(dirName, 'constraints'));
-    readFiles(path.join(dirName, 'indexes'));
+    readFiles(path.join(dirName, 'indexes/primaries'));
+    readFiles(path.join(dirName, 'indexes/uniques'));
+    readFiles(path.join(dirName, 'indexes/defaults'));
+
+    readFiles(path.join(dirName, 'constraints/primaries'));
+    readFiles(path.join(dirName, 'constraints/uniques'));
+    readFiles(path.join(dirName, 'constraints/foreigns'));
+    readFiles(path.join(dirName, 'constraints/checks'));
+
     readFiles(path.join(dirName, 'sources/triggers'));
 
     files = files.filter((file:string) => {
       if (file.toLowerCase().includes(tablename)) {
-        const fContent = readFileSync(file, "utf-8").replace(/[\r\n]+/g," ").replace(/\s{2,}/g,' ').replace(/\(/g,' (').toLowerCase();
+        const fContent = readFileSync(file, "utf-8").replace(/[\r\n]+/g," ").replace(/\s{2,}/g,' ').replace(/\(/g,' (').toLowerCase().replace(/ +(?= )/g,'');
         return (   fContent.includes(`alter table ${tablename} add`)
                 || fContent.includes(` on ${tablename} (`)
                 || fContent.includes(` on ${tablename} for`)
