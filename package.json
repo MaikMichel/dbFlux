@@ -228,7 +228,7 @@
 				"command": "dbFlux.openSpecOrBody",
 				"title": "Open corresponding Spec or Body",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceFilename =~ /.pk[bs]$/"
+				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
 			},
 			{
 				"command": "dbFlux.wrapLogSelection",
@@ -279,7 +279,7 @@
 				"command": "dbFlux.openSpecOrBody",
 				"key": "ctrl+alt+o",
 				"mac": "ctrl+alt+o",
-				"when": "inDbFlowProject && resourceFilename =~ /.pk[bs]$/"
+				"when": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
 			},
 			{
 				"command": "dbFlux.compileSchemas",
@@ -429,6 +429,8 @@
 							"sql",
 							"pks",
 							"pkb",
+							"tps",
+							"tpb",
 							"prc",
 							"fnc"
 						],

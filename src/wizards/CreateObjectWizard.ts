@@ -16,6 +16,7 @@ import { execSync } from 'child_process';
 
 
 export async function createObjectWizard(context: ExtensionContext) {
+  const title = 'dbFLux: Create Object';
 
   interface State {
     title: string;
@@ -33,7 +34,6 @@ export async function createObjectWizard(context: ExtensionContext) {
     return state as State;
   }
 
-  const title = 'dbFLux: Create Object';
 
   async function inputObjectName(input: MultiStepInput, state: Partial<State>) {
     state.objectName = await input.showInputBox({
@@ -171,6 +171,10 @@ export async function createObjectWizard(context: ExtensionContext) {
         }
       }
 
+      folders.push(".hooks/pre");
+      folders.push(".hooks/post");
+      folders.push("db/.hooks/pre");
+      folders.push("db/.hooks/post");
 
       const uniqueFolders = [...new Set(folders)];
       const folderNames = uniqueFolders.map(function(element){return {"label":element, "description": path.parse(element).name, "alwaysShow": false};});
@@ -193,6 +197,7 @@ export async function createObjectWizard(context: ExtensionContext) {
 
     let myExt = new Map<string, string>([
       ["packages", "pks"],
+      ["types", "tps"],
       ["js", "js"],
       ["css", "css"]
   ]);
@@ -220,6 +225,11 @@ export async function createObjectWizard(context: ExtensionContext) {
       writeFileSync(file2, "");
 
       extension = "(pks/pkb)";
+    } else  if (extension === ".tps") {
+      file2 = path.join(workspace.workspaceFolders[0].uri.fsPath , state.objectType.label, baseF + ".tpb");
+      writeFileSync(file2, "");
+
+      extension = "(tps/tpb)";
     }
 
     window.showInformationMessage(`File for object '${baseF}${extension}' successfully created`);
@@ -383,7 +393,6 @@ export async function createTableDDL(context: ExtensionContext) {
 
   //
   const state = await collectInputs();
-  console.log('state', state);
 
   if (state.objectType.label && workspace.workspaceFolders) {
     // find max num used
@@ -416,13 +425,20 @@ export async function createTableDDL(context: ExtensionContext) {
     const newDDLFileName = path.join(tableDDLFolder, state.objectType.description! + "." + (nextNum + 1) + ".sql");
 
     const ws:string = workspace.workspaceFolders[0].uri.fsPath;
-    const gitCommand = 'git diff --unified=0 ' + path.join("db", state.objectType.label); // + " | grep -Po '(?<=^\+)(?!\+\+).*'";
-    const output = execSync(gitCommand, { cwd:ws }).toString().split("\n").filter((line) => {
-      return line.match(/(?<=^[\+-])(?![(\+\+)(--)]).*/)
-    });
+    let output = ["-- " + newDDLFileName];
+
+    // if git folder exists then try to get git diff
+    if (existsSync(path.join(ws, ".git"))) {
+      const gitCommand = 'git diff --unified=0 ' + path.join("db", state.objectType.label); // + " | grep -Po '(?<=^\+)(?!\+\+).*'";
+      output = execSync(gitCommand, { cwd:ws }).toString().split("\n").filter((line) => {
+        return line.match(/(?<=^[\+-])(?![(\+\+)(--)]).*/)
+      });
+      writeFileSync(newDDLFileName, "/** \n  modified lines in " + state.objectType.description + ".sql\n" + "    " + output.join('\n    ') + "\n**/");
+    } else {
+      writeFileSync(newDDLFileName, "/** \n  alter table " + state.objectType.description  + "\n**/");
+    }
 
 
-    writeFileSync(newDDLFileName, "/** \n  Modified lines in " + state.objectType.description + ".sql\n" + "    " + output.join('\n    ') + "\n**/");
     window.showInformationMessage(`File '${newDDLFileName}' successfully created`);
 
     workspace.openTextDocument(Uri.file(newDDLFileName)).then(doc => {

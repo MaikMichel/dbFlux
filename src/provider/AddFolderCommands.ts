@@ -4,7 +4,7 @@ import * as path from "path";
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { outputLog } from '../helper/OutputChannel';
 import { createDirectoryPath, getSubFolders, getWorkspaceRootPath } from '../helper/utilities';
-import { dbFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
+import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
 import { getDBUserFromPath, getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
 import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { ConfigurationManager } from '../helper/ConfigurationManager';
@@ -498,6 +498,10 @@ function addMainFolders(schema: string, folders: any, projectInfos:IProjectInfos
           if (wsPath.description === "db") {
             createDirectoryPath(dbFolderDef, "/", dirName) ;
           }
+
+          if (wsPath.description === "rest") {
+            createDirectoryPath(restFolderDef, "/", dirName) ;
+          }
         }
       });
 
@@ -729,7 +733,7 @@ export function registerOpenSpecOrBody() {
     const fileName = window.activeTextEditor?.document.fileName;
     if (fileName) {
       const extension = path.extname(fileName);
-      if ([".pks", ".pkb"].includes(extension.toLowerCase())) {
+      if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
         let extensionNew = "xxx";
         if (extension === ".pks") {
           extensionNew = ".pkb";
@@ -739,6 +743,14 @@ export function registerOpenSpecOrBody() {
           extensionNew = ".pks";
         } else if (extension === ".PKB") {
           extensionNew = ".PKS";
+        } else if (extension === ".tps") {
+          extensionNew = ".tpb";
+        } else if (extension === ".TPS") {
+          extensionNew = ".TPB";
+        } else if (extension === ".tpb") {
+          extensionNew = ".tps";
+        } else if (extension === ".TPB") {
+          extensionNew = ".TPS";
         }
 
         const fileNameNew = fileName.replace(extension, extensionNew);
