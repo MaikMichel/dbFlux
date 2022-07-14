@@ -33,8 +33,10 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
   async getRestTasks(): Promise<Task[]> {
     const result: Task[] = [];
 
-    const runTask: IRESTExportInfos = this.prepExportInfos(RestTaskStore.getInstance().restModule);
-    result.push(this.createRestTask(this.createRestTaskDefinition("exportREST", runTask)));
+    if (RestTaskStore.getInstance().restModule) {
+      const runTask: IRESTExportInfos = this.prepExportInfos(RestTaskStore.getInstance().restModule);
+      result.push(this.createRestTask(this.createRestTaskDefinition("exportREST", runTask)));
+    }
 
     return Promise.resolve(result);
   }

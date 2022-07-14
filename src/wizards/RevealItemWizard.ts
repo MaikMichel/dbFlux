@@ -67,10 +67,9 @@ export async function revealItemWizard(context: ExtensionContext) {
       for (let i = 0; i < files.length; i++) {
         if (files[i].isDirectory() && files[i].name !== "dist") {
           // check if there is any subdir in filder
+          yield path.join(dir, files[i].name);
           if (subDirExists(path.join(dir, files[i].name))){
             yield* walkSync(path.join(dir, files[i].name));
-          } else {
-            yield path.join(dir, files[i].name);
           }
         }
       }
@@ -97,9 +96,11 @@ export async function revealItemWizard(context: ExtensionContext) {
       let folders:string[] = [];
 
       const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-      const sourceDB = path.join(wsRoot, "db");
-      const sourceStatic = path.join(wsRoot, "static");
+      const sourceDB      = path.join(wsRoot, "db");
+      const sourceStatic  = path.join(wsRoot, "static");
       const sourceReports = path.join(wsRoot, "reports");
+      const sourceRest    = path.join(wsRoot, "rest");
+      const sourceApex    = path.join(wsRoot, "apex");
 
       const getSchemaFolders = (source: PathLike) =>
           readdirSync(source, { withFileTypes: true })
@@ -119,20 +120,32 @@ export async function revealItemWizard(context: ExtensionContext) {
         }
       }
 
-      for (let schemaPath of [ ... getSchemaFolders(sourceStatic)]) {
-        for (let folderItem of walkSync(schemaPath)) {
-          folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+      if (existsSync(sourceStatic)) {
+        for (let schemaPath of [ ... getSchemaFolders(sourceStatic)]) {
+          for (let folderItem of walkSync(schemaPath)) {
+            folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+          }
         }
       }
 
 
-
-      for (let folderItem of walkSync(sourceReports)) {
-        console.log('folderItem', folderItem);
-        folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+      if (existsSync(sourceReports)) {
+        for (let folderItem of walkSync(sourceReports)) {
+          folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+        }
       }
 
+      if (existsSync(sourceApex)) {
+        for (let folderItem of walkSync(sourceApex)) {
+          folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+        }
+      }
 
+      if (existsSync(sourceRest)) {
+        for (let folderItem of walkSync(sourceRest)) {
+          folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+        }
+      }
 
       const uniqueFolders = [...new Set(folders)];
       const folderNames = uniqueFolders.map(function(element){return {"label":element, "description": path.parse(element).name, "alwaysShow": false};});
