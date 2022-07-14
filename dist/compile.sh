@@ -4,20 +4,20 @@
 NC="\033[0m"       # Text Reset
 
 # Regular Colors
-RED="\033[0;31m"          # Red
-BRED="\033[1;31m"         # Red Bold
-GREEN="\033[0;32m"        # Green
-BGREEN="\033[1;32m"       # Green Bold
-YELLOW="\033[0;33m"       # Yellow
-BYELLOW="\033[1;33m"      # Yellow Bold
-BLUE="\033[0;34m"         # Blue
-BBLUE="\033[1;34m"        # Blue Bold
-PURPLE="\033[0;35m"       # Purple
-BPURPLE="\033[1;35m"      # Purple Bold
-CYAN="\033[0;36m"         # Cyan
+#RED="\033[0;31m"          # Red
+#BRED="\033[1;31m"         # Red Bold
+#GREEN="\033[0;32m"        # Green
+#BGREEN="\033[1;32m"       # Green Bold
+#YELLOW="\033[0;33m"       # Yellow
+#BYELLOW="\033[1;33m"      # Yellow Bold
+#BLUE="\033[0;34m"         # Blue
+#BBLUE="\033[1;34m"        # Blue Bold
+#PURPLE="\033[0;35m"       # Purple
+#BPURPLE="\033[1;35m"      # Purple Bold
+#CYAN="\033[0;36m"         # Cyan
 BCYAN="\033[1;36m"        # Cyan Bold
-WHITE="\033[0;37m"        # White
-BWHITE="\033[1;37m"       # White Bold
+#WHITE="\033[0;37m"        # White
+#BWHITE="\033[1;37m"       # White Bold
 
 export NLS_LANG="GERMAN_GERMANY.AL32UTF8"
 export NLS_DATE_FORMAT="DD.MM.YYYY HH24:MI:SS"
@@ -42,7 +42,7 @@ CONN_ARRY=( "$@" )
 for arg in "${CONN_ARRY[@]}"; do
   echo -e "${BCYAN}Compiling Connection ${arg}}@${DBFLOW_DBTNS} ${NC}"
 
-  ${DBFLOW_SQLCLI} -s -l ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
+  ${DBFLOW_SQLCLI} -s -l "${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<!
 
 set scan off
 set define off
@@ -100,6 +100,10 @@ Begin
                       when type = 'PACKAGE'      and lower(name) like 'test/_%' escape '/' then 'db/'||lower(user)||'/tests/packages/'||lower(name)||'.pks'
                       when type = 'PACKAGE BODY' and lower(name) not like 'test/_%' escape '/' then 'db/'||lower(user)||'/sources/packages/'||lower(name)||'.pkb'
                       when type = 'PACKAGE'      and lower(name) not like 'test/_%' escape '/' then 'db/'||lower(user)||'/sources/packages/'||lower(name)||'.pks'
+                      when type = 'TYPE BODY' and lower(name) like 'test/_%' escape '/' then 'db/'||lower(user)||'/tests/types/'||lower(name)||'.tpb'
+                      when type = 'TYPE'      and lower(name) like 'test/_%' escape '/' then 'db/'||lower(user)||'/tests/types/'||lower(name)||'.tps'
+                      when type = 'TYPE BODY' and lower(name) not like 'test/_%' escape '/' then 'db/'||lower(user)||'/sources/types/'||lower(name)||'.tpb'
+                      when type = 'TYPE'      and lower(name) not like 'test/_%' escape '/' then 'db/'||lower(user)||'/sources/types/'||lower(name)||'.tps'
                       when type = 'FUNCTION'     then 'db/'||lower(user)||'/sources/functions/'||lower(name)||'.sql'
                       when type = 'PROCEDURE'    then 'db/'||lower(user)||'/sources/procedures/'||lower(name)||'.sql'
                       when type = 'VIEW'         then 'db/'||lower(user)||'/views/'||lower(name)||'.sql'

@@ -15,6 +15,7 @@ import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, regi
 import { CompileSchemasProvider } from "./provider/CompileSchemasProvider";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
 import { revealItemWizard } from "./wizards/RevealItemWizard";
+import { ExportDBObjectProvider, ExportDBSchemaProvider, registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
 
 
 export function activate(context: ExtensionContext) {
@@ -112,6 +113,14 @@ export function activate(context: ExtensionContext) {
     // Export APEX
     context.subscriptions.push(registerExportAPEXCommand(context));
     context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportTaskProvider(context)));
+
+    // Export DBSchema
+    context.subscriptions.push(registerExportDBSchemaCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportDBSchemaProvider(context)));
+
+    // Export DBObject
+    context.subscriptions.push(registerExportDBObjectCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportDBObjectProvider(context)));
 
 
     // Enable FLEX Mode
