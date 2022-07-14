@@ -612,7 +612,7 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
 
         if (lines.length > 0 && lines[0] !== "") {
           mkdirSync(path.dirname(dirName + '/' + newFileName), {recursive:true});
-          writeFileSync(dirName + '/' + newFileName, lines.join(lineSpliter));
+          writeFileSync(dirName + '/' + newFileName, lines.join(lineSpliter).trim());
           fileArray.push(newFileName);
           splitted = true;
         }
@@ -649,7 +649,7 @@ export function registerJoinFromFilesCommand(projectInfos: IProjectInfos) {
 
         if (existsSync(readFileName)) {
           const fileContent = readFileSync(readFileName, "utf-8");
-          splittedContent[index] = content + fileContent;
+          splittedContent[index] = content + fileContent + "\n";
           joined = true;
         }
       }
