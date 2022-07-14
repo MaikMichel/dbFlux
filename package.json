@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "3.3.0",
+	"version": "3.4.0",
 	"engines": {
 		"vscode": "^1.60.0"
 	},
@@ -199,6 +199,18 @@
 				"title": "Add APEX static folder",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.exportSchema",
+				"title": "Export DB Schema into Folder",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.exportObject",
+				"title": "Export current Object into current File",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*$/"
 			},
 			{
 				"command": "dbFlux.addReportFolder",

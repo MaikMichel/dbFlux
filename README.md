@@ -19,6 +19,7 @@ Using this extension enables you to develop Oracle Database and APEX application
 - Compile all selected schemas
 - [**Export APEX Applications**](#export-apex-application 'Jump to Export APEX Application')
 - [**Export REST Modules**](#export-rest-module 'Jump to Export REST Module')
+- [**Export DB Schema or Object**](#export-db-schema-or-object 'Jump to Export DB Schema or Object')
 - [**Upload any file to your APEX Application**](#upload-to-apex-static-applicatoin-files 'Jump to Upload to APEX Static Applicatoin Files')
   - Additionaly minify JavaScript and CSS Files
 - Run utPLSQL [**UnitTests**](#unittests 'Jump to Tests') for current TestPackage or on all selected schemas
@@ -106,7 +107,7 @@ Each schemafolder inside **db** folder except `_setup` is build with the same st
 | ...... defaults   | Non uniqe indexes
 | ...... primaries  | Unique Indexes based in primary key columns
 | ...... uniques    | Unique Indexes
-| .... jobs         | Jobs, Scheduler scripts goes here
+| .... jobs         | Jobs, Scheduler scripts go here
 | .... policies     | Policies
 | .... sequences    | Sequences must be scripted in a restartable manner
 | .... sources      | All PL/SQL Code is stored in respective subfolders
@@ -114,10 +115,11 @@ Each schemafolder inside **db** folder except `_setup` is build with the same st
 | ...... packages   | Extension for package specification is pks and extension pkb is used for body
 | ...... procedures |
 | ...... triggers   |
-| ...... types      |
-| .... views        | Views goes here
+| ...... types      | Extension for type specification is tps and extension tpb is used for body
+| .... views        | Views go here
+| .... mviews       | Materialized Views go here
 | .... tables       | Here are all create table scripts stored
-| ...... tables_ddl | All table alter or modification scripts named with tablename.num.sql goes here
+| ...... tables_ddl | All table alter or modification scripts named with tablename.num.sql go here
 | .....tests        | Unittests
 | ...... packages   | Packages containing utPLSQL Unittests
 
@@ -213,7 +215,7 @@ dbFlux.showWarningMessages.</br>AfterCompilation | If set to true additional out
 dbFlux.showWarningMessages.</br>AfterCompilationExcludingFollowingCodes | Array of PLS Warning Codes to exclude. This is equivalent to: ALTER SESSION SET PLSQL_WARNINGS = 'ENABLE:ALL', 'DISABLE:(List,of,pls,warning,codes)';
 dbFlux.showWarningMessages.</br>showWarningsAndErrorsWithColoredOutput | Enables colored output from SQL(plus/cl) output. This is for environment which does not support colored output.
 dbFlux.customTriggerRuns | See above
-dbFlux.extensionsWhichShouldBeHandeldBySqlCli | File-Extension **dbFlux** can compile by using either SQLPlus or SQLcl. (sql, pks, pkb, prc, fnc)
+dbFlux.extensionsWhichShouldBeHandeldBySqlCli | File-Extension **dbFlux** can compile by using either SQLPlus or SQLcl. (sql, pks, pkb, tps, tpb, prc, fnc)
 
 
 ## Upload to APEX Static Applicatoin Files [#](#upload-to-apex-static-applicatoin-files 'Upload to APEX Static Applicatoin Files')
@@ -362,7 +364,7 @@ If you have just opened a package specification in the editor, you can open the 
 
 Command                           | Key               | Description
 ----------------------------------|-------------------|---------------------------------------
-Open corresponding Spec or Body   | `Ctrl+alt+o`      | when active file has then extension pks, then same file with extension pkb get's opened and the otherway around
+Open corresponding Spec or Body   | `Ctrl+alt+o`      | when active file has then extension pks, then same file with extension pkb get's opened and the otherway around. This works also with types and type bodies (tps <-> tpb)
 
 
 
@@ -376,6 +378,12 @@ With **dbFlux** you can directly export the stored APEX applications. You just h
 
 With **dbFlux** you can directly export the stored REST modules. All you have to do is to select a module by command `dbFLux: Export REST Module`. In the background APEX will then call SQLcl with the appropriate DB connection and export the module. In MultiSchema mode this is the APP schema.
 > Only those modules can be exported which have been stored in the directory structure. See command: `dbFLux: Add REST Module`.
+
+## Export DB Schema or Object [#](#export-db-schema-or-object 'Export DB Schema or Object')
+
+**dbFlux** can export an entire schema or just a specific object. To export a schema simply call the command: ``dbFlux: Export DB Schema into Folder`` and select the schema you want to export. **dbFlux** will show you the corresponding schema folders here. Select one. Additionally you can set the destination directory. By default this is set to the schema you want to export.
+If you want to export an object, you must have already created a file for it and have it currently open. If you then want to export the object with the command: ``dbFlux: Export current Object into current File`` , the object matching the file will be exported. For tables, the indexes and contraints are additionally exported.
+
 
 
 ## Add: APEX Application, REST Module, Workspace or Schema
@@ -409,6 +417,46 @@ In FlexSchema mode, dbFLux also offers you the command `dbFLux: Add Schema`. Wit
   <br/>
   <br/>
 </p>
+
+
+### List of all commands
+
+| command                       | Title                                      |
+| ----------------------------- | ------------------------------------------ |
+| dbFlux.splitToFiles           | Split File                                 |
+| dbFlux.joinFiles              | Join Files                                 |
+| dbFlux.reverseBuildFromFiles  | Scan for dependent files                   |
+| &nbsp; |   |
+| dbFlux.createObjectWizard     | Create Object                              |
+| dbFlux.createTableDDL         | Create TableDDL File                       |
+| &nbsp; |   |
+| dbFlux.compileFile            | Compile current File                       |
+| dbFlux.compileSchemas         | Compile selected Schemas                   |
+| dbFlux.executeTests           | Execute utPLSQL tests                      |
+| dbFlux.executeTestPackage     | Execute utPLSQL test with current Package  |
+| &nbsp; |   |
+| dbFlux.exportSchema           | Export a Schema from DB into Folder        |
+| dbFlux.exportObject           | Export current Object into current File    |
+| dbFlux.exportAPEX             | Export APEX Application                    |
+| dbFlux.exportREST             | Export REST Module                         |
+| &nbsp; |   |
+| dbFlux.addREST                | Add REST Module                            |
+| dbFlux.addAPP                 | Add APEX Application                       |
+| dbFlux.addWorkspace           | Add Workspace                              |
+| dbFlux.addSchema              | Add Schema                                 |
+| dbFlux.addStaticFolder        | Add APEX static folder                     |
+| dbFlux.addReportFolder        | Add REPORT type                            |
+| &nbsp; |   |
+| dbFlux.openSpecOrBody         | Open corresponding Spec or Body            |
+| dbFlux.gotoToFolder           | Goto folder                                |
+| dbFlux.wrapLogSelection       | Wrap Selection with Logging Method         |
+| dbFlux.wrapLogSelection.down  | Wrap Selection with Logging Method         |
+| dbFlux.wrapLogSelection.up    | Wrap Selection with Logging Method         |
+| &nbsp; |   |
+| dbFlux.enableFlexMode         | Enable FlexMode                            |
+| dbFlux.removeConfiguration    | Remove dbFlux configuration from workspace |
+| dbFlux.initializeProject      | Initialize Project structure               |
+| dbFlux.resetPassword          | Reset password                             |
 
 
 # Contributors or Influencers &#x1F64F;&#x2764;
