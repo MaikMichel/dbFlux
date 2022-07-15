@@ -6,7 +6,7 @@ import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskP
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ExportDBSchemaStore } from "../stores/ExportDBSchemaStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
-import { getActiveFileUri, getObjectNameFromFile, getObjectTypeFromFile, getSchemaFromFile, getWorkingFile, getWorkspaceRootPath, ltrim, matchRuleShort } from "../helper/utilities";
+import { getActiveFileUri, getObjectNameFromFile, getObjectTypeFromFile, getRelativePartsFromFile, getSchemaFromFile, getWorkingFile, getWorkspaceRootPath, ltrim, matchRuleShort } from "../helper/utilities";
 import { existsSync } from "fs";
 import { exportObjectWizard, exportSchemaWizard, ExportSchemaWizardState } from "../wizards/ExportSchemaWizard";
 
@@ -193,14 +193,18 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
       const activeFilePath          = connectionUri?.path;
       // console.log('activeFilePath', activeFilePath);
 
+
       if (activeFilePath && fileExists(activeFilePath)) {
         // runner.schemaName             = getSchemaFromFile(activeFilePath!);
 
         runner.schemaName = schemaName;
         runner.schemaNameNew = schemaNameNew;
 
-        runner.exportFolder           = getObjectTypeFromFile(activeFilePath!);
-        runner.exportFileName         = getObjectNameFromFile(activeFilePath!);
+        const parts:string[] = getRelativePartsFromFile(activeFilePath);
+        if (parts[0] === "db") {
+          runner.exportFolder           = getObjectTypeFromFile(activeFilePath!);
+          runner.exportFileName         = getObjectNameFromFile(activeFilePath!);
+        }
       }
 
       this.setInitialCompileInfo("export_schema.sh", connectionUri!, runner);

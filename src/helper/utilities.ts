@@ -39,8 +39,9 @@ export function getWorkspaceRootPath():string {
 }
 
 export function toUpperDriverLetter(wsf: string) {
-  let filePath = ltrim(wsf, '/');
+  let filePath:string = wsf;
   if (isWindows && path.isAbsolute(filePath)) {
+    filePath = ltrim(wsf, '/');
     const segments = filePath.split('/');
     const first = segments.shift()?.toUpperCase();
     filePath = first + '/' + segments.join('/');
@@ -167,7 +168,7 @@ export async function getWorkingFile() {
   return toUpperDriverLetter(fileName);
 }
 
-function getRelativePartsFromFile(filePath:string):string[] {
+export function getRelativePartsFromFile(filePath:string):string[] {
   const wsRoot = getWorkspaceRootPath() + "/";
   const withoutRoot = toUpperDriverLetter(filePath).replace(wsRoot, "");
   const parts = withoutRoot.split("/");

@@ -16,9 +16,18 @@ import { CompileSchemasProvider } from "./provider/CompileSchemasProvider";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
 import { revealItemWizard } from "./wizards/RevealItemWizard";
 import { ExportDBObjectProvider, ExportDBSchemaProvider, registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
+import { extensionManager } from "./provider/UpdateInfoProvider";
 
 
-export function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext) {
+  await extensionManager.init();
+
+  const installationType = extensionManager.getInstallationType();
+
+  if ((installationType.update) && await extensionManager.askShowChangelog()) {
+    extensionManager.showChangeLog();
+  }
+
   // get Mode
   const dbFluxMode = getDBFlowMode(context);
 
