@@ -1,6 +1,8 @@
 # Change Log
 
 
+## [3.4.1 - 2022-07-15]
+- Fix: Compile File on Windows vs MacOS
 
 ## [3.4.0 - 2022-07-14]
 - Fix: Path Problem on Windows with upper or lower driveletter
