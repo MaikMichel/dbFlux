@@ -42,7 +42,7 @@
       "-- don't forget to create index: indexs/primary_key/${TM_FILENAME_BASE}.sql based on that pk",
       "alter table ${1:source_table} add (",
 			"  constraint ${TM_FILENAME_BASE}",
-			"  primary key (${2:source_prefix}_id)",
+			"  primary key (${2:source_column})",
 			"  using index ${TM_FILENAME_BASE}",
 			"  enable validate",
 			");$0"
@@ -53,7 +53,7 @@
       "-- don't forget to create index: indexs/primary_key/${TM_FILENAME_BASE}.sql based on that pk",
       "alter table ${1:source_table} add (",
 			"  constraint ${TM_FILENAME_BASE}",
-			"  primary key (${2:source_prefix}_id)",
+			"  primary key (${2:source_column})",
 			"  using index ${TM_FILENAME_BASE}",
 			"  enable validate",
 			");$0"
@@ -190,11 +190,11 @@
 		"scope": "plsql,sql",
 		"prefix": "dbf.tbl.con.pk",
 		"body": [
-			"-- File: constraints/primaries/${TM_FILENAME_BASE}_${1:table_prefix}_id_pk.sql",
+			"-- File: constraints/primaries/${TM_FILENAME_BASE}_${1:source_column}_pk.sql",
 			"alter table ${TM_FILENAME_BASE} add (",
-			"  constraint ${1:table_prefix}_id_pk",
-			"  primary key (${1:table_prefix}_id)",
-			"  using index ${TM_FILENAME_BASE}_${1:table_prefix}_id_pk",
+			"  constraint ${1:source_column}_pk",
+			"  primary key (${1:source_column)",
+			"  using index ${TM_FILENAME_BASE}_${1:source_column}_pk",
 			"  enable validate",
 			");$0"
 		],
