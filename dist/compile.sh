@@ -14,7 +14,7 @@ NC="\033[0m"       # Text Reset
 #BBLUE="\033[1;34m"        # Blue Bold
 #PURPLE="\033[0;35m"       # Purple
 #BPURPLE="\033[1;35m"      # Purple Bold
-#CYAN="\033[0;36m"         # Cyan
+CYAN="\033[0;36m"         # Cyan
 BCYAN="\033[1;36m"        # Cyan Bold
 #WHITE="\033[0;37m"        # White
 #BWHITE="\033[1;37m"       # White Bold
@@ -40,7 +40,7 @@ CONN_ARRY=( "$@" )
 
 
 for arg in "${CONN_ARRY[@]}"; do
-  echo -e "${BCYAN}Compiling Connection ${arg}}@${DBFLOW_DBTNS} ${NC}"
+  echo -e "${CYAN}Compiling Connection ${arg}@${DBFLOW_DBTNS} ${NC}"
 
   ${DBFLOW_SQLCLI} -s -l "${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<!
 
@@ -58,10 +58,10 @@ Declare
   l_color_on   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[36m' end;
   l_color_off  constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[0m' end;
 Begin
-  dbms_output.put_line(l_color_on || 'DB-User:     ' || l_color_off || USER);
-  dbms_output.put_line(l_color_on || 'DB-Name:     ' || l_color_off || ORA_DATABASE_NAME);
+  dbms_output.put_line(l_color_on || 'DB-User:  ' || l_color_off || USER);
+  dbms_output.put_line(l_color_on || 'DB-Name:  ' || l_color_off || ORA_DATABASE_NAME);
   dbms_output.put_line(l_color_on || 'DB-Now:      ' || l_color_off || SYSTIMESTAMP);
-  dbms_output.put_line(l_color_on || '   ... compiling schema ... ' || l_color_off);
+  dbms_output.put_line(l_color_on || 'compiling schema ... ' || l_color_off);
 End;
 /
 
@@ -107,9 +107,11 @@ Begin
                       when type = 'FUNCTION'     then 'db/'||lower(user)||'/sources/functions/'||lower(name)||'.sql'
                       when type = 'PROCEDURE'    then 'db/'||lower(user)||'/sources/procedures/'||lower(name)||'.sql'
                       when type = 'VIEW'         then 'db/'||lower(user)||'/views/'||lower(name)||'.sql'
+                      when type = 'TRIGGER'      then 'db/'||lower(user)||'/sources/triggers/'||lower(name)||'.sql'
                     end wsfile
                 from user_errors
                where attribute in ('ERROR', 'WARNING')
+                 and name not like 'BIN$%' -- exclude trash
                order by type, name, line, position)
   loop
     l_errors_exists := true;
