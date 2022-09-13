@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as path from "path";
 
-import { AbstractBashTaskProvider, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
-import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, TaskScope, Uri, window, workspace } from "vscode";
+import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ExportDBSchemaStore } from "../stores/ExportDBSchemaStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
@@ -103,12 +103,11 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
 }
 
 
-export function registerExportDBSchemaCommand(context: ExtensionContext) {
+export function registerExportDBSchemaCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportSchema", async () => {
-    const projectInfosReloaded = getProjectInfos(context);
 
-    if (projectInfosReloaded.isValid) {
-      setAppPassword(projectInfosReloaded);
+    if (projectInfos.isValid) {
+      setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
         which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
@@ -116,6 +115,8 @@ export function registerExportDBSchemaCommand(context: ExtensionContext) {
 
           ExportDBSchemaStore.getInstance().schemaName = state.schemaName.label;
           ExportDBSchemaStore.getInstance().schemaNameNew = state.newSchemaName;
+
+          context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportDBSchemaProvider(context)));
           await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportSchema");
 
         }).catch(() => {
@@ -219,10 +220,8 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
 }
 
 
-export function registerExportDBObjectCommand(context: ExtensionContext) {
+export function registerExportDBObjectCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportObject", async () => {
-    const projectInfosReloaded = getProjectInfos(context);
-
     // check what file has to build
     let fileName = await getWorkingFile();
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
@@ -232,8 +231,8 @@ export function registerExportDBObjectCommand(context: ExtensionContext) {
     const insideDb = !insideSetup && matchRuleShort(relativeFileName, 'db/*');
 
     if (insideDb) {
-      if (projectInfosReloaded.isValid) {
-        setAppPassword(projectInfosReloaded);
+      if (projectInfos.isValid) {
+        setAppPassword(projectInfos);
 
         if (CompileTaskStore.getInstance().appPwd !== undefined) {
 
@@ -244,6 +243,7 @@ export function registerExportDBObjectCommand(context: ExtensionContext) {
             ExportDBSchemaStore.getInstance().schemaName = state.schemaName.label;
             ExportDBSchemaStore.getInstance().schemaNameNew = state.newSchemaName;
 
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportDBObjectProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportObject");
           }).catch(() => {
             window.showErrorMessage('dbFlux: No executable "sql" found on path!');

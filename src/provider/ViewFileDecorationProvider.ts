@@ -30,7 +30,7 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
   }
 
   async refreshCache() {
-    const urlToFetch = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/") + "/api/v1/files/" + getProjectInfos(this.context).projectName?.toLowerCase();
+    const urlToFetch = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/") + "/dblock/v1/files/" + getProjectInfos(this.context).projectName?.toLowerCase();
     const options = {
       method: 'GET',
       headers: {  Accept: '*/*',
@@ -95,7 +95,7 @@ export function registerLockCurrentFileCommand(projectInfos: IProjectInfos, deco
       const urlEncodedFile = encodeURIComponent(relativeFile!);
       const urlFromSettings = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/");
 
-      const url = `${urlFromSettings}/api/v1/file/${projectInfos.projectName?.toLowerCase()}?filename=${urlEncodedFile}`;
+      const url = `${urlFromSettings}/dblock/v1/file/${projectInfos.projectName?.toLowerCase()}?filename=${urlEncodedFile}`;
 
       const options = {
         method: 'POST',
@@ -133,7 +133,7 @@ export function registerUnLockCurrentFileCommand(projectInfos: IProjectInfos, de
       const urlEncodedFile = encodeURIComponent(relativeFile!);
       const urlFromSettings = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/");
 
-      const url = `${urlFromSettings}/api/v1/file/${projectInfos.projectName?.toLowerCase()}?filename=${urlEncodedFile}`;
+      const url = `${urlFromSettings}/dblock/v1/file/${projectInfos.projectName?.toLowerCase()}?filename=${urlEncodedFile}`;
 
       const options = {
         method: 'DELETE',

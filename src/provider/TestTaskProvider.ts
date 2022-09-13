@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import * as vscode from "vscode";
+import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, ViewColumn, WebviewPanel, window, workspace } from "vscode";
 import * as path from "path";
 
 import { getWorkingFile, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
-import { AbstractBashTaskProvider, getDBSchemaFolders, getDBUserFromPath, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, getDBSchemaFolders, getDBUserFromPath, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { TestTaskStore } from "../stores/TestTaskStore";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
@@ -15,7 +15,7 @@ import { removeSync } from "fs-extra";
 
 const which = require('which');
 
-interface TestTaskDefinition extends vscode.TaskDefinition {
+interface TestTaskDefinition extends TaskDefinition {
   name: string;
   runner: ISQLTestInfos;
 }
@@ -26,24 +26,24 @@ interface ISQLTestInfos extends IBashInfos {
   fileToTest:         string;
 }
 
-export class TestTaskProvider extends AbstractBashTaskProvider implements vscode.TaskProvider {
+export class TestTaskProvider extends AbstractBashTaskProvider implements TaskProvider {
   static dbFluxType: string = "dbFlux";
 
-  constructor(context: vscode.ExtensionContext, private mode:string){
+  constructor(context: ExtensionContext, private mode:string){
     super(context);
   };
 
-  provideTasks(): Thenable<vscode.Task[]> | undefined {
+  provideTasks(): Thenable<Task[]> | undefined {
     return this.getTestTasks();
   }
 
-  resolveTask(task: vscode.Task): vscode.Task | undefined {
+  resolveTask(task: Task): Task | undefined {
     return task;
   }
 
 
-  async getTestTasks(): Promise<vscode.Task[]> {
-    const result: vscode.Task[] = [];
+  async getTestTasks(): Promise<Task[]> {
+    const result: Task[] = [];
 
     const runTask: ISQLTestInfos = await this.prepTestInfos();
 
@@ -60,13 +60,13 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
     };
   }
 
-  createTestTask(definition: TestTaskDefinition): vscode.Task {
-    let _task = new vscode.Task(
+  createTestTask(definition: TestTaskDefinition): Task {
+    let _task = new Task(
       definition,
-      vscode.TaskScope.Workspace,
+      TaskScope.Workspace,
       definition.name,
       TestTaskProvider.dbFluxType,
-      new vscode.ShellExecution(definition.runner.runFile, definition.runner.connectionArray, {
+      new ShellExecution(definition.runner.runFile, definition.runner.connectionArray, {
         env: {
           DBFLOW_SQLCLI:     definition.runner.executableCli,
           DBFLOW_DBTNS:      definition.runner.connectionTns,
@@ -85,9 +85,9 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
   async prepTestInfos(): Promise<ISQLTestInfos> {
     let runner: ISQLTestInfos = {} as ISQLTestInfos;
 
-    if (vscode.workspace.workspaceFolders) {
-      let fileUri:vscode.Uri = vscode.workspace.workspaceFolders[0].uri;
-      let apexUri:vscode.Uri = vscode.Uri.file(path.join(fileUri.fsPath, 'apex/f0000/install.sql'));
+    if (workspace.workspaceFolders) {
+      let fileUri:Uri = workspace.workspaceFolders[0].uri;
+      let apexUri:Uri = Uri.file(path.join(fileUri.fsPath, 'apex/f0000/install.sql'));
 
       if (apexUri !== undefined) {
         this.setInitialCompileInfo("test.sh", apexUri, runner);
@@ -111,16 +111,16 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements vscode
 }
 
 
-export function registerExecuteTestPackageCommand(context: vscode.ExtensionContext) {
-  return vscode.commands.registerCommand("dbFlux.executeTestPackage", async () => {
-    const projectInfosReloaded = getProjectInfos(context);
-    if (projectInfosReloaded.isValid) {
+export function registerExecuteTestPackageCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
+  return commands.registerCommand("dbFlux.executeTestPackage", async () => {
+
+    if (projectInfos.isValid) {
 
       // check what file has to build
       let fileName = await getWorkingFile();
 
       // now check connection infos
-      setAppPassword(projectInfosReloaded);
+      setAppPassword(projectInfos);
 
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
@@ -132,25 +132,26 @@ export function registerExecuteTestPackageCommand(context: vscode.ExtensionConte
 
         if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideTests)) {
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            TestTaskStore.getInstance().selectedSchemas = ["db/" + getDBUserFromPath(fileName, projectInfosReloaded)];
+            TestTaskStore.getInstance().selectedSchemas = ["db/" + getDBUserFromPath(fileName, projectInfos)];
             TestTaskStore.getInstance().fileName = fileName;
-            vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTestPackage");
+
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTestPackage")));
+            commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTestPackage");
           }).catch(() => {
-            vscode.window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
+            window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
           });
         } else {
-          vscode.window.showWarningMessage('Current filetype is not supported by dbFlux ...');
+          window.showWarningMessage('Current filetype is not supported by dbFlux ...');
         }
       }
     }
   });
 }
 
-export function registerExecuteTestsTaskCommand(context: vscode.ExtensionContext) {
-  return vscode.commands.registerCommand("dbFlux.executeTests", async () => {
-    const projectInfosReloaded = getProjectInfos(context);
-    if (projectInfosReloaded.isValid) {
-      setAppPassword(projectInfosReloaded);
+export function registerExecuteTestsTaskCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
+  return commands.registerCommand("dbFlux.executeTests", async () => {
+    if (projectInfos.isValid) {
+      setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
 
@@ -158,7 +159,7 @@ export function registerExecuteTestsTaskCommand(context: vscode.ExtensionContext
         const dbSchemaFolders = await getDBSchemaFolders();
         if (dbSchemaFolders.length > 1) {
 
-          const items: vscode.QuickPickItem[] | undefined = await vscode.window.showQuickPick(dbSchemaFolders, {
+          const items: QuickPickItem[] | undefined = await window.showQuickPick(dbSchemaFolders, {
             canPickMany: true, placeHolder: 'Choose Schema to run your tests'
           });
           schemaSelected = (items !== undefined && items?.length > 0);
@@ -170,10 +171,11 @@ export function registerExecuteTestsTaskCommand(context: vscode.ExtensionContext
 
         if (schemaSelected) {
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            await vscode.commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTests");
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTests")));
+            await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTests");
           }).catch((error: any) => {
             outputLog(error);
-            vscode.window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
+            window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
           });
         }
       }
@@ -181,7 +183,7 @@ export function registerExecuteTestsTaskCommand(context: vscode.ExtensionContext
   });
 }
 
-export function openTestResult(context: vscode.ExtensionContext, webViewTestPanel: vscode.WebviewPanel | undefined){
+export function openTestResult(context: ExtensionContext, webViewTestPanel: WebviewPanel | undefined){
   const wsRoot = getWorkspaceRootPath();
   const logFile = path.join(wsRoot, "utoutput.log");
 
@@ -198,10 +200,10 @@ export function openTestResult(context: vscode.ExtensionContext, webViewTestPane
 
     // Create and show panel
     if (!webViewTestPanel) {
-      webViewTestPanel = vscode.window.createWebviewPanel(
+      webViewTestPanel = window.createWebviewPanel(
         'dbFLux ',
         'dbFlux - utPLSQL UnitTest Output',
-        vscode.ViewColumn.Beside,
+        ViewColumn.Beside,
         {}
       );
     }
@@ -219,7 +221,7 @@ export function openTestResult(context: vscode.ExtensionContext, webViewTestPane
     </body>
     </html>`;
 
-    context.subscriptions.push(vscode.window.setStatusBarMessage(`Tests completed, Showing Output as Html`));
+    context.subscriptions.push(window.setStatusBarMessage(`Tests completed, Showing Output as Html`));
 
     return webViewTestPanel;
   }

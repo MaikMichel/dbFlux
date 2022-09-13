@@ -287,19 +287,19 @@
 				"command": "dbFlux.lockCurrentFile",
 				"title": "Lock current File",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*$/"
+				"enablement": "inDbFlowProject && dbLockEnabled && resourceDirname =~ /^.*(\\\\|\/)(db|static)(\\\\|\/).*$/"
 			},
 			{
 				"command": "dbFlux.unlockCurrentFile",
 				"title": "Unlock current File",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*$/"
+				"enablement": "inDbFlowProject && dbLockEnabled && resourceDirname =~ /^.*(\\\\|\/)(db|static)(\\\\|\/).*$/"
 			},
 			{
 				"command": "dbFlux.refreshLockedFiles",
 				"title": "Refresh locked state of files",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject"
+				"enablement": "inDbFlowProject && dbLockEnabled"
 			}
 		],
 		"keybindings": [

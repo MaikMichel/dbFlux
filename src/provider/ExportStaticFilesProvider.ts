@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as path from "path";
 
-import { AbstractBashTaskProvider, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
-import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, TaskScope, Uri, window, workspace } from "vscode";
+import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { getActiveFileUri, getRelativePartsFromFile, getWorkingFile, getWorkspaceRootPath, ltrim, matchRuleShort } from "../helper/utilities";
@@ -102,18 +102,18 @@ export class ExportStaticFilesProvider extends AbstractBashTaskProvider implemen
 }
 
 
-export function registerExportStaticFilesCommand(context: ExtensionContext) {
+export function registerExportStaticFilesCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportStaticFiles", async () => {
-    const projectInfosReloaded = getProjectInfos(context);
 
-    if (projectInfosReloaded.isValid) {
-      setAppPassword(projectInfosReloaded);
+    if (projectInfos.isValid) {
+      setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
         which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfosReloaded);
+          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos);
 
           if (ExportTaskStore.getInstance().expID !== undefined) {
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportStaticFilesProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportStaticFiles");
           } else {
             window.setStatusBarMessage('dbFlux: No Application found or selected', 2000);
@@ -207,8 +207,8 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
           runner.exportAppID    = runner.exportAppPath.replace("/src", "").split("/").pop()?.replace("f", "");
 
         }
-          this.setInitialCompileInfo("export_static_files.sh", connectionUri!, runner);
-        
+        this.setInitialCompileInfo("export_static_files.sh", connectionUri!, runner);
+
       }
 
 
@@ -222,10 +222,8 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
 }
 
 
-export function registerExportCurrentStaticFileCommand(context: ExtensionContext) {
+export function registerExportCurrentStaticFileCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportCurrentStaticFile", async () => {
-    const projectInfosReloaded = getProjectInfos(context);
-
     // check what file has to build
     let fileName = await getWorkingFile();
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
@@ -234,12 +232,13 @@ export function registerExportCurrentStaticFileCommand(context: ExtensionContext
     const insideStatic = matchRuleShort(relativeFileName, 'static/*/src/*');
 
     if (insideStatic) {
-      if (projectInfosReloaded.isValid) {
-        setAppPassword(projectInfosReloaded);
+      if (projectInfos.isValid) {
+        setAppPassword(projectInfos);
 
         if (CompileTaskStore.getInstance().appPwd !== undefined) {
 
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportCurrentStaticFileProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportCurrentStaticFile");
           }).catch(() => {
             window.showErrorMessage('dbFlux: No executable "sql" found on path!');

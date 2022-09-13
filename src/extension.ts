@@ -1,24 +1,23 @@
 import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, WebviewPanel, window, workspace } from "vscode";
 
 import { basename, join } from "path";
-import { CompileTaskProvider, registerCompileFileCommand, registerCompileSchemasCommand } from "./provider/CompileTaskProvider";
-import { ExportTaskProvider, registerExportAPEXCommand } from "./provider/ExportTaskProvider";
+import { registerCompileFileCommand, registerCompileSchemasCommand } from "./provider/CompileTaskProvider";
+import { registerExportAPEXCommand } from "./provider/ExportTaskProvider";
 
-import { registerExportRESTCommand, RestTaskProvider } from "./provider/RestTaskProvider";
+import { registerExportRESTCommand } from "./provider/RestTaskProvider";
 import { applyFileExists, getDBFlowMode, getProjectInfos } from "./provider/AbstractBashTaskProvider";
-import { openTestResult, registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand, TestTaskProvider } from "./provider/TestTaskProvider";
+import { openTestResult, registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand } from "./provider/TestTaskProvider";
 import { ConfigurationManager, removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
 import { outputLog } from './helper/OutputChannel';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
 import { registerAddApplicationCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
-import { CompileSchemasProvider } from "./provider/CompileSchemasProvider";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
 import { revealItemWizard } from "./wizards/RevealItemWizard";
-import { ExportDBObjectProvider, ExportDBSchemaProvider, registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
+import { registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
 import { extensionManager } from "./provider/UpdateInfoProvider";
 import { registerLockCurrentFileCommand, registerregisterRefreshLockedFiles, registerUnLockCurrentFileCommand, ViewFileDecorationProvider } from "./provider/ViewFileDecorationProvider";
-import { ExportCurrentStaticFileProvider, ExportStaticFilesProvider, registerExportCurrentStaticFileCommand, registerExportStaticFilesCommand } from "./provider/ExportStaticFilesProvider";
+import { registerExportCurrentStaticFileCommand, registerExportStaticFilesCommand } from "./provider/ExportStaticFilesProvider";
 
 
 
@@ -79,6 +78,7 @@ export async function activate(context: ExtensionContext) {
 
     outputLog(`dbFlux-Mode is ${dbFluxMode} and FlexMode is ${projectInfos.isFlexMode}`);
     commands.executeCommand("setContext", "inDbFlowProject", true);
+    commands.executeCommand("setContext", "dbLockEnabled", ConfigurationManager.isDBLockEnabled());
     commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
     commands.executeCommand("setContext", "existsAppSchemas", );
 
@@ -119,30 +119,26 @@ export async function activate(context: ExtensionContext) {
 
 
     // Compile
-    context.subscriptions.push(registerCompileFileCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileTaskProvider(context)));
+    context.subscriptions.push(registerCompileFileCommand(projectInfos, context));
 
 
     // Export APEX
-    context.subscriptions.push(registerExportAPEXCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportTaskProvider(context)));
+    context.subscriptions.push(registerExportAPEXCommand(projectInfos, context));
 
     // Export DBSchema
-    context.subscriptions.push(registerExportDBSchemaCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportDBSchemaProvider(context)));
+    context.subscriptions.push(registerExportDBSchemaCommand(projectInfos, context));
 
     // Export DBObject
-    context.subscriptions.push(registerExportDBObjectCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportDBObjectProvider(context)));
+    context.subscriptions.push(registerExportDBObjectCommand(projectInfos, context));
+
 
 
     // Export APEX Static Files
-    context.subscriptions.push(registerExportStaticFilesCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportStaticFilesProvider(context)));
+    context.subscriptions.push(registerExportStaticFilesCommand(projectInfos, context));
+
 
     // Export one APEX Static File
-    context.subscriptions.push(registerExportCurrentStaticFileCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportCurrentStaticFileProvider(context)));
+    context.subscriptions.push(registerExportCurrentStaticFileCommand(projectInfos, context));
 
 
     // Enable FLEX Mode
@@ -171,18 +167,16 @@ export async function activate(context: ExtensionContext) {
 
 
     // Export REST
-    context.subscriptions.push(registerExportRESTCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new RestTaskProvider(context)));
+    context.subscriptions.push(registerExportRESTCommand(projectInfos, context));
 
 
     // run tests on selected Schemas
-    context.subscriptions.push(registerExecuteTestsTaskCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTests")));
+    context.subscriptions.push(registerExecuteTestsTaskCommand(projectInfos, context));
 
 
     // run test against current package
-    context.subscriptions.push(registerExecuteTestPackageCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTestPackage")));
+    context.subscriptions.push(registerExecuteTestPackageCommand(projectInfos, context));
+
 
 
     // Reset Password
@@ -190,8 +184,7 @@ export async function activate(context: ExtensionContext) {
 
 
     // compile selected Schemas
-    context.subscriptions.push(registerCompileSchemasCommand(context));
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileSchemasProvider(context, "compileSchemas")));
+    context.subscriptions.push(registerCompileSchemasCommand(projectInfos, context));
 
     // Separate parts of a file, when reference with something like that: -- File: xx/yy/ff.sql
     // So split content by "-- File: " and write to path underneath db/schema
@@ -228,7 +221,7 @@ export async function activate(context: ExtensionContext) {
 
       if (task.definition.type === "dbFlux"){
 
-        console.log('task.name', task.name);
+        outputLog(task.name + " done");
         switch (task.name) {
           case "executeTests" : {
             webViewTestPanel = openTestResult(context, webViewTestPanel);
