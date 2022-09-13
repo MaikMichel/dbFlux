@@ -75,25 +75,20 @@ ${DBFLOW_SQLCLI} -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! >
 !
 
 if [[ -f "${DBFLOW_EXP_PATH}.zip.base64" ]]; then
-  echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported static file ... ${NC}"
-
-  if grep -q "ORA-20001:" "${DBFLOW_EXP_PATH}.zip.base64"; then
+  #if grep -q "ORA-20001:" "${DBFLOW_EXP_PATH}.zip.base64"; then
+  if grep -q "ORA-.*:" "${DBFLOW_EXP_PATH}.zip.base64"; then
     echo -e "${RED}Error detected on export${NC}"
-    echo -e "${ORANGE}Opening output${NC}"
-    mv "${DBFLOW_EXP_PATH}.zip.base64" "${DBFLOW_EXP_PATH}.log"
-    code "${DBFLOW_EXP_PATH}.log"
-  elif grep -q "ORA-20002:" "${DBFLOW_EXP_PATH}.zip.base64"; then
-    echo -e "${RED}Nothing to export${NC}"
-    echo -e "${ORANGE}Opening output${NC}"
-    mv "${DBFLOW_EXP_PATH}.zip.base64" "${DBFLOW_EXP_PATH}.log"
-    code "${DBFLOW_EXP_PATH}.log"
+    tput setaf 9
+    cat "${DBFLOW_EXP_PATH}.zip.base64"
+    tput setaf default
+
+    rm "${DBFLOW_EXP_PATH}.zip.base64"
   else
+    echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported static file ... ${NC}"
     base64 -di "${DBFLOW_EXP_PATH}.zip.base64" > "${DBFLOW_EXP_PATH}.zip"
 
     # remove base64 garbage
-    if [[ -f "${DBFLOW_EXP_PATH}.zip.base64" ]]; then
-      rm "${DBFLOW_EXP_PATH}.zip.base64"
-    fi
+    rm "${DBFLOW_EXP_PATH}.zip.base64"
   fi
 
   # unzip file content
