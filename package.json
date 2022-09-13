@@ -14,6 +14,11 @@
 	"engines": {
 		"vscode": "^1.60.0"
 	},
+	"keywords": [
+		"plsql",
+		"oracle",
+		"apex"
+	],
 	"preview": false,
 	"author": {
 		"name": "Maik Michel"
