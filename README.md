@@ -28,6 +28,8 @@ Using this extension enables you to develop Oracle Database and APEX application
 - [**Split or join files**](#split-and-join-files 'Jump to Split and Join Files '), when content is seperated with "-- File: "
 - [**Initialize project**](#initialize-project 'Jump to Initialize project') so you can just work
 - Addionaly Support for dbFlow and XCL projects
+- [**Lock and unlock Files**](#lock-and-unlock-files 'Jump to Lock and unlock Files'), so you can't accidentally delete changes allready made by another person
+- [**Export APEX Static Application Files**](#export-apex-static-application-files 'Jump to Export APEX Static Application Files') to static folder
 
 
 
@@ -384,6 +386,9 @@ With **dbFlux** you can directly export the stored REST modules. All you have to
 **dbFlux** can export an entire schema or just a specific object. To export a schema simply call the command: ``dbFlux: Export DB Schema into Folder`` and select the schema you want to export. **dbFlux** will show you the corresponding schema folders here. Select one. Additionally you can set the destination directory. By default this is set to the schema you want to export.
 If you want to export an object, you must have already created a file for it and have it currently open. If you then want to export the object with the command: ``dbFlux: Export current Object into current File`` , the object matching the file will be exported. For tables, the indexes and contraints are additionally exported.
 
+## Export APEX Static Application Files [#](#export-apex-static-application-files 'Export APEX Static Application Files')
+
+With **dbFLux** you can now export static application files of the configured applications to the static folder. You can either use the command: `Export Static Application Files` to export all files of an application or you can call the command: `Export Static Application File (current)` if you already have a static file open. In this case exactly this file will be downloaded from the Static Application Files. This makes it easy to start working with VSCode and dbFLux especially for existing projects.
 
 
 ## Add: APEX Application, REST Module, Workspace or Schema
@@ -410,6 +415,13 @@ In FlexSchema mode **dbFlux** additionally offers you the command `dbFLux: Add W
 ### Add Schema
 
 In FlexSchema mode, dbFLux also offers you the command `dbFLux: Add Schema`. With this command you can add Schemas inside the different main directories: **`apex, db, rest, static`**. You will be shown a selection of these folders, in which you have to select all or only one, before you enter the actual schema name.
+
+
+### Lock and unlock Files [#](#lock-and-unlock-files 'Lock and unlock Files')
+> feature is in preview - things might change
+
+You can enable this feature within the settings for `Rest APIEnabled`. You can find the implementation for an ORDS-REST endpoint at (https://github.com/MaikMichel/dbLock). You have to install it accordingly. It is sufficient to execute the installation file in a schema of your choice. At the end of the installation a token will be displayed. This token has to be added in addition to the URL under which this REST service is now accessible in settings as well. (`Rest APIToken`, `Rest APIUrl`)
+
 
 <p align="center">
   <br/>
