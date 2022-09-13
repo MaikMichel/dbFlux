@@ -213,9 +213,21 @@
 			},
 			{
 				"command": "dbFlux.exportObject",
-				"title": "Export current Object into current File",
+				"title": "Export DB Object (current)",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*$/"
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|\/)db(\\\\|\/).*$/"
+			},
+			{
+				"command": "dbFlux.exportStaticFiles",
+				"title": "Export Static Application Files",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.exportCurrentStaticFile",
+				"title": "Export Static Application File (current)",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|\/)static(\\\\|\/).*$/"
 			},
 			{
 				"command": "dbFlux.addReportFolder",
@@ -509,7 +521,7 @@
 					"dark": "#ecc903",
 					"light": "#0000000C",
 					"highContrast": "#FFFFFF13"
-					}
+				}
 			},
 			{
 				"id": "dbFLow.lockedFileBackground",

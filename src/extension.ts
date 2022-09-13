@@ -18,6 +18,9 @@ import { revealItemWizard } from "./wizards/RevealItemWizard";
 import { ExportDBObjectProvider, ExportDBSchemaProvider, registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
 import { extensionManager } from "./provider/UpdateInfoProvider";
 import { registerLockCurrentFileCommand, registerregisterRefreshLockedFiles, registerUnLockCurrentFileCommand, ViewFileDecorationProvider } from "./provider/ViewFileDecorationProvider";
+import { ExportCurrentStaticFileProvider, ExportStaticFilesProvider, registerExportCurrentStaticFileCommand, registerExportStaticFilesCommand } from "./provider/ExportStaticFilesProvider";
+
+
 
 
 export async function activate(context: ExtensionContext) {
@@ -131,6 +134,15 @@ export async function activate(context: ExtensionContext) {
     // Export DBObject
     context.subscriptions.push(registerExportDBObjectCommand(context));
     context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportDBObjectProvider(context)));
+
+
+    // Export APEX Static Files
+    context.subscriptions.push(registerExportStaticFilesCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportStaticFilesProvider(context)));
+
+    // Export one APEX Static File
+    context.subscriptions.push(registerExportCurrentStaticFileCommand(context));
+    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportCurrentStaticFileProvider(context)));
 
 
     // Enable FLEX Mode
