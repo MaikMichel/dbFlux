@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "4.0.0",
+	"version": "4.0.1",
 	"engines": {
 		"vscode": "^1.60.0"
 	},
@@ -497,6 +497,7 @@
 					},
 					"dbFlux.dbLock.RestAPIEnabled": {
 						"type": "boolean",
+						"default": false,
 						"markdownDescription": "Activate to enable dbLock feature",
 						"scope": "window"
 					},

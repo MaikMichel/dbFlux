@@ -30,25 +30,30 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
   }
 
   async refreshCache() {
-    const urlToFetch = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/") + "/dblock/v1/files/" + getProjectInfos(this.context).projectName?.toLowerCase();
-    const options = {
-      method: 'GET',
-      headers: {  Accept: '*/*',
-                 'User-Agent': 'VSCode (dbFlux)',
-                 'mandant': ConfigurationManager.getDBLockMandantToken()
-          }
-        };
+    try {
+      const urlToFetch = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/") + "/dblock/v1/files/" + getProjectInfos(this.context).projectName?.toLowerCase();
+      const options = {
+        method: 'GET',
+        headers: {  Accept: '*/*',
+                  'User-Agent': 'VSCode (dbFlux)',
+                  'mandant': ConfigurationManager.getDBLockMandantToken()
+            }
+          };
 
-    const response = await fetch(urlToFetch, options);
-    const data = await response.json();
-    this.cachedFiles = data.items.map(function (elem:any) {
-      return elem.lfs_name
-    });
-    this.cachedUsers = data.items.map(function (elem:any) {
-      return elem.lfs_user
-    });
+      const response = await fetch(urlToFetch, options);
+      const data = await response.json();
+      this.cachedFiles = data.items.map(function (elem:any) {
+        return elem.lfs_name
+      });
+      this.cachedUsers = data.items.map(function (elem:any) {
+        return elem.lfs_user
+      });
 
-    this.updateDecorations();
+      this.updateDecorations();
+    } catch (e:any) {
+      console.error(e);
+      await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
+    }
   }
 
   updateDecorations() {
@@ -106,20 +111,25 @@ export function registerLockCurrentFileCommand(projectInfos: IProjectInfos, deco
             }
       };
 
-      console.log('url', url, options);
-      const response = await fetch(url, options);
-      console.log('response', response, response.body);
+      // console.log('url', url, options);
+      try {
+        const response = await fetch(url, options);
+        // console.log('response', response, response.body);
 
-      if (response.ok) {
-        const data = await response.json();
+        if (response.ok) {
+          const data = await response.json();
 
-        window.showInformationMessage(`${data.message}`)
-        decoProvider.refreshCache();
-      } else {
-        const text = response.text();
-        console.log('text', text);
+          window.showInformationMessage(`${data.message}`)
+          decoProvider.refreshCache();
+        } else {
+          // const text = response.text();
+          // console.log('text', text);
 
-        outputLog(`Status from ${urlFromSettings} was ${response.status}`);
+          outputLog(`Status from ${urlFromSettings} was ${response.status}`);
+        }
+      } catch (e:any) {
+        console.error(e);
+        await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
       }
     }
   }
@@ -143,15 +153,19 @@ export function registerUnLockCurrentFileCommand(projectInfos: IProjectInfos, de
             }
           };
 
+      try {
+        const response = await fetch(url, options);
+        if (response.ok) {
+          const data = await response.json();
 
-      const response = await fetch(url, options);
-      if (response.ok) {
-        const data = await response.json();
-
-        window.showInformationMessage(`${data.message}`)
-        decoProvider.refreshCache();
-      } else {
-        outputLog(`Status from ${urlFromSettings} was ${response.status}`);
+          window.showInformationMessage(`${data.message}`)
+          decoProvider.refreshCache();
+        } else {
+          outputLog(`Status from ${urlFromSettings} was ${response.status}`);
+        }
+      } catch (e:any) {
+        console.error(e);
+        await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
       }
     }
   });

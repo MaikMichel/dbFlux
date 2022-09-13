@@ -253,15 +253,20 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
 
           let compilable = true;
           if (dbLockService) {
-            const locked:ILockedFile = await isfileLockedByAnotherUser(projectInfos.projectName!, relativeFileName);
-            const currentUser = process.env.username?process.env.username:"none";
-            console.log('currentUser', currentUser);
-            if (locked.isLocked && locked.user !== currentUser) {
-              compilable = false;
-              await window.showInformationMessage(`File is locked by User ${locked.user}. You have to unlock the file first!`, "OK");
-              // await window.showInformationMessage(`File is locked by User ${locked.user}. Compile anyway?`, "Yes", "No").then(answer => {
-              //    compilable = (answer === "Yes");
-              // });
+            try {
+              const locked:ILockedFile = await isfileLockedByAnotherUser(projectInfos.projectName!, relativeFileName);
+              const currentUser = process.env.username?process.env.username:"none";
+              console.log('currentUser', currentUser);
+              if (locked.isLocked && locked.user !== currentUser) {
+                compilable = false;
+                await window.showWarningMessage(`File is locked by User ${locked.user}. You have to unlock the file first!`);
+                // await window.showInformationMessage(`File is locked by User ${locked.user}. Compile anyway?`, "Yes", "No").then(answer => {
+                //    compilable = (answer === "Yes");
+                // });
+              }
+            } catch (e:any) {
+                console.error(e);
+                await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
             }
           }
 
