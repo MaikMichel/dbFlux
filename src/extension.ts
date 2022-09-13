@@ -7,7 +7,7 @@ import { ExportTaskProvider, registerExportAPEXCommand } from "./provider/Export
 import { registerExportRESTCommand, RestTaskProvider } from "./provider/RestTaskProvider";
 import { applyFileExists, getDBFlowMode, getProjectInfos } from "./provider/AbstractBashTaskProvider";
 import { openTestResult, registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand, TestTaskProvider } from "./provider/TestTaskProvider";
-import { removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
+import { ConfigurationManager, removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
 import { outputLog } from './helper/OutputChannel';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
@@ -17,6 +17,7 @@ import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLog
 import { revealItemWizard } from "./wizards/RevealItemWizard";
 import { ExportDBObjectProvider, ExportDBSchemaProvider, registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
 import { extensionManager } from "./provider/UpdateInfoProvider";
+import { registerLockCurrentFileCommand, registerregisterRefreshLockedFiles, registerUnLockCurrentFileCommand, ViewFileDecorationProvider } from "./provider/ViewFileDecorationProvider";
 
 
 export async function activate(context: ExtensionContext) {
@@ -194,7 +195,20 @@ export async function activate(context: ExtensionContext) {
     // Open SpecOrBody
     context.subscriptions.push(registerOpenSpecOrBody());
 
+    if (ConfigurationManager.isDBLockEnabled()) {
 
+      // dbLock
+      const decoProvider = new ViewFileDecorationProvider(context)
+      context.subscriptions.push(decoProvider);
+      setTimeout(() => {
+        decoProvider.refreshCache();
+      }, 100);
+
+      context.subscriptions.push(registerLockCurrentFileCommand(projectInfos, decoProvider));
+      context.subscriptions.push(registerUnLockCurrentFileCommand(projectInfos, decoProvider));
+      context.subscriptions.push(registerregisterRefreshLockedFiles(decoProvider));
+
+    }
 
     // Execute Something when task endet
     tasks.onDidEndTask((e) => {
@@ -202,6 +216,7 @@ export async function activate(context: ExtensionContext) {
 
       if (task.definition.type === "dbFlux"){
 
+        console.log('task.name', task.name);
         switch (task.name) {
           case "executeTests" : {
             webViewTestPanel = openTestResult(context, webViewTestPanel);
@@ -211,6 +226,10 @@ export async function activate(context: ExtensionContext) {
             webViewTestPanel = openTestResult(context, webViewTestPanel);
             break;
           }
+          // case "compileFile" : {
+          //   lockFileByRest(task, projectInfos, decoProvider);
+          //   break;
+          // }
         }
 
         // Reset when the current panel is closed

@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationManager, focusProblemPanel } from "../helper/ConfigurationManager";
-import { getActiveFileUri, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
+import { getActiveFileUri, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
 import { AbstractBashTaskProvider, getDBSchemaFolders, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
 import { CompileTaskStore, setAdminPassword, setAdminUserName, setAppPassword } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, TaskScope, Uri, window, workspace } from "vscode";
@@ -11,6 +11,8 @@ import { Terserer } from "../templaters/Terserer";
 import { Uglifyer } from "../templaters/Uglifyer";
 import { SimpleUploader } from "../templaters/SimpleUploader";
 import { ReportTemplater } from "../templaters/ReportTemplater";
+import fetch from "node-fetch";
+import { outputLog } from "../helper/OutputChannel";
 
 
 const which = require('which');
@@ -18,6 +20,11 @@ const which = require('which');
 interface OraTaskDefinition extends TaskDefinition {
   name:   string;
   runner: ICompileInfos;
+}
+
+interface ILockedFile {
+  isLocked:boolean
+  user:string
 }
 
 interface ICompileInfos extends IBashInfos {
@@ -208,6 +215,7 @@ export function registerCompileFileCommand(context: ExtensionContext) {
     // get current config
     const projectInfosReloaded = getProjectInfos(context);
     const compTaskStoreInstance = CompileTaskStore.getInstance();
+    const dbLockService = ConfigurationManager.isDBLockEnabled();
 
     if (projectInfosReloaded.isValid) {
 
@@ -242,8 +250,26 @@ export function registerCompileFileCommand(context: ExtensionContext) {
         which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
 
           if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideSetup || insideDb || insideREST || insideAPEX)) {
-             // call the compile Task itself
-             commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+
+            let compilable = true;
+            if (dbLockService) {
+              const locked:ILockedFile = await isfileLockedByAnotherUser(projectInfosReloaded.projectName!, relativeFileName);
+              const currentUser = process.env.username?process.env.username:"none";
+              console.log('currentUser', currentUser);
+              if (locked.isLocked && locked.user !== currentUser) {
+                compilable = false;
+                await window.showInformationMessage(`File is locked by User ${locked.user}. You have to unlock the file first!`, "OK");
+                // await window.showInformationMessage(`File is locked by User ${locked.user}. Compile anyway?`, "Yes", "No").then(answer => {
+                //    compilable = (answer === "Yes");
+                // });
+              }
+            }
+
+            // call the compile Task itself
+            if (compilable) {
+              commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+            }
+
 
              // when configured, the problem panel will be focused
              focusProblemPanel();
@@ -303,4 +329,36 @@ export function registerCompileFileCommand(context: ExtensionContext) {
       }
     }
   });
+}
+
+async function isfileLockedByAnotherUser(projectName: string, relativeFileName: string):Promise<ILockedFile> {
+  let element:ILockedFile = {isLocked:false, user:""};
+  const urlEncodedFile = encodeURIComponent(relativeFileName!);
+  const urlFromSettings = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/");
+  const url = `${urlFromSettings}/api/v1/file/${projectName.toLowerCase()}?filename=${urlEncodedFile}`;
+  const options = {
+    method: 'GET',
+    headers: { Accept: '*/*',
+              'User-Agent': 'VSCode (dbFlux)',
+              'mandant': ConfigurationManager.getDBLockMandantToken()
+            }
+  };
+
+  const response = await fetch(url, options);
+  if (response.ok) {
+    const data = await response.json();
+
+    if (data.items.length > 0) {
+      element.isLocked = true;
+      element.user = data.items[0].lfs_user?data.items[0].lfs_user:"unknown";
+      // console.log('element', element);
+      outputLog(`File is locked by ${element.user}`);
+    } else {
+      outputLog(`File is not locked`);
+    }
+  } else {
+    outputLog(`Response status from ${urlFromSettings} was ${response.status}`);
+  }
+
+  return element;
 }
