@@ -3,10 +3,9 @@ import * as path from "path";
 
 import { getAllFoldersButNotTheLastFolder, getLastFolderFromFolderPath } from "../helper/utilities";
 import { ExportTaskStore } from "../stores/ExportTaskStore";
-import { AbstractBashTaskProvider, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
-import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, TaskScope, Uri, window, workspace } from "vscode";
+import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
-import { WSAEINVALIDPROCTABLE } from "constants";
 
 const which = require('which');
 
@@ -98,18 +97,18 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
 }
 
 
-export function registerExportAPEXCommand(context: ExtensionContext) {
+export function registerExportAPEXCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportAPEX", async () => {
-    const projectInfosReloaded = getProjectInfos(context);
 
-    if (projectInfosReloaded.isValid) {
-      setAppPassword(projectInfosReloaded);
+    if (projectInfos.isValid) {
+      setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
         which('sql').then(async () => {
-          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfosReloaded);
+          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos);
 
           if (ExportTaskStore.getInstance().expID !== undefined) {
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportTaskProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportAPEX");
           } else {
             window.setStatusBarMessage('dbFlux: No Application found or selected', 2000);

@@ -1,6 +1,18 @@
 # Change Log
 
 
+## [4.0.0 - 2022-09-13]
+- Feature: Add dbLock > Lock and unlock files like APEX Pagebuilder
+- Feature: Add export Static Application Files to static folder
+- Feature: Add support for obfuscated apply.env, when using dbFLow
+- Refactor: Tuning Task creation
+- Refactor: Change error output when exporting schema or static files
+- Refactor: Remove VM options when using SQLcl
+- Refactor: Add keywords to package.json
+- Fix: Compile Schema won't show items in bin/trash
+- Fix: Modified snippet to be more consistent
+
+
 ## [3.4.1 - 2022-07-15]
 - Fix: Compile File on Windows vs MacOS
 

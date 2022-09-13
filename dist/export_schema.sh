@@ -84,22 +84,22 @@ ${DBFLOW_SQLCLI} -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! >
 
 !
 
-
 if [[ -f "db/${DBFLOW_SCHEMA}.zip.base64" ]]; then
-  echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported schema file ... ${NC}"
-
-  if grep -q "ORA-20001:" "db/${DBFLOW_SCHEMA}.zip.base64"; then
+  # if grep -q "ORA-20001:" "db/${DBFLOW_SCHEMA}.zip.base64"; then
+  if grep -q "ORA-.*:" "db/${DBFLOW_SCHEMA}.zip.base64"; then
     echo -e "${RED}Error detected on export${NC}"
-    echo -e "${ORANGE}Opening output${NC}"
-    mv "db/${DBFLOW_SCHEMA}.zip.base64" "db/${DBFLOW_SCHEMA}.log"
-    code "db/${DBFLOW_SCHEMA}.log"
+    tput setaf 9
+    cat "db/${DBFLOW_SCHEMA}.zip.base64"
+    tput setaf default
+
+    rm "db/${DBFLOW_SCHEMA}.zip.base64"
   else
+    echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported schema file ... ${NC}"
     base64 -di "db/${DBFLOW_SCHEMA}.zip.base64" > "db/${DBFLOW_SCHEMA}.zip"
 
     # remove base64 garbage
-    if [[ -f "db/${DBFLOW_SCHEMA}.zip.base64" ]]; then
-      rm "db/${DBFLOW_SCHEMA}.zip.base64"
-    fi
+    rm "db/${DBFLOW_SCHEMA}.zip.base64"
+
   fi
 
   # unzip file content

@@ -3,14 +3,17 @@
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationManager, focusProblemPanel } from "../helper/ConfigurationManager";
-import { getActiveFileUri, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
-import { AbstractBashTaskProvider, getDBSchemaFolders, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
+import { getActiveFileUri, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
+import { AbstractBashTaskProvider, getDBSchemaFolders, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { CompileTaskStore, setAdminPassword, setAdminUserName, setAppPassword } from "../stores/CompileTaskStore";
-import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, TaskScope, Uri, window, workspace } from "vscode";
+import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { Terserer } from "../templaters/Terserer";
 import { Uglifyer } from "../templaters/Uglifyer";
 import { SimpleUploader } from "../templaters/SimpleUploader";
 import { ReportTemplater } from "../templaters/ReportTemplater";
+import fetch from "node-fetch";
+import { outputLog } from "../helper/OutputChannel";
+import { CompileSchemasProvider } from "./CompileSchemasProvider";
 
 
 const which = require('which');
@@ -18,6 +21,11 @@ const which = require('which');
 interface OraTaskDefinition extends TaskDefinition {
   name:   string;
   runner: ICompileInfos;
+}
+
+interface ILockedFile {
+  isLocked:boolean
+  user:string
 }
 
 interface ICompileInfos extends IBashInfos {
@@ -162,11 +170,11 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
 }
 
 
-export function registerCompileSchemasCommand(context: ExtensionContext) {
+export function registerCompileSchemasCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.compileSchemas", async () => {
-    const projectInfosReloaded = getProjectInfos(context);
-    if (projectInfosReloaded.isValid) {
-      setAppPassword(projectInfosReloaded);
+
+    if (projectInfos.isValid) {
+      setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
 
@@ -186,6 +194,7 @@ export function registerCompileSchemasCommand(context: ExtensionContext) {
 
         if (schemaSelected) {
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileSchemasProvider(context, "compileSchemas")));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileSchemas");
           }).catch(() => {
             window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
@@ -196,7 +205,7 @@ export function registerCompileSchemasCommand(context: ExtensionContext) {
   });
 }
 
-export function registerCompileFileCommand(context: ExtensionContext) {
+export function registerCompileFileCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.compileFile", async () => {
 
     // save file
@@ -206,10 +215,10 @@ export function registerCompileFileCommand(context: ExtensionContext) {
     }
 
     // get current config
-    const projectInfosReloaded = getProjectInfos(context);
     const compTaskStoreInstance = CompileTaskStore.getInstance();
+    const dbLockService = ConfigurationManager.isDBLockEnabled();
 
-    if (projectInfosReloaded.isValid) {
+    if (projectInfos.isValid) {
 
       // check what file has to build
       let fileName = await getWorkingFile();
@@ -218,7 +227,7 @@ export function registerCompileFileCommand(context: ExtensionContext) {
 
       const insideSetup = (matchRuleShort(relativeFileName, 'db/_setup/*') || matchRuleShort(relativeFileName, 'db/.setup/*'));
       const insideDb = !insideSetup && matchRuleShort(relativeFileName, 'db/*');
-      const insideStatics = matchRuleShort(relativeFileName, projectInfosReloaded.isFlexMode ? 'static/*/*/f*/src/*' : 'static/f*/src/*');
+      const insideStatics = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'static/*/*/f*/src/*' : 'static/f*/src/*');
       const insideReports = matchRuleShort(relativeFileName, 'reports/*');
       const insideAPEX = matchRuleShort(relativeFileName, 'apex/*');
       const insideREST = matchRuleShort(relativeFileName, 'rest/*');
@@ -227,10 +236,10 @@ export function registerCompileFileCommand(context: ExtensionContext) {
 
       // Set password and userinfo to taskStore
       if (insideSetup) {
-        await setAdminUserName(projectInfosReloaded);
-        await setAdminPassword(projectInfosReloaded);
+        await setAdminUserName(projectInfos);
+        await setAdminPassword(projectInfos);
       } else {
-        await setAppPassword(projectInfosReloaded);
+        await setAppPassword(projectInfos);
       }
 
       if ((insideSetup
@@ -241,56 +250,75 @@ export function registerCompileFileCommand(context: ExtensionContext) {
 
         which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
 
-          if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideSetup || insideDb || insideREST || insideAPEX)) {
-             // call the compile Task itself
-             commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
 
-             // when configured, the problem panel will be focused
-             focusProblemPanel();
-
-          } else if (insideStatics && ['js'].includes(fileExtension.toLowerCase())) {
-            // Minify and create JS-Maps when needed
-            const tersered = new Terserer(fileName, projectInfosReloaded.isFlexMode);
-            const success = await tersered.genFile();
-            if (success) {
-              commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
-            } else {
-              window.showErrorMessage("dbFlux/terser: " + tersered.getLastErrorMessage());
+          let compilable = true;
+          if (dbLockService) {
+            const locked:ILockedFile = await isfileLockedByAnotherUser(projectInfos.projectName!, relativeFileName);
+            const currentUser = process.env.username?process.env.username:"none";
+            console.log('currentUser', currentUser);
+            if (locked.isLocked && locked.user !== currentUser) {
+              compilable = false;
+              await window.showInformationMessage(`File is locked by User ${locked.user}. You have to unlock the file first!`, "OK");
+              // await window.showInformationMessage(`File is locked by User ${locked.user}. Compile anyway?`, "Yes", "No").then(answer => {
+              //    compilable = (answer === "Yes");
+              // });
             }
-          } else if (insideStatics && ['css'].includes(fileExtension.toLowerCase())) {
-            // Minify CSS
-            const uglifyer = new Uglifyer(fileName, projectInfosReloaded.isFlexMode);
-            uglifyer.genFile();
-            commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
-          } else if (insideStatics) {
-            // Otherwise (not JS or CSS) simple upload the file
-            const simpleUploader = new SimpleUploader(fileName, projectInfosReloaded.isFlexMode);
-            simpleUploader.genFile();
-            commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
-          } else if (insideReports && !extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
-            const reportTemplater = new ReportTemplater(fileName);
-            reportTemplater.genFile();
-          } else if (insideReports || !(insideDb || insideREST || insideAPEX || insideSetup || insideStatics) && extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
-              const dbSchemaFolders = await getDBSchemaFolders();
-              let schemaSelected: boolean = false;
-              if (dbSchemaFolders.length > 1) {
-                const item: QuickPickItem | undefined = await window.showQuickPick(dbSchemaFolders, {
-                  canPickMany: false, placeHolder: 'Choose Schema to execute this file'
-                });
-                schemaSelected = (item !== undefined);
-                CompileTaskStore.getInstance().selectedSchemas = [item?.description!];
-              } else if (dbSchemaFolders.length === 1) {
-                schemaSelected = true;
-                CompileTaskStore.getInstance().selectedSchemas = dbSchemaFolders?.map(function (element) { return element.description!; });
-              }
-
-              if (schemaSelected) {
-                commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
-              }
-          } else {
-            window.showWarningMessage('Current filetype or location is not supported by dbFlux ...');
           }
 
+          if (compilable) {
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileTaskProvider(context)));
+
+            if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideSetup || insideDb || insideREST || insideAPEX)) {
+
+              // call the compile Task itself
+              commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+
+              // when configured, the problem panel will be focused
+              focusProblemPanel();
+
+            } else if (insideStatics && ['js'].includes(fileExtension.toLowerCase())) {
+              // Minify and create JS-Maps when needed
+              const tersered = new Terserer(fileName, projectInfos.isFlexMode);
+              const success = await tersered.genFile();
+              if (success) {
+                commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+              } else {
+                window.showErrorMessage("dbFlux/terser: " + tersered.getLastErrorMessage());
+              }
+            } else if (insideStatics && ['css'].includes(fileExtension.toLowerCase())) {
+              // Minify CSS
+              const uglifyer = new Uglifyer(fileName, projectInfos.isFlexMode);
+              uglifyer.genFile();
+              commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+            } else if (insideStatics) {
+              // Otherwise (not JS or CSS) simple upload the file
+              const simpleUploader = new SimpleUploader(fileName, projectInfos.isFlexMode);
+              simpleUploader.genFile();
+              commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+            } else if (insideReports && !extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
+              const reportTemplater = new ReportTemplater(fileName);
+              reportTemplater.genFile();
+            } else if (insideReports || !(insideDb || insideREST || insideAPEX || insideSetup || insideStatics) && extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
+                const dbSchemaFolders = await getDBSchemaFolders();
+                let schemaSelected: boolean = false;
+                if (dbSchemaFolders.length > 1) {
+                  const item: QuickPickItem | undefined = await window.showQuickPick(dbSchemaFolders, {
+                    canPickMany: false, placeHolder: 'Choose Schema to execute this file'
+                  });
+                  schemaSelected = (item !== undefined);
+                  CompileTaskStore.getInstance().selectedSchemas = [item?.description!];
+                } else if (dbSchemaFolders.length === 1) {
+                  schemaSelected = true;
+                  CompileTaskStore.getInstance().selectedSchemas = dbSchemaFolders?.map(function (element) { return element.description!; });
+                }
+
+                if (schemaSelected) {
+                  commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+                }
+            } else {
+              window.showWarningMessage('Current filetype or location is not supported by dbFlux ...');
+            }
+          }
         }).catch((e: any) => {
           console.error(e);
           window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
@@ -303,4 +331,36 @@ export function registerCompileFileCommand(context: ExtensionContext) {
       }
     }
   });
+}
+
+async function isfileLockedByAnotherUser(projectName: string, relativeFileName: string):Promise<ILockedFile> {
+  let element:ILockedFile = {isLocked:false, user:""};
+  const urlEncodedFile = encodeURIComponent(relativeFileName!);
+  const urlFromSettings = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/");
+  const url = `${urlFromSettings}/dblock/v1/file/${projectName.toLowerCase()}?filename=${urlEncodedFile}`;
+  const options = {
+    method: 'GET',
+    headers: { Accept: '*/*',
+              'User-Agent': 'VSCode (dbFlux)',
+              'mandant': ConfigurationManager.getDBLockMandantToken()
+            }
+  };
+
+  const response = await fetch(url, options);
+  if (response.ok) {
+    const data = await response.json();
+
+    if (data.items.length > 0) {
+      element.isLocked = true;
+      element.user = data.items[0].lfs_user?data.items[0].lfs_user:"unknown";
+      // console.log('element', element);
+      outputLog(`File is locked by ${element.user}`);
+    } else {
+      outputLog(`File is not locked`);
+    }
+  } else {
+    outputLog(`Response status from ${urlFromSettings} was ${response.status}`);
+  }
+
+  return element;
 }

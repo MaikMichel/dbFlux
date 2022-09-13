@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as path from "path";
 
-import { getAllFoldersButNotTheLastFolder, getLastFolderFromFolderPath, matchRuleShort } from "../helper/utilities";
-import { AbstractBashTaskProvider, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
+import { getAllFoldersButNotTheLastFolder, getLastFolderFromFolderPath } from "../helper/utilities";
+import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { RestTaskStore } from "../stores/RestTaskStore";
-import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, TaskScope, Uri, window, workspace } from "vscode";
+import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 
 const which = require('which');
@@ -95,17 +95,17 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
 }
 
 
-export function registerExportRESTCommand(context: ExtensionContext) {
+export function registerExportRESTCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportREST", async () => {
-    const projectInfosReloaded = getProjectInfos(context);
 
-    if (projectInfosReloaded.isValid) {
-      setAppPassword(projectInfosReloaded);
+    if (projectInfos.isValid) {
+      setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
         which('sql').then(async () => {
-          RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule(projectInfosReloaded);
+          RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule(projectInfos);
           if (RestTaskStore.getInstance().restModule !== undefined) {
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new RestTaskProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportREST");
           }
         }).catch((e: any) => {

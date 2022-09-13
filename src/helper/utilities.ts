@@ -56,6 +56,11 @@ export function ltrim (s:string, c:string) {
   return s.replace(new RegExp("^[" + c + "]+|[" + c + "]+$", "g"), "");
 }
 
+export function rtrim (s:string, c:string) {
+  if (s === undefined) s = '\\s';
+  return s.replace(new RegExp("[" + c + "]*$"), '');
+};
+
 export function getApplicationIdFromPath(sourceFile: string, isFlexMode: boolean) {
   if (isFlexMode) {
     // */static/scheman_name/workspace_name/f_with_app_id/src/*

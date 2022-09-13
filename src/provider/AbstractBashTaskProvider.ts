@@ -174,6 +174,15 @@ function getProjectInfosFromDBFlow():IProjectInfos {
       projectInfos.dbAdminUser = applyEnv.parsed.DB_ADMIN_USER;
       projectInfos.dbAdminPwd  = applyEnv.parsed.DB_ADMIN_PWD;
       projectInfos.dbTns       = applyEnv.parsed.DB_TNS;
+
+      // decode when starting with an !
+      if (projectInfos.dbAppPwd && projectInfos.dbAppPwd.startsWith("!")) {
+        projectInfos.dbAppPwd = Buffer.from(projectInfos.dbAppPwd.substring(1), 'base64').toString('utf8').replace("\n", "");
+      }
+      // decode when starting with an !
+      if (projectInfos.dbAdminPwd && projectInfos.dbAdminPwd.startsWith("!")) {
+        projectInfos.dbAdminPwd = Buffer.from(projectInfos.dbAdminPwd.substring(1), 'base64').toString('utf8').replace("\n", "");
+      }
     }
 
     if (buildEnv.parsed) {

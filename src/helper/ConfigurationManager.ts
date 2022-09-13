@@ -57,6 +57,19 @@ export class ConfigurationManager {
   static getShowWarningsAndErrorsWithColoredOutput(): boolean {
     return this.get<boolean>("showWarningMessages.showWarningsAndErrorsWithColoredOutput");
   }
+
+  static isDBLockEnabled(): boolean {
+    return this.get<boolean>("dbLock.RestAPIEnabled");
+  }
+
+  static getDBLockRESTUrl(): string {
+    return this.get<string>("dbLock.RestAPIUrl");
+  }
+
+  static getDBLockMandantToken(): string {
+    return this.get<string>("dbLock.RestAPIToken");
+  }
+
 }
 
 export function showConfig(applyFileName:string, buildFileName:string){
