@@ -484,7 +484,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 			context.workspaceState.update("dbFlux_mode", "dbFlux");
 			context.workspaceState.update("dbFlux_DB_TNS", state.dbConnection);
 			if (state.projectType.label === "SingleSchema") {
-					context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase() + "_app");
+					context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase());
 			} else {
 					context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase() + "_depl");
 			}
@@ -500,7 +500,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 				context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
 			} else if (state.projectType.label === "SingleSchema") {
 				context.workspaceState.update("dbFlux_PROJECT_MODE", "SINGLE");
-				context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
+				context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase());
 			} else if (state.projectType.label === "FlexSchema") {
 				context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
 			}
