@@ -1,6 +1,9 @@
 # Change Log
 
 
+- Fix: FK Constraint Snippet missing closing bracket
+- Fix: Name of Deploymentuser and Schemauser on dbFlux Mode when Single ProjectType
+
 ## [4.0.0 - 2022-09-13]
 - Feature: Add dbLock > Lock and unlock files like APEX Pagebuilder
 - Feature: Add export Static Application Files to static folder

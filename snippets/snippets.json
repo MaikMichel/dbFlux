@@ -193,7 +193,7 @@
 			"-- File: constraints/primaries/${TM_FILENAME_BASE}_${1:source_column}_pk.sql",
 			"alter table ${TM_FILENAME_BASE} add (",
 			"  constraint ${1:source_column}_pk",
-			"  primary key (${1:source_column)",
+			"  primary key (${1:source_column})",
 			"  using index ${TM_FILENAME_BASE}_${1:source_column}_pk",
 			"  enable validate",
 			");$0"
