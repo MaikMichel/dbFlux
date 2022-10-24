@@ -868,3 +868,14 @@
     end loop;
     return l_bas64;
   end;
+
+  procedure print_clob_to_output (p_clob IN clob) is
+   l_offset     pls_integer := 1;
+   l_length     pls_integer := 128;
+  begin
+    loop
+      exit when l_offset > dbms_lob.getlength(p_clob);
+      dbms_output.put_line( replace(replace(dbms_lob.substr( p_clob, l_length, l_offset), chr(10)), chr(13)));
+      l_offset := l_offset + l_length;
+    end loop;
+ end print_clob_to_output;

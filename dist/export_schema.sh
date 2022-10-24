@@ -39,20 +39,19 @@ echo -e "${BYELLOW}Object:${NC}        ${WHITE}${DBFLOW_EXP_FNAME}${NC}"
 echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Schema ${DBFLOW_SCHEMA} to db/${DBFLOW_SCHEMA} ${NC}"
 echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}"
 
-## FullExport
-PREPSTMT=":contents := to_base64(get_zip);"
-
-## Or just an object
-if [[ -n ${DBFLOW_EXP_FOLDER} ]]; then
-  PREPSTMT=":contents :=  to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}'));"
-fi
-
 ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/export_anonymous_function.sql" )
 
-
-
 # the export itself
-${DBFLOW_SQLCLI} -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! > db/"${DBFLOW_SCHEMA}".zip.base64
+if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
+  ## FullExport
+  PREPSTMT=":contents := to_base64(get_zip);"
+
+  ## Or just an object
+  if [[ -n ${DBFLOW_EXP_FOLDER} ]]; then
+    PREPSTMT=":contents :=  to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}'));"
+  fi
+
+  sqlplus -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! > db/"${DBFLOW_SCHEMA}".zip.base64
     set verify off
     set scan off
     set feedback off
@@ -83,6 +82,49 @@ ${DBFLOW_SQLCLI} -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! >
     print contents
 
 !
+
+else
+  ## FullExport
+  PREPSTMT="v_content := to_base64(get_zip);"
+
+  ## Or just an object
+  if [[ -n ${DBFLOW_EXP_FNAME} ]]; then
+    PREPSTMT="v_content := to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}'));"
+  fi
+
+    sql -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! > db/"${DBFLOW_SCHEMA}".zip.base64
+    set verify off
+    set scan off
+    set feedback off
+    set heading off
+    set trimout on
+    set trimspool on
+    set pagesize 0
+    set linesize 5000
+    set long 100000000
+    set longchunksize 32767
+    set serveroutput on
+    whenever sqlerror exit sql.sqlcode rollback
+    DECLARE
+      v_content clob;
+      ${ANOFUNCTIONS}
+    BEGIN
+      dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'SQLTERMINATOR',        true);
+      dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'PRETTY',               true);
+      dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'STORAGE',              false);
+      dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'SEGMENT_ATTRIBUTES',   false);
+      dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'CONSTRAINTS',          true);
+      dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'REF_CONSTRAINTS',      true);
+      dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'CONSTRAINTS_AS_ALTER', true);
+      dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'EMIT_SCHEMA',          false);
+      ${PREPSTMT}
+      print_clob_to_output(v_content);
+    END;
+    /
+
+!
+
+fi
 
 if [[ -f "db/${DBFLOW_SCHEMA}.zip.base64" ]]; then
   # if grep -q "ORA-20001:" "db/${DBFLOW_SCHEMA}.zip.base64"; then
