@@ -1,6 +1,7 @@
 # Change Log
 
-
+## [4.0.6 - 2022-10-24]
+- Fix: Export static files and schema when SQLcl is prefered
 - Fix: FK Constraint Snippet missing closing bracket
 - Fix: Name of Deploymentuser and Schemauser on dbFlux Mode when Single ProjectType
 
