@@ -18,6 +18,7 @@ import { registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./
 import { extensionManager } from "./provider/UpdateInfoProvider";
 import { registerLockCurrentFileCommand, registerregisterRefreshLockedFiles, registerUnLockCurrentFileCommand, ViewFileDecorationProvider } from "./provider/ViewFileDecorationProvider";
 import { registerExportCurrentStaticFileCommand, registerExportStaticFilesCommand } from "./provider/ExportStaticFilesProvider";
+import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticFileProvider";
 
 
 
@@ -140,6 +141,9 @@ export async function activate(context: ExtensionContext) {
 
     // Export one APEX Static File
     context.subscriptions.push(registerExportCurrentStaticFileCommand(projectInfos, context));
+
+    // Remove current APEX Static File
+    context.subscriptions.push(registerRemoveCurrentStaticFileCommand(projectInfos, context));
 
 
     // Enable FLEX Mode

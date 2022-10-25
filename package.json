@@ -230,6 +230,12 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.removeCurrentStaticFile",
+				"title": "Remove Static Application File (current)",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|/)static(\\\\|/).*$/"
+			},
+			{
 				"command": "dbFlux.exportCurrentStaticFile",
 				"title": "Export Static Application File (current)",
 				"category": "dbFlux",
