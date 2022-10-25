@@ -152,6 +152,12 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.runTriggerForCurrentFile",
+				"title": "Run trigger for current File",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
 				"command": "dbFlux.compileSchemas",
 				"title": "Compile selected Schemas",
 				"category": "dbFlux",

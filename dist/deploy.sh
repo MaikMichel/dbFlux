@@ -42,7 +42,7 @@ extension="${basefl##*.}"
 MDATE=`date +%d.%m.%y_%H:%M:%S,%5N`
 
 echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBUSER}@${DBFLOW_DBTNS}${NC}"
-echo -e "${BYELLOW}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC}"
+echo -e "${BYELLOW}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC} ${BYELLOW}(Trigger only:${NC} ${WHITE}${DBFLOW_TRIGGER_ONLY}${NC}${BYELLOW})${NC}"
 echo -e "${BYELLOW}OS-Now:${NC}      ${WHITE}${MDATE}${NC}"
 
 # define settings array
@@ -60,6 +60,8 @@ DBA_OPTION=""
 if [[ ${DBFLOW_DBUSER} == "sys" ]]; then
   DBA_OPTION=" as sysdba"
 fi
+
+if [[ ${DBFLOW_TRIGGER_ONLY} == "NO" ]]; then
 
 ${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}${DBA_OPTION} <<!
 $(
@@ -135,6 +137,8 @@ End;
 
 
 !
+
+fi
 
 if [ $? -ne 0 ]
 then

@@ -120,6 +120,7 @@ export async function activate(context: ExtensionContext) {
 
     // Compile
     context.subscriptions.push(registerCompileFileCommand(projectInfos, context));
+    context.subscriptions.push(registerCompileFileCommand(projectInfos, context, true));
 
 
     // Export APEX

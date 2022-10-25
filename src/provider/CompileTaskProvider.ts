@@ -38,10 +38,16 @@ interface ICompileInfos extends IBashInfos {
   trgRunsFile:        string;
   coloredOutput:      string;
   additionalOutput:   string;
+  onlyTriggerRun:     string;
 }
 
 export class CompileTaskProvider extends AbstractBashTaskProvider implements TaskProvider {
+  onlyTrigger: boolean = false;
 
+  constructor(context: ExtensionContext, onlyTrigger: boolean = false) {
+    super(context);
+    this.onlyTrigger = onlyTrigger;
+  }
 
   provideTasks(): Thenable<Task[]> | undefined {
     return this.getCompileTasks();
@@ -89,6 +95,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
           DBFLOW_ENABLE_WARNINGS:   definition.runner.enableWarnings,
           DBFLOW_ADDITIONAL_OUTPUT: definition.runner.additionalOutput,
 
+          DBFLOW_TRIGGER_ONLY:      this.onlyTrigger?"YES":"NO",
           DBFLOW_CONN_RUNS:         definition.runner.trgRunsConn,
           DBFLOW_FILE_RUNS:         definition.runner.trgRunsFile,
 
@@ -205,8 +212,9 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
   });
 }
 
-export function registerCompileFileCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
-  return commands.registerCommand("dbFlux.compileFile", async () => {
+export function registerCompileFileCommand(projectInfos: IProjectInfos, context: ExtensionContext, onlyTriggers:boolean = false) {
+
+  return commands.registerCommand(onlyTriggers?"dbFlux.runTriggerForCurrentFile":"dbFlux.compileFile", async () => {
 
     // save file
     let fileUri:Uri|undefined = window.activeTextEditor?.document.uri;
@@ -271,7 +279,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
           }
 
           if (compilable) {
-            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileTaskProvider(context)));
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileTaskProvider(context, onlyTriggers)));
 
             if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideSetup || insideDb || insideREST || insideAPEX)) {
 
