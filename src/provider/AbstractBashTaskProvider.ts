@@ -73,21 +73,11 @@ export abstract class AbstractBashTaskProvider {
   }
 
 
-
-
   buildConnectionUser(projectInfos: IProjectInfos, currentPath: string, currentFilePath: string | undefined = undefined): string {
-    let dbUserFromPath = getDBUserFromPath(currentPath, projectInfos, currentFilePath);
-
-    if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
-      return projectInfos.dbAdminUser+"".toLowerCase();
-    } else {
-      if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath) {
-        return `${projectInfos.dbAppUser}`;
-      } else {
-        return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
-      }
-    }
+    return buildConnectionUser(projectInfos, currentPath, currentFilePath);
   }
+
+
 
   getConnection(projectInfos: IProjectInfos, currentPath: string): string {
     return this.buildConnectionUser(projectInfos, currentPath) + `/${projectInfos.dbAppPwd}@${projectInfos.dbTns}`;
@@ -117,6 +107,20 @@ export abstract class AbstractBashTaskProvider {
     }
   }
 
+}
+
+export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: string, currentFilePath: string | undefined = undefined): string {
+  let dbUserFromPath = getDBUserFromPath(currentPath, projectInfos, currentFilePath);
+
+  if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
+    return projectInfos.dbAdminUser+"".toLowerCase();
+  } else {
+    if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath) {
+      return `${projectInfos.dbAppUser}`;
+    } else {
+      return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
+    }
+  }
 }
 
 export function getProjectInfos(context: ExtensionContext) {

@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "4.0.5",
+	"version": "4.1.0",
 	"engines": {
 		"vscode": "^1.60.0"
 	},
@@ -312,6 +312,18 @@
 				"title": "Refresh locked state of files",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject && dbLockEnabled"
+			},
+			{
+				"command": "dbFlux.run.SQLcl",
+				"title": "Run SQLcl",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.run.SQLplus",
+				"title": "Run SQL+",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
 			}
 		],
 		"keybindings": [

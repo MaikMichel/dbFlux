@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationManager, focusProblemPanel } from "../helper/ConfigurationManager";
 import { getActiveFileUri, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
-import { AbstractBashTaskProvider, getDBSchemaFolders, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, buildConnectionUser, getDBSchemaFolders, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { CompileTaskStore, setAdminPassword, setAdminUserName, setAppPassword } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { Terserer } from "../templaters/Terserer";
@@ -313,17 +313,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
               reportTemplater.genFile();
             } else if (insideReports || !(insideDb || insideREST || insideAPEX || insideSetup || insideStatics) && extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
                 const dbSchemaFolders = await getDBSchemaFolders();
-                let schemaSelected: boolean = false;
-                if (dbSchemaFolders.length > 1) {
-                  const item: QuickPickItem | undefined = await window.showQuickPick(dbSchemaFolders, {
-                    canPickMany: false, placeHolder: 'Choose Schema to execute this file'
-                  });
-                  schemaSelected = (item !== undefined);
-                  CompileTaskStore.getInstance().selectedSchemas = [item?.description!];
-                } else if (dbSchemaFolders.length === 1) {
-                  schemaSelected = true;
-                  CompileTaskStore.getInstance().selectedSchemas = dbSchemaFolders?.map(function (element) { return element.description!; });
-                }
+                let schemaSelected: boolean = await selectSchema(dbSchemaFolders);
 
                 if (schemaSelected) {
                   commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
@@ -344,6 +334,21 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
       }
     }
   });
+}
+
+export async function selectSchema(dbSchemaFolders: QuickPickItem[]) {
+  let schemaSelected: boolean = false;
+  if (dbSchemaFolders.length > 1) {
+    const item: QuickPickItem | undefined = await window.showQuickPick(dbSchemaFolders, {
+      canPickMany: false, placeHolder: 'Choose Schema to execute this file'
+    });
+    schemaSelected = (item !== undefined);
+    CompileTaskStore.getInstance().selectedSchemas = [item?.description!];
+  } else if (dbSchemaFolders.length === 1) {
+    schemaSelected = true;
+    CompileTaskStore.getInstance().selectedSchemas = dbSchemaFolders?.map(function (element) { return element.description!; });
+  }
+  return schemaSelected;
 }
 
 async function isfileLockedByAnotherUser(projectName: string, relativeFileName: string):Promise<ILockedFile> {
@@ -376,4 +381,39 @@ async function isfileLockedByAnotherUser(projectName: string, relativeFileName: 
   }
 
   return element;
+}
+
+
+export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, cli: string) {
+  return commands.registerCommand(command, async () => {
+
+    const dbSchemaFolders = await getDBSchemaFolders();
+    let schemaSelected: boolean = await selectSchema(dbSchemaFolders);
+
+    if (schemaSelected) {
+      await setAppPassword(projectInfos)
+
+      const compTaskStoreInstance = CompileTaskStore.getInstance();
+      if (compTaskStoreInstance.appPwd !== undefined) {
+        const userName = buildConnectionUser(projectInfos, "", undefined);
+        const termName = cli;
+        const term = window.createTerminal({name:termName,
+          env: { "DBFLUX_TERM_PWD": compTaskStoreInstance.appPwd}});
+          // term.show(true);
+
+          window.onDidCloseTerminal(event => {
+            if (term && termName === event.name) {
+              term.dispose();
+            }
+          });
+
+          term.sendText(cli + " " + userName + "/${DBFLUX_TERM_PWD}@" + projectInfos.dbTns);
+          term.sendText("DBFLUX_TERM_PWD=");
+          term.sendText("exit");
+          term.show(true);
+          commands.executeCommand("workbench.action.terminal.focus");
+
+      }
+    }
+  });
 }

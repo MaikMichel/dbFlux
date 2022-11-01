@@ -1,5 +1,10 @@
 # Change Log
 
+## [4.1.0 - 2022-11-01]
+- Feature: New Command "Run trigger for current File" to run defined Triggering Expression for current file without running the file itself
+- Feature: New Commands "Run SQLcl / Run SQL+" to run your SQLcli in terminal panel
+- Feature: New Command "Remove Static Application File (current)" to remove current APEX Application Static File from APEX Metadate itself
+
 ## [4.0.6 - 2022-10-24]
 - Fix: Export static files and schema when SQLcl is prefered
 - Fix: FK Constraint Snippet missing closing bracket

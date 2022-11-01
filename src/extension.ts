@@ -1,11 +1,11 @@
 import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, WebviewPanel, window, workspace } from "vscode";
 
 import { basename, join } from "path";
-import { registerCompileFileCommand, registerCompileSchemasCommand } from "./provider/CompileTaskProvider";
+import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
 import { registerExportAPEXCommand } from "./provider/ExportTaskProvider";
 
 import { registerExportRESTCommand } from "./provider/RestTaskProvider";
-import { applyFileExists, getDBFlowMode, getProjectInfos } from "./provider/AbstractBashTaskProvider";
+import { applyFileExists, getDBFlowMode, getProjectInfos} from "./provider/AbstractBashTaskProvider";
 import { openTestResult, registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand } from "./provider/TestTaskProvider";
 import { ConfigurationManager, removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
 import { outputLog } from './helper/OutputChannel';
@@ -19,6 +19,7 @@ import { extensionManager } from "./provider/UpdateInfoProvider";
 import { registerLockCurrentFileCommand, registerregisterRefreshLockedFiles, registerUnLockCurrentFileCommand, ViewFileDecorationProvider } from "./provider/ViewFileDecorationProvider";
 import { registerExportCurrentStaticFileCommand, registerExportStaticFilesCommand } from "./provider/ExportStaticFilesProvider";
 import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticFileProvider";
+
 
 
 
@@ -182,7 +183,9 @@ export async function activate(context: ExtensionContext) {
     // run test against current package
     context.subscriptions.push(registerExecuteTestPackageCommand(projectInfos, context));
 
-
+    // RUN SQLplus or SQLcl
+    context.subscriptions.push(registerRunSQLcli(projectInfos, "dbFlux.run.SQLcl", "sql"));
+    context.subscriptions.push(registerRunSQLcli(projectInfos, "dbFlux.run.SQLplus", "sqlplus"));
 
     // Reset Password
     context.subscriptions.push(registerResetPasswordCommand());
