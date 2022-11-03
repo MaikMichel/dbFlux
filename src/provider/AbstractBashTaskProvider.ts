@@ -115,7 +115,7 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
   if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
     return projectInfos.dbAdminUser+"".toLowerCase();
   } else {
-    if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath) {
+    if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath.toLowerCase()) {
       return `${projectInfos.dbAppUser}`;
     } else {
       return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;

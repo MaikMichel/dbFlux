@@ -1,5 +1,8 @@
 # Change Log
 
+
+- Fix: Build Connection String when single schema mode
+
 ## [4.1.0 - 2022-11-01]
 - Feature: New Command "Run trigger for current File" to run defined Triggering Expression for current file without running the file itself
 - Feature: New Commands "Run SQLcl / Run SQL+" to run your SQLcli in terminal panel
