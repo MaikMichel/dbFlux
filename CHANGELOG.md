@@ -1,6 +1,7 @@
 # Change Log
 
 
+- Fix: Query to get static files to remove
 - Fix: Build Connection String when single schema mode
 
 ## [4.1.0 - 2022-11-01]

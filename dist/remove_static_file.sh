@@ -87,8 +87,8 @@ ${DBFLOW_SQLCLI} -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<!
 
       for cur in (select application_file_id, application_id, file_name
                     from apex_application_static_files
-                   where application_id = 1201
-                     and replace(lower(file_name), replace('${DBFLOW_EXP_FNAME}', '.${DBFLOW_EXP_FEXT}')) in ('.${DBFLOW_EXP_FEXT}', '.${DBFLOW_EXP_FEXT}.map', '.min.${DBFLOW_EXP_FEXT}'))
+                   where to_char(application_id) = '${DBFLOW_EXP_APP_ID}'
+                     and replace(file_name, replace('${DBFLOW_EXP_FNAME}', '.${DBFLOW_EXP_FEXT}')) in ('.${DBFLOW_EXP_FEXT}', '.${DBFLOW_EXP_FEXT}.map', '.min.${DBFLOW_EXP_FEXT}'))
       loop
         v_found := true;
         dbms_output.put_line(l_color_yellow || ' >> removing File: ' || cur.file_name || l_color_off);
