@@ -32,6 +32,7 @@ export CUSTOM_JDBC="-XX:TieredStopAtLevel=1"
 echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
 echo -e "${BYELLOW}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
 echo -e "${BYELLOW}AppID:${NC}       ${WHITE}${DBFLOW_APPID}${NC}"
+echo -e "${BYELLOW}Folder:${NC}      ${WHITE}${DBFLOW_APPFOLDER}${NC}"
 
 echo -e " ${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Application ${DBFLOW_APPID} to ${DBFLOW_APPFOLDER} ${NC}"
 
@@ -39,39 +40,43 @@ echo -e " ${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Application ${DBFLOW_
 if [[ -d ${DBFLOW_APPFOLDER} ]]; then
   cd ${DBFLOW_APPFOLDER}
 
-  # remove folder when exists
-  if [[ -d f${DBFLOW_APPID} ]]; then
-    mv f${DBFLOW_APPID} f${DBFLOW_APPID}_bck
-  fi
+  for d in f${DBFLOW_APPID} ; do
+    DBFLOW_DIR_APPID="${d/f}"
 
-  # the export itself
-  sql -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
-    apex export -applicationid ${DBFLOW_APPID} -split -skipExportDate
-!
-
-  if [[ $? -ne 0 ]]; then
-    echo -e "${RED}$(date '+%d.%m.%Y %H:%M:%S') >> something went wrong${NC}"
-
-    # restore
-    if [[ -d f${DBFLOW_APPID}_bck ]]; then
-      mv f${DBFLOW_APPID}_bck f${DBFLOW_APPID}
+    # remove folder when exists
+    if [[ -d f${DBFLOW_DIR_APPID} ]]; then
+      mv f${DBFLOW_DIR_APPID} f${DBFLOW_DIR_APPID}_bck
     fi
 
-  else
+    # the export itself
+    sql -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} <<!
+      apex export -applicationid ${DBFLOW_DIR_APPID} -split -skipExportDate
+!
 
-    # remove the full export file
-    [[ -f f${DBFLOW_APPID}.sql ]] && rm f${DBFLOW_APPID}.sql
+    if [[ $? -ne 0 ]]; then
+      echo -e "${RED}$(date '+%d.%m.%Y %H:%M:%S') >> something went wrong${NC}"
 
-    # remove backup
-    [[ -d f${DBFLOW_APPID}_bck ]] && rm -rf f${DBFLOW_APPID}_bck
+      # restore
+      if [[ -d f${DBFLOW_DIR_APPID}_bck ]]; then
+        mv f${DBFLOW_DIR_APPID}_bck f${DBFLOW_DIR_APPID}
+      fi
 
-    echo -e "${GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
-  fi
+    else
 
-  # remove sqlcl history.log
-  if [[ -f history.log ]]; then
-    rm history.log
-  fi
+      # remove the full export file
+      [[ -f f${DBFLOW_DIR_APPID}.sql ]] && rm f${DBFLOW_DIR_APPID}.sql
+
+      # remove backup
+      [[ -d f${DBFLOW_DIR_APPID}_bck ]] && rm -rf f${DBFLOW_DIR_APPID}_bck
+
+      echo -e "${GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
+    fi
+
+    # remove sqlcl history.log
+    if [[ -f history.log ]]; then
+      rm history.log
+    fi
+  done
 else
   echo -e "${RED}$(date '+%d.%m.%Y %H:%M:%S') >> application folder ${DBFLOW_APPFOLDER} does not exist ${NC}"
 fi

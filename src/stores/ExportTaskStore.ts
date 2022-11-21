@@ -82,6 +82,7 @@ export class ExportTaskStore {
 
                 apps = apps.concat(localApps);
           });
+          apps.unshift('apex/*');
 
           return apps;
         };
