@@ -19,6 +19,7 @@ import { extensionManager } from "./provider/UpdateInfoProvider";
 import { registerLockCurrentFileCommand, registerregisterRefreshLockedFiles, registerUnLockCurrentFileCommand, ViewFileDecorationProvider } from "./provider/ViewFileDecorationProvider";
 import { registerExportCurrentStaticFileCommand, registerExportStaticFilesCommand } from "./provider/ExportStaticFilesProvider";
 import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticFileProvider";
+import { DBLockTreeView } from "./ui/DBLockTreeView";
 
 
 
@@ -204,17 +205,22 @@ export async function activate(context: ExtensionContext) {
     // Reverse build splitted File
     context.subscriptions.push(registerReverseBuildFromFilesCommand(projectInfos));
 
-
     // Open SpecOrBody
     context.subscriptions.push(registerOpenSpecOrBody());
 
     if (ConfigurationManager.isDBLockEnabled()) {
 
-      // dbLock
+      // dbLock FileDecodations
       const decoProvider = new ViewFileDecorationProvider(context)
+
+      //create a local tree view and register it in vscode
+      const tree = new DBLockTreeView(decoProvider);
+      context.subscriptions.push(window.registerTreeDataProvider('dbflux.dblock.treeview', tree));
+
       context.subscriptions.push(decoProvider);
       setTimeout(() => {
-        decoProvider.refreshCache();
+        tree.refresh();
+        // decoProvider.refreshCache();
       }, 100);
 
       context.subscriptions.push(registerLockCurrentFileCommand(projectInfos, decoProvider));

@@ -103,7 +103,33 @@
 				]
 			}
 		],
+		"menus": {
+			"view/title": [
+					{
+						"command": "dbflux.dblock.treeview.view_refresh",
+						"when": "view == dbflux.dblock.treeview",
+						"group": "navigation@0"
+					}
+				]
+			},
+		"views": {
+			"explorer": [
+				{
+					"id": "dbflux.dblock.treeview",
+					"name": "DBLock - locked files by user"
+				}
+			]
+		},
 		"commands": [
+			{
+				"command": "dbflux.dblock.treeview.item_clicked",
+				"title": "cwt tree view item"
+			},
+			{
+				"command": "dbflux.dblock.treeview.view_refresh",
+				"title": "refresh",
+				"icon": "$(refresh)"
+			},
 			{
 				"command": "dbFlux.initializeProject",
 				"title": "Initialize Project structure",

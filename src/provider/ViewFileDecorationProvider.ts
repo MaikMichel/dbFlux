@@ -29,6 +29,14 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
     this.disposable.dispose();
   }
 
+  public getCachedFiles(): string[] {
+    return this.cachedFiles;
+  }
+
+  public getCachedUsers(): string[] {
+    return this.cachedUsers;
+  }
+
   async refreshCache() {
     try {
       const urlToFetch = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/") + "/dblock/v1/files/" + getProjectInfos(this.context).projectName?.toLowerCase();
