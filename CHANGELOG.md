@@ -1,6 +1,8 @@
 # Change Log
 
-
+## [4.2.1 - 2022-11-21]
+- New: Viewpanel to show locked files wehn using dbLock
+- New: Option to export all Applications in folder
 - Fix: Query to get static files to remove
 - Fix: Build Connection String when single schema mode
 
