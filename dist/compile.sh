@@ -65,11 +65,15 @@ Begin
 End;
 /
 
+Rem enable some PL/SQL Warnings
+${DBFLOW_ENABLE_WARNINGS}
+
 Begin
   dbms_utility.compile_schema(schema => USER, compile_all => false);
   dbms_session.reset_package;
 End;
 /
+
 set serveroutput on
 Declare
   l_color_on   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[36m' end;
@@ -79,8 +83,6 @@ Begin
 End;
 /
 
-Rem enable some PL/SQL Warnings
-${DBFLOW_ENABLE_WARNINGS}
 
 Declare
   l_errors_exists   boolean := false;
