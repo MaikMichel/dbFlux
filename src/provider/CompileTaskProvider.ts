@@ -199,9 +199,16 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
           CompileTaskStore.getInstance().selectedSchemas = dbSchemaFolders?.map(function (element) { return element.description!; });
         }
 
-        if (schemaSelected) {
+        const options = [{label:"Invalid", description: "Only invalid object will be compiled"},{label:"All", description: "All objects will be compiled"}];
+        const compileOption: QuickPickItem | undefined = await window.showQuickPick(options, {
+          canPickMany: false, placeHolder: 'Compile all or just the invalide ones'
+        });
+
+
+        if (schemaSelected && compileOption != undefined) {
+
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileSchemasProvider(context, "compileSchemas")));
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileSchemasProvider(context, "compileSchemas", compileOption.label)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileSchemas");
           }).catch(() => {
             window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);

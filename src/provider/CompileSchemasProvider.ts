@@ -17,12 +17,15 @@ interface ISQLCompileInfos extends IBashInfos {
   executableCli:      string;
   enableWarnings:     string;
   coloredOutput:      string;
+  sqlWarningString:   string;
+  sqlWarningExcList:  string;
+  sqlCompileOption:   string;
 }
 
 export class CompileSchemasProvider extends AbstractBashTaskProvider implements vscode.TaskProvider {
   static dbFluxType: string = "dbFlux";
 
-  constructor(context: vscode.ExtensionContext, private mode:string){
+  constructor(context: vscode.ExtensionContext, private mode:string, private compileOption: string){
     super(context);
   };
 
@@ -65,6 +68,9 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
 
           DBFLOW_COLOR_ON:          definition.runner.coloredOutput,
           DBFLOW_ENABLE_WARNINGS:   definition.runner.enableWarnings,
+          DBFLOW_SQL_WARNING_STRING:  definition.runner.sqlWarningString?definition.runner.sqlWarningString:"NIX",
+          DBFLOW_SQL_WARNING_EXCLUDE: definition.runner.sqlWarningExcList?definition.runner.sqlWarningExcList:"0",
+          DBFLOW_SQL_COMPILE_OPTION: definition.runner.sqlCompileOption==="Invalid"?"false":"true"
         }
       }),
       ["$dbflux-plsql-all"]
@@ -90,12 +96,16 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
             return '"' + this.buildConnectionUser(projectInfos, element) + '"';
           });
         };
+
         runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
         runner.coloredOutput      = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
+        runner.sqlCompileOption   = this.compileOption;
 
         if (ConfigurationManager.getShowWarningMessages()) {
           const excluding = ConfigurationManager.getWarningsToExclude().join(", ");
           runner.enableWarnings = `ALTER SESSION SET PLSQL_WARNINGS = 'ENABLE:ALL', 'DISABLE:(${excluding})';`;
+          runner.sqlWarningString = 'WARNING';
+          runner.sqlWarningExcList = excluding;
         } else {
           runner.enableWarnings = "";
         }

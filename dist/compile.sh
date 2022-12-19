@@ -61,7 +61,7 @@ Begin
   dbms_output.put_line(l_color_on || 'DB-User:  ' || l_color_off || USER);
   dbms_output.put_line(l_color_on || 'DB-Name:  ' || l_color_off || ORA_DATABASE_NAME);
   dbms_output.put_line(l_color_on || 'DB-Now:      ' || l_color_off || SYSTIMESTAMP);
-  dbms_output.put_line(l_color_on || 'compiling schema ... ' || l_color_off);
+  dbms_output.put_line(l_color_on || 'compile_schema(schema => '||USER||', compile_all => ${DBFLOW_SQL_COMPILE_OPTION})' || l_color_off);
 End;
 /
 
@@ -69,7 +69,7 @@ Rem enable some PL/SQL Warnings
 ${DBFLOW_ENABLE_WARNINGS}
 
 Begin
-  dbms_utility.compile_schema(schema => USER, compile_all => false);
+  dbms_utility.compile_schema(schema => USER, compile_all => ${DBFLOW_SQL_COMPILE_OPTION});
   dbms_session.reset_package;
 End;
 /
@@ -112,7 +112,8 @@ Begin
                       when type = 'TRIGGER'      then 'db/'||lower(user)||'/sources/triggers/'||lower(name)||'.sql'
                     end wsfile
                 from user_errors
-               where attribute in ('ERROR', 'WARNING')
+               where attribute in ('ERROR', '${DBFLOW_SQL_WARNING_STRING}')
+                 and message_number not in (${DBFLOW_SQL_WARNING_EXCLUDE})
                  and name not like 'BIN$%' -- exclude trash
                order by type, name, line, position)
   loop
