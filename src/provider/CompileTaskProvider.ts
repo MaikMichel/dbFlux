@@ -319,12 +319,23 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
               const reportTemplater = new ReportTemplater(fileName);
               reportTemplater.genFile();
             } else if (insideReports || !(insideDb || insideREST || insideAPEX || insideSetup || insideStatics) && extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
-                const dbSchemaFolders = await getDBSchemaFolders();
-                let schemaSelected: boolean = await selectSchema(dbSchemaFolders);
-
-                if (schemaSelected) {
-                  commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+              const dbSchemaFolders = await getDBSchemaFolders();
+              // check if folder contains dbSchemaFolder
+              const folderParts = relativeFileName.split("/");
+              let scheme:string|undefined = undefined;
+              folderParts.forEach((part) => {
+                if (scheme === undefined) {
+                  dbSchemaFolders.forEach((schema) => {
+                    scheme = part.includes(schema.label)?schema.label:scheme;
+                    CompileTaskStore.getInstance().selectedSchemas = [schema?.description!];
+                  });
                 }
+              });
+              // scheme, when schema include as file name, otherwise selected on
+              let schemaSelected: boolean = scheme || await selectSchema(dbSchemaFolders);
+              if (schemaSelected) {
+                commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+              }
             } else {
               window.showWarningMessage('Current filetype or location is not supported by dbFlux ...');
             }

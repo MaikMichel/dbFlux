@@ -274,6 +274,12 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.addHookFile",
+				"title": "Add .hook file",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
 				"command": "dbFlux.executeTests",
 				"title": "Execute utPLSQL tests",
 				"category": "dbFlux",

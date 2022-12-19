@@ -82,111 +82,11 @@ export async function createObjectWizard(context: ExtensionContext) {
     return undefined;
   }
 
-  function subDirExists(dir: string):boolean {
-    const files = readdirSync(dir, { withFileTypes: true });
-    for (let i = 0; i < files.length; i++) {
-      if (files[i].isDirectory()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function *walkSync(dir:string):any {
-    const files = readdirSync(dir, { withFileTypes: true });
-    for (let i = 0; i < files.length; i++) {
-      if (files[i].isDirectory() && files[i].name !== "dist") {
-        // check if there is any subdir in filder
-        if (subDirExists(path.join(dir, files[i].name))){
-          yield* walkSync(path.join(dir, files[i].name));
-        } else {
-          yield path.join(dir, files[i].name);
-        }
-      }
-    }
-  }
-
-  function toFlatPropertyMap(obj: object, keySeparator = '/') {
-    const flattenRecursive = (obj: object, parentProperty?: string, propertyMap: Record<string, unknown> = {}) => {
-      for(const [key, value] of Object.entries(obj)){
-        const property = parentProperty ? `${parentProperty}${keySeparator}${key}` : key;
-        if(value && typeof value === 'object'){
-          flattenRecursive(value, property, propertyMap);
-        } else {
-          propertyMap[property] = value;
-        }
-      }
-      return propertyMap;
-    };
-    return flattenRecursive(obj);
-  }
-
   function rtrim(str:string, chr:string) {
     var rgxtrim = (!chr) ? new RegExp('\\s+$') : new RegExp(chr+'+$');
     return str.replace(rgxtrim, '');
   }
 
-
-  async function getAvailableObjectTypes(): Promise<QuickPickItem[]> {
-    if (workspace.workspaceFolders){
-      let folders:string[] = [];
-
-      const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-      const sourceDB = path.join(wsRoot, "db");
-      const sourceStatic = path.join(wsRoot, "static");
-      const originalPath = Object.keys(toFlatPropertyMap(dbFolderDef[0]));
-
-      const getSchemaFolders = (source: PathLike) =>
-          readdirSync(source, { withFileTypes: true })
-          .filter((dirent) => {
-            return dirent.isDirectory() && !["_setup", ".setup", "dist", ".hooks"].includes(dirent.name);
-          })
-          .map((dirent) => path.join(source.toString(), dirent.name));
-
-      for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
-        // known structure
-        for (let opath of originalPath) {
-          const folderString = schemaPath + "/" + (opath as string);
-
-          if (folderString.includes("tables/tables_ddl")) {
-            folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/').replace("tables/tables_ddl", "tables"));
-          }
-          folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
-
-        }
-
-        // real file path
-        for (let folderItem of walkSync(schemaPath)) {
-          const folderString = (folderItem as string);
-          if (folderString.includes("tables" + path.sep + "tables_ddl")) {
-            folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/').replace("tables/tables_ddl", "tables"));
-          }
-          folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
-        }
-      }
-
-      for (let schemaPath of [ ... getSchemaFolders(sourceStatic)]) {
-        for (let folderItem of walkSync(schemaPath)) {
-          folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
-        }
-      }
-
-      folders.push(".hooks/pre");
-      folders.push(".hooks/post");
-      folders.push("db/.hooks/pre");
-      folders.push("db/.hooks/post");
-
-      const uniqueFolders = [...new Set(folders)];
-      const folderNames = uniqueFolders.map(function(element){return {"label":element, "description": path.parse(element).name, "alwaysShow": false};});
-
-      return folderNames;
-    }
-
-    return [{label: ""}];
-  }
-
-
-  //
   const state = await collectInputs();
 
   if (workspace.workspaceFolders){
@@ -235,9 +135,64 @@ export async function createObjectWizard(context: ExtensionContext) {
     window.showInformationMessage(`File for object '${baseF}${extension}' successfully created`);
 
   }
+}
 
+export async function getAvailableObjectTypes(): Promise<QuickPickItem[]> {
+  if (workspace.workspaceFolders){
+    let folders:string[] = [];
 
+    const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
+    const sourceDB = path.join(wsRoot, "db");
+    const sourceStatic = path.join(wsRoot, "static");
+    const originalPath = Object.keys(toFlatPropertyMap(dbFolderDef[0]));
 
+    const getSchemaFolders = (source: PathLike) =>
+        readdirSync(source, { withFileTypes: true })
+        .filter((dirent) => {
+          return dirent.isDirectory() && !["_setup", ".setup", "sys", "dist", ".hooks"].includes(dirent.name);
+        })
+        .map((dirent) => path.join(source.toString(), dirent.name));
+
+    for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
+      // known structure
+      for (let opath of originalPath) {
+        const folderString = schemaPath + "/" + (opath as string);
+
+        if (folderString.includes("tables/tables_ddl")) {
+          folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/').replace("tables/tables_ddl", "tables"));
+        }
+        folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+
+      }
+
+      // real file path
+      for (let folderItem of walkSync(schemaPath)) {
+        const folderString = (folderItem as string);
+        if (folderString.includes("tables" + path.sep + "tables_ddl")) {
+          folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/').replace("tables/tables_ddl", "tables"));
+        }
+        folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+      }
+    }
+
+    for (let schemaPath of [ ... getSchemaFolders(sourceStatic)]) {
+      for (let folderItem of walkSync(schemaPath)) {
+        folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
+      }
+    }
+
+    folders.push(".hooks/pre");
+    folders.push(".hooks/post");
+    folders.push("db/.hooks/pre");
+    folders.push("db/.hooks/post");
+
+    const uniqueFolders = [...new Set(folders)];
+    const folderNames = uniqueFolders.map(function(element){return {"label":element, "description": path.parse(element).name, "alwaysShow": false};});
+
+    return folderNames;
+  }
+
+  return [{label: ""}];
 }
 
 export function callSnippet(wsPath:string, document:TextDocument, prefix:string|undefined = undefined) {
@@ -313,17 +268,31 @@ export async function createTableDDL(context: ExtensionContext) {
 
   const title = 'dbFLux: Create TableDDL File';
 
+  async function getQuickPickFromCurrentFile(quickPicks:QuickPickItem[]):Promise<QuickPickItem> {
+    let item:QuickPickItem = quickPicks[0];
+    if (window.activeTextEditor != undefined) {
+      const relativeFile = workspace.asRelativePath(window.activeTextEditor.document.uri);
+      const pathBlocks = relativeFile.split(path.posix.sep);
+      if (pathBlocks[pathBlocks.length-2] === 'tables') {
+        const tempItem = quickPicks.find(quickPick => (relativeFile.includes(quickPick.label)))
+        item = tempItem?tempItem:item;
+      }
+    }
 
+    return item;
+ }
 
   async function pickObjectType(input: MultiStepInput, state: Partial<State>) {
     const objectTypes = await getAllTableFiles();
+    const currentFQickPick = await getQuickPickFromCurrentFile(objectTypes);
+
     state.objectType = await input.showQuickPick({
       title,
       step: 1,
       totalSteps: 1,
       placeholder: 'Fuzzy pick a table',
       items: objectTypes,
-      activeItem: objectTypes[0],
+      activeItem: currentFQickPick,
       shouldResume: shouldResume,
       canSelectMany: false
     });
@@ -348,10 +317,7 @@ export async function createTableDDL(context: ExtensionContext) {
   }
 
 
-  function rtrim(str:string, chr:string) {
-    var rgxtrim = (!chr) ? new RegExp('\\s+$') : new RegExp(chr+'+$');
-    return str.replace(rgxtrim, '');
-  }
+
 
 
   async function getAllTableFiles(): Promise<QuickPickItem[]> {
@@ -445,4 +411,43 @@ export async function createTableDDL(context: ExtensionContext) {
       window.showTextDocument(doc, {preview: false});
     });
   }
+}
+
+function *walkSync(dir:string):any {
+  const files = readdirSync(dir, { withFileTypes: true });
+  for (let i = 0; i < files.length; i++) {
+    if (files[i].isDirectory() && files[i].name !== "dist") {
+      // check if there is any subdir in filder
+      if (subDirExists(path.join(dir, files[i].name))){
+        yield* walkSync(path.join(dir, files[i].name));
+      } else {
+        yield path.join(dir, files[i].name);
+      }
+    }
+  }
+}
+
+function toFlatPropertyMap(obj: object, keySeparator = '/') {
+  const flattenRecursive = (obj: object, parentProperty?: string, propertyMap: Record<string, unknown> = {}) => {
+    for(const [key, value] of Object.entries(obj)){
+      const property = parentProperty ? `${parentProperty}${keySeparator}${key}` : key;
+      if(value && typeof value === 'object'){
+        flattenRecursive(value, property, propertyMap);
+      } else {
+        propertyMap[property] = value;
+      }
+    }
+    return propertyMap;
+  };
+  return flattenRecursive(obj);
+}
+
+function subDirExists(dir: string):boolean {
+  const files = readdirSync(dir, { withFileTypes: true });
+  for (let i = 0; i < files.length; i++) {
+    if (files[i].isDirectory()) {
+      return true;
+    }
+  }
+  return false;
 }

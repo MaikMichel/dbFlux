@@ -61,6 +61,12 @@ export function rtrim (s:string, c:string) {
   return s.replace(new RegExp("[" + c + "]*$"), '');
 };
 
+// function rtrim(str:string, chr:string) {
+//   var rgxtrim = (!chr) ? new RegExp('\\s+$') : new RegExp(chr+'+$');
+//   return str.replace(rgxtrim, '');
+// }
+
+
 export function getApplicationIdFromPath(sourceFile: string, isFlexMode: boolean) {
   if (isFlexMode) {
     // */static/scheman_name/workspace_name/f_with_app_id/src/*

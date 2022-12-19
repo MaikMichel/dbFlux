@@ -1,14 +1,15 @@
 import { QuickPickItem, window, ExtensionContext, Uri, workspace, commands, ViewColumn } from 'vscode';
 
 import * as path from "path";
-import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
+import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFile, writeFileSync } from 'fs';
 import { outputLog } from '../helper/OutputChannel';
-import { createDirectoryPath, getSubFolders, getWorkspaceRootPath } from '../helper/utilities';
+import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim } from '../helper/utilities';
 import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
 import { getDBUserFromPath, getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
 import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { ConfigurationManager } from '../helper/ConfigurationManager';
 import { MultiStepInput } from '../wizards/InputFlowAction';
+import { getAvailableObjectTypes } from '../wizards/CreateObjectWizard';
 
 export async function addAPEXApp(context: ExtensionContext, folder:string) {
   interface State {
@@ -89,6 +90,91 @@ export async function addAPEXApp(context: ExtensionContext, folder:string) {
   } else {
     window.showWarningMessage(`dbFlux: You have to add at least one Workspace inside an ${folder} Schema-Folder. Just use command dbFlux: Add Workspace`);
   }
+}
+
+
+export async function addHookFile(context: ExtensionContext) {
+  interface State {
+    title:      string;
+    step:       number;
+    totalSteps: number;
+    folder:     QuickPickItem;
+    name:       string
+  }
+
+  async function collectInputs() {
+    const state = {} as Partial<State>;
+
+    await MultiStepInput.run(input => pickHookFolder(input, state));
+    return state as State;
+  }
+
+
+
+
+  async function pickHookFolder(input: MultiStepInput, state: Partial<State>) {
+    state.folder = await input.showQuickPick({
+      title,
+      step: 1,
+      totalSteps: 2,
+      placeholder: 'Pick a .hook folder',
+      items: objectTypes,
+      activeItem: objectTypes[0],
+      shouldResume: shouldResume,
+      canSelectMany:false
+    });
+
+    return (input: MultiStepInput) => inputObjectName(input, state);
+  }
+
+  async function inputObjectName(input: MultiStepInput, state: Partial<State>) {
+    state.name = await input.showInputBox({
+      title,
+      step: 2,
+      totalSteps: 2,
+      value: state.name || '',
+      prompt: 'Enter file name',
+      validate: validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
+
+  }
+
+  function shouldResume() {
+    // Could show a notification with the option to resume.
+    return new Promise<boolean>((resolve, reject) => {
+      // noop
+    });
+  }
+
+  async function validateValueIsRequiered(name: string) {
+    // eslint-disable-next-line eqeqeq
+    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
+  }
+
+
+  const title = 'Add .hook file';
+  const objectTypes = await getAvailableFolders(".hooks");
+  if (objectTypes.length > 0) {
+    const state = await collectInputs();
+
+    if (state.name) {
+      addHookFileToPath(state.folder.label, state.name);
+    } else {
+      outputLog('Canceled');
+    }
+  }
+}
+
+
+async function getAvailableFolders(folderserach: string): Promise<QuickPickItem[]> {
+  if (workspace.workspaceFolders !== undefined) {
+    const folders = await getAvailableObjectTypes();
+    const filteredFolder = folders.filter((qitem) => qitem.label.split("/").includes(folderserach));
+    // const appItems = apps.map(function(element){return {"label":path.parse(element).name, "description":element , "alwaysShow": true};});
+    return filteredFolder;
+  }
+  return [{label: "", description:""}];
 }
 
 async function getAvailableWorkSpaces(folder:string): Promise<QuickPickItem[]> {
@@ -543,7 +629,12 @@ export function registerAddRESTModuleCommand(projectInfos: IProjectInfos, contex
 export function registerAddReportTypeFolderCommand() {
   return commands.registerCommand("dbFlux.addReportFolder", async () => {
     ExportTaskStore.getInstance().addReportTypeFolder(await ExportTaskStore.getInstance().getReportType());
+  });
+}
 
+export function registerAddHookFileCommand(context: ExtensionContext) {
+  return commands.registerCommand("dbFlux.addHookFile", async () => {
+    addHookFile(context)
   });
 }
 
@@ -763,4 +854,20 @@ export function registerOpenSpecOrBody() {
       }
     }
   });
+}
+
+function addHookFileToPath(folder: string, filename: string) {
+  const wsRoot   = getWorkspaceRootPath();
+  const dirName  = path.join(wsRoot, folder);
+  const baseF    = rtrim(path.basename(filename), ".sql");
+  const fullFile = dirName + '/' + baseF + ".sql";
+  const template = readFileSync(path.resolve(__dirname, "..", "..", "dist", "hook.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8");
+
+  writeFileSync(fullFile, template);
+
+  if (existsSync(fullFile)) {
+    workspace.openTextDocument(Uri.file(fullFile)).then(doc => {
+      window.showTextDocument(doc, {preview: false});
+    });
+  }
 }
