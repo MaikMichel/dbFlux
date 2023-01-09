@@ -20,11 +20,11 @@ import { MultiStepInput } from './InputFlowAction';
 
 // read .env file & convert to array
 const readEnvVars = (file:string) => {
-	if (fs.existsSync(file)) {
-		return fs.readFileSync(file, "utf-8").split(/\r?\n/);
+  if (fs.existsSync(file)) {
+    return fs.readFileSync(file, "utf-8").split(/\r?\n/);
   } else {
-		return [];
-	}
+    return [];
+  }
 };
 
 /**
@@ -79,65 +79,65 @@ const setLine = (file: string, content: string) => {
 };
 
 export const dbFolderDef = [{
-	".hooks": {
-		pre: "",
-		post: ""
-	},
-	"constraints": {
-		"checks": "",
-		"foreigns": "",
-		"primaries": "",
-		"uniques": ""
-	},
-	"contexts": "",
-	"ddl": {
-		"init": "",
-		"patch": {
-			"post": "",
-			"pre": ""
-		},
-	},
-	"dml": {
-		"base": "",
-		"init": "",
-		"patch": {
-			"post": "",
-			"pre": ""
-		},
-	},
-	"indexes": {
-		"defaults": "",
-		"primaries": "",
-		"uniques": ""
-	},
-	"jobs": "",
-	"policies": "",
-	"sequences": "",
-	"sources": {
-		"functions": "",
-		"packages": "",
-		"procedures": "",
-		"triggers": "",
-		"types": "",
-	},
-	"views": "",
-	"mviews": "",
-	"tables": {
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		"tables_ddl": ""
-	},
-	"tests": {
-		"packages": ""
-	}
+  ".hooks": {
+    pre: "",
+    post: ""
+  },
+  "constraints": {
+    "checks": "",
+    "foreigns": "",
+    "primaries": "",
+    "uniques": ""
+  },
+  "contexts": "",
+  "ddl": {
+    "init": "",
+    "patch": {
+      "post": "",
+      "pre": ""
+    },
+  },
+  "dml": {
+    "base": "",
+    "init": "",
+    "patch": {
+      "post": "",
+      "pre": ""
+    },
+  },
+  "indexes": {
+    "defaults": "",
+    "primaries": "",
+    "uniques": ""
+  },
+  "jobs": "",
+  "policies": "",
+  "sequences": "",
+  "sources": {
+    "functions": "",
+    "packages": "",
+    "procedures": "",
+    "triggers": "",
+    "types": "",
+  },
+  "views": "",
+  "mviews": "",
+  "tables": {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    "tables_ddl": ""
+  },
+  "tests": {
+    "packages": ""
+  }
 }];
 
 export const restFolderDef = [{
-	"access": {
-		mapping: "",
-		roles: "",
-		privileges: ""
-	},
-	"modules": ""
+  "access": {
+    mapping: "",
+    roles: "",
+    privileges: ""
+  },
+  "modules": ""
 }];
 
 
@@ -148,303 +148,303 @@ export const restFolderDef = [{
  */
 export async function initializeProjectWizard(context: ExtensionContext) {
 
-	interface State {
-		title: string;
-		step: number;
-		totalSteps: number;
+  interface State {
+    title: string;
+    step: number;
+    totalSteps: number;
 
-		projectName: string;
-		projectType: QuickPickItem;
-		dbConnection: string;
-		dbAdminUser: string;
-		dbAppPwd: string;
+    projectName: string;
+    projectType: QuickPickItem;
+    dbConnection: string;
+    dbAdminUser: string;
+    dbAppPwd: string;
 
-		createWorkspace: QuickPickItem;
-		developerName: string;
-		apexSchemaName: string;
-	}
+    createWorkspace: QuickPickItem;
+    developerName: string;
+    apexSchemaName: string;
+  }
 
-	async function collectInputs() {
-		const state = {} as Partial<State>;
-		if (workspace.workspaceFolders) {
+  async function collectInputs() {
+    const state = {} as Partial<State>;
+    if (workspace.workspaceFolders) {
 
-			state.projectName = context.workspaceState.get("dbFlux_PROJECT") || "";
-			state.dbConnection = context.workspaceState.get("dbFlux_DB_TNS") || "";
-			state.dbAdminUser = context.workspaceState.get("dbFlux_DB_ADMIN_USER") || "";
-			state.apexSchemaName = context.workspaceState.get("dbFlux_APEX_USER") || "";
-		}
+      state.projectName = context.workspaceState.get("dbFlux_PROJECT") || "";
+      state.dbConnection = context.workspaceState.get("dbFlux_DB_TNS") || "";
+      state.dbAdminUser = context.workspaceState.get("dbFlux_DB_ADMIN_USER") || "";
+      state.apexSchemaName = context.workspaceState.get("dbFlux_APEX_USER") || "";
+    }
 
-		await MultiStepInput.run(input => inputProjectName(input, state));
-		return state as State;
-	}
+    await MultiStepInput.run(input => inputProjectName(input, state));
+    return state as State;
+  }
 
-	const title = 'Initialize Project';
+  const title = 'Initialize Project';
 
-	async function inputProjectName(input: MultiStepInput, state: Partial<State>) {
-		state.projectName = await input.showInputBox({
-			title,
-			step: 1,
-			totalSteps: 5,
-			value: state.projectName || '',
-			prompt: 'Choose a Name for your project',
-			validate: validateValueIsRequiered,
-			shouldResume: shouldResume
-		});
-		return (input: MultiStepInput) => pickProjectType(input, state);
-	}
+  async function inputProjectName(input: MultiStepInput, state: Partial<State>) {
+    state.projectName = await input.showInputBox({
+      title,
+      step: 1,
+      totalSteps: 5,
+      value: state.projectName || '',
+      prompt: 'Choose a Name for your project',
+      validate: validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
+    return (input: MultiStepInput) => pickProjectType(input, state);
+  }
 
-	async function pickProjectType(input: MultiStepInput, state: Partial<State>) {
-		const projectTypes = await getAvailableProjectTypes();
-		state.projectType = await input.showQuickPick({
-			title,
-			step: 2,
-			totalSteps: 5,
-			placeholder: 'Pick a type',
-			items: projectTypes,
-			activeItem: state.projectType || projectTypes[0],
-			shouldResume: shouldResume,
-			canSelectMany: false
-		});
+  async function pickProjectType(input: MultiStepInput, state: Partial<State>) {
+    const projectTypes = await getAvailableProjectTypes();
+    state.projectType = await input.showQuickPick({
+      title,
+      step: 2,
+      totalSteps: 5,
+      placeholder: 'Pick a type',
+      items: projectTypes,
+      activeItem: state.projectType || projectTypes[0],
+      shouldResume: shouldResume,
+      canSelectMany: false
+    });
 
-		return (input: MultiStepInput) => inputConnection(input, state);
-	}
+    return (input: MultiStepInput) => inputConnection(input, state);
+  }
 
-	async function inputConnection(input: MultiStepInput, state: Partial<State>) {
-		state.dbConnection = await input.showInputBox({
-			title,
-			step: 3,
-			totalSteps: 5,
-			value: state.dbConnection || 'localhost:1521/xepdb1',
-			prompt: 'Enter connection string (localhost:1521/xepdb1)',
-			validate: validateValueIsRequiered,
-			shouldResume: shouldResume
-		});
+  async function inputConnection(input: MultiStepInput, state: Partial<State>) {
+    state.dbConnection = await input.showInputBox({
+      title,
+      step: 3,
+      totalSteps: 5,
+      value: state.dbConnection || 'localhost:1521/xepdb1',
+      prompt: 'Enter connection string (localhost:1521/xepdb1)',
+      validate: validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
 
-		return (input: MultiStepInput) => inputAppPwd(input, state);
-	}
+    return (input: MultiStepInput) => inputAppPwd(input, state);
+  }
 
-	async function inputAppPwd(input: MultiStepInput, state: Partial<State>) {
-		const appUserName = (state.projectType?.label==="SingleSchema")?state.projectName:state.projectName+"_depl";
-		state.dbAppPwd = await input.showInputBox({
-			title,
-			step: 4,
-			totalSteps: 5,
-			value: state.dbAppPwd || '',
-			prompt: `Enter password of user ${appUserName} (creation of user scripts) `,
-			validate: validateValueIsRequiered,
-			shouldResume: shouldResume,
-			password: true
-		});
+  async function inputAppPwd(input: MultiStepInput, state: Partial<State>) {
+    const appUserName = (state.projectType?.label==="SingleSchema")?state.projectName:state.projectName+"_depl";
+    state.dbAppPwd = await input.showInputBox({
+      title,
+      step: 4,
+      totalSteps: 5,
+      value: state.dbAppPwd || '',
+      prompt: `Enter password of user ${appUserName} (creation of user scripts) `,
+      validate: validateValueIsRequiered,
+      shouldResume: shouldResume,
+      password: true
+    });
 
-		return (input: MultiStepInput) => inputAdminName(input, state);
-	}
+    return (input: MultiStepInput) => inputAdminName(input, state);
+  }
 
-	async function inputAdminName(input: MultiStepInput, state: Partial<State>) {
-		state.dbAdminUser = await input.showInputBox({
-			title,
-			step: 5,
-			totalSteps: 6,
-			value: state.dbAdminUser || 'sys',
-			prompt: 'Enter name of an Admin-User (sys, admin, ...)',
-			validate: validateValueNotRequiered,
-			shouldResume: shouldResume
-		});
+  async function inputAdminName(input: MultiStepInput, state: Partial<State>) {
+    state.dbAdminUser = await input.showInputBox({
+      title,
+      step: 5,
+      totalSteps: 6,
+      value: state.dbAdminUser || 'sys',
+      prompt: 'Enter name of an Admin-User (sys, admin, ...)',
+      validate: validateValueNotRequiered,
+      shouldResume: shouldResume
+    });
 
-		if (state.projectType?.label !== "FlexSchema") {
-			return (input: MultiStepInput) => inputCreateWorkspace(input, state);
-		}
+    if (state.projectType?.label !== "FlexSchema") {
+      return (input: MultiStepInput) => inputCreateWorkspace(input, state);
+    }
 
-	}
+  }
 
-	async function inputCreateWorkspace(input: MultiStepInput, state: Partial<State>) {
-		const answers = [{label:"Yes",}, {label:"No"}];
-		state.createWorkspace = await input.showQuickPick({
-			title,
-			step: 6,
-			totalSteps: 6,
-			placeholder: 'Would you like to create workspace script?',
-			items: answers,
-			activeItem: answers[0],
-			shouldResume: shouldResume,
-			canSelectMany: false
-		});
+  async function inputCreateWorkspace(input: MultiStepInput, state: Partial<State>) {
+    const answers = [{label:"Yes",}, {label:"No"}];
+    state.createWorkspace = await input.showQuickPick({
+      title,
+      step: 6,
+      totalSteps: 6,
+      placeholder: 'Would you like to create workspace script?',
+      items: answers,
+      activeItem: answers[0],
+      shouldResume: shouldResume,
+      canSelectMany: false
+    });
 
-		if (state.createWorkspace && state.createWorkspace.label === "Yes") {
-			return (input: MultiStepInput) => inputDevAdminName(input, state);
-		}
-	}
+    if (state.createWorkspace && state.createWorkspace.label === "Yes") {
+      return (input: MultiStepInput) => inputDevAdminName(input, state);
+    }
+  }
 
-	async function inputDevAdminName(input: MultiStepInput, state: Partial<State>) {
-		state.developerName = await input.showInputBox({
-			title,
-			step: 7,
-			totalSteps: 7,
-			value: 'wsadmin',
-			prompt: 'Enter name of workspace user (Admin/Developer) you want to create',
-			validate: validateValueIsRequiered,
-			shouldResume: shouldResume
-		});
-	}
+  async function inputDevAdminName(input: MultiStepInput, state: Partial<State>) {
+    state.developerName = await input.showInputBox({
+      title,
+      step: 7,
+      totalSteps: 7,
+      value: 'wsadmin',
+      prompt: 'Enter name of workspace user (Admin/Developer) you want to create',
+      validate: validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
+  }
 
-	function shouldResume() {
-		// Could show a notification with the option to resume.
-		return new Promise<boolean>((resolve, reject) => {
-			// noop
-		});
-	}
+  function shouldResume() {
+    // Could show a notification with the option to resume.
+    return new Promise<boolean>((resolve, reject) => {
+      // noop
+    });
+  }
 
-	async function validateValueIsRequiered(name: string) {
+  async function validateValueIsRequiered(name: string) {
     // eslint-disable-next-line eqeqeq
-		return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
-	}
+    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
+  }
 
-	async function validateValueNotRequiered(name: string) {
+  async function validateValueNotRequiered(name: string) {
     // eslint-disable-next-line eqeqeq
-		return undefined;
-	}
+    return undefined;
+  }
 
 
-	async function getAvailableProjectTypes(): Promise<QuickPickItem[]> {
-		return [
-			{label: "FlexSchema",
-		   description: "Multiple Schemas are supported and defined by folder names. Connection uses proxy syntax when not equals folder name."},
-			{label: "MultiSchema",
-		   description: "3 Schemas are supported data, logic, app. All prefixed with projectname. Connection is started with a proxy user depl."},
-			{label: "SingleSchema",
-			description: "There will be only one Schema named app and prefix with project name. Connection is startet with Schema-Owner."}
-		];
-	}
+  async function getAvailableProjectTypes(): Promise<QuickPickItem[]> {
+    return [
+      {label: "FlexSchema",
+       description: "Multiple Schemas are supported and defined by folder names. Connection uses proxy syntax when not equals folder name."},
+      {label: "MultiSchema",
+       description: "3 Schemas are supported data, logic, app. All prefixed with projectname. Connection is started with a proxy user depl."},
+      {label: "SingleSchema",
+      description: "There will be only one Schema named app and prefix with project name. Connection is startet with Schema-Owner."}
+    ];
+  }
 
-	const state = await collectInputs();
-
-
-	function createFolders(state: State) {
-		if (workspace.workspaceFolders) {
-
-			const schemaDef:any = dbFolderDef;
-
-			const dataSchema = state.projectName + "_data";
-			const logicSchema = state.projectName + "_logic";
-			const appSchema = state.projectName + ((state.projectType.label !== "SingleSchema") ? "_app" : "");
-
-			const folderDef:any = {
-				".hooks": {
-						pre: "",
-						post: ""
-				},
-				"apex" : "",
-				"db" : {
-					".hooks": {
-						pre: "",
-						post: ""
-					},
-					["_setup"]: {
-						users: "",
-						workspaces: ""
-					},
-					[dataSchema] : schemaDef,
-					[logicSchema] : schemaDef,
-					[appSchema] : schemaDef,
-					},
-				"reports": "",
-				"rest": {
-					"access": {
-						mapping: "",
-						roles: "",
-						privileges: ""
-					},
-					"modules": ""
-				},
-				"static": ""
-			};
-
-			if (state.projectType.label === "SingleSchema") {
-				delete folderDef.db[dataSchema];
-				delete folderDef.db[logicSchema];
-			} else if (state.projectType.label === "FlexSchema") {
-				delete folderDef.db[dataSchema];
-				delete folderDef.db[logicSchema];
-				delete folderDef.db[appSchema];
-
-				delete folderDef.rest.access;
-				delete folderDef.rest.modules;
-				folderDef.rest = "";
-
-			}
-
-			createDirectoryPath(folderDef, "/", workspace.workspaceFolders[0].uri.fsPath) ;
-		}
-	}
-
-	createFolders(state);
-
-	const fcontent = {
-		"title" : "dbFlux - Initialization summary",
-		"files" : [],
-		"userFile": "",
-		"installFile": ""
-	};
-
-	async function writeUserScritps(state: State) {
-		if (workspace.workspaceFolders) {
-
-			const gitIgnore = path.resolve(workspace.workspaceFolders![0].uri.fsPath, ".gitignore");
-			setLine(gitIgnore, '**/dist');
-
-			if (state.projectType.label === "SingleSchema"){
-				// write schema-user
-				const singleUserFile = writeSingleUserCreationScript(state.projectName, state.dbAppPwd);
-				setLine(gitIgnore, singleUserFile);
-				(fcontent.files as string[]).push(singleUserFile);
-
-			} else {
-				// write proxy-user of MultiSchema and FlexSchema
-				const proxyFile = writeProxyUserCreationScript(state.projectName, state.dbAppPwd);
-				setLine(gitIgnore, proxyFile);
-				(fcontent.files as string[]).push(proxyFile);
-
-				// write schema users
-				if (state.projectType.label === "MultiSchema") {
-					const schemas = [`${state.projectName}_data`, `${state.projectName}_logic`, `${state.projectName}_app`];
-					schemas.forEach((schema, index) => {
-						(fcontent.files as string[]).push(writeUserCreationScript(index, schema, state.projectName));
-					});
-				}
-
-			}
+  const state = await collectInputs();
 
 
-			// Workspace und initialen WSUser erstellen
-			if (state.createWorkspace && state.createWorkspace.label === "Yes") {
-				const schema_name = state.projectType.label !== "SingleSchema" ? state.projectName + "_app" : state.projectName;
-				// Create Folder if not exists
-				(fcontent.files as string[]).push(writeCreateWorkspaceScript(state.projectName, schema_name));
+  function createFolders(state: State) {
+    if (workspace.workspaceFolders) {
 
-				// Create Workspace Admin
-				(fcontent.files as string[]).push(writeCreateWorkspaceAdminScript(state.projectName, state.developerName, schema_name));
-			}
+      const schemaDef:any = dbFolderDef;
+
+      const dataSchema = state.projectName + "_data";
+      const logicSchema = state.projectName + "_logic";
+      const appSchema = state.projectName + ((state.projectType.label !== "SingleSchema") ? "_app" : "");
+
+      const folderDef:any = {
+        ".hooks": {
+            pre: "",
+            post: ""
+        },
+        "apex" : "",
+        "db" : {
+          ".hooks": {
+            pre: "",
+            post: ""
+          },
+          ["_setup"]: {
+            users: "",
+            workspaces: ""
+          },
+          [dataSchema] : schemaDef,
+          [logicSchema] : schemaDef,
+          [appSchema] : schemaDef,
+          },
+        "reports": "",
+        "rest": {
+          "access": {
+            mapping: "",
+            roles: "",
+            privileges: ""
+          },
+          "modules": ""
+        },
+        "static": ""
+      };
+
+      if (state.projectType.label === "SingleSchema") {
+        delete folderDef.db[dataSchema];
+        delete folderDef.db[logicSchema];
+      } else if (state.projectType.label === "FlexSchema") {
+        delete folderDef.db[dataSchema];
+        delete folderDef.db[logicSchema];
+        delete folderDef.db[appSchema];
+
+        delete folderDef.rest.access;
+        delete folderDef.rest.modules;
+        folderDef.rest = "";
+
+      }
+
+      createDirectoryPath(folderDef, "/", workspace.workspaceFolders[0].uri.fsPath) ;
+    }
+  }
+
+  createFolders(state);
+
+  const fcontent = {
+    "title" : "dbFlux - Initialization summary",
+    "files" : [],
+    "userFile": "",
+    "installFile": ""
+  };
+
+  async function writeUserScritps(state: State) {
+    if (workspace.workspaceFolders) {
+
+      const gitIgnore = path.resolve(workspace.workspaceFolders![0].uri.fsPath, ".gitignore");
+      setLine(gitIgnore, '**/dist');
+
+      if (state.projectType.label === "SingleSchema"){
+        // write schema-user
+        const singleUserFile = writeSingleUserCreationScript(state.projectName, state.dbAppPwd);
+        setLine(gitIgnore, singleUserFile);
+        (fcontent.files as string[]).push(singleUserFile);
+
+      } else {
+        // write proxy-user of MultiSchema and FlexSchema
+        const proxyFile = writeProxyUserCreationScript(state.projectName, state.dbAppPwd);
+        setLine(gitIgnore, proxyFile);
+        (fcontent.files as string[]).push(proxyFile);
+
+        // write schema users
+        if (state.projectType.label === "MultiSchema") {
+          const schemas = [`${state.projectName}_data`, `${state.projectName}_logic`, `${state.projectName}_app`];
+          schemas.forEach((schema, index) => {
+            (fcontent.files as string[]).push(writeUserCreationScript(index, schema, state.projectName));
+          });
+        }
+
+      }
 
 
-			// write Summary Installation File
-			{
-				fcontent.installFile = `db/_setup/install.sql`;
-				const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, fcontent.installFile);
+      // Workspace und initialen WSUser erstellen
+      if (state.createWorkspace && state.createWorkspace.label === "Yes") {
+        const schema_name = state.projectType.label !== "SingleSchema" ? state.projectName + "_app" : state.projectName;
+        // Create Folder if not exists
+        (fcontent.files as string[]).push(writeCreateWorkspaceScript(state.projectName, schema_name));
 
-				// create a install.sql
-				writeInstallSQLFile((fcontent.files as string[]), userFile);
+        // Create Workspace Admin
+        (fcontent.files as string[]).push(writeCreateWorkspaceAdminScript(state.projectName, state.developerName, schema_name));
+      }
 
-			}
 
-		}
-	}
+      // write Summary Installation File
+      {
+        fcontent.installFile = `db/_setup/install.sql`;
+        const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, fcontent.installFile);
 
-	function getWebviewContent(content:any, state: State) {
+        // create a install.sql
+        writeInstallSQLFile((fcontent.files as string[]), userFile);
+
+      }
+
+    }
+  }
+
+  function getWebviewContent(content:any, state: State) {
     const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", state.projectType.label==="FlexSchema" ? "welcomeFlex.tmpl.html": "welcome.tmpl.html").split(path.sep).join('/'), "utf8"));
     return template(content);
   }
 
-	function openWebView(state: State) {
-		const panel = window.createWebviewPanel(
+  function openWebView(state: State) {
+    const panel = window.createWebviewPanel(
                         'openWebview', // Identifies the type of the webview. Used internally
                         fcontent.title, // Title of the panel displayed to the user
                         ViewColumn.One, // Editor column to show the new webview panel in.
@@ -475,235 +475,235 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
     // And get the special URI to use with the webview
     const cssURI = panel.webview.asWebviewUri(onDiskPath);
-		fcontent.userFile = fcontent.files[fcontent.files.length-1];
+    fcontent.userFile = fcontent.files[fcontent.files.length-1];
     panel.webview.html = getWebviewContent(fcontent, state);
-	}
+  }
 
-	async function writeConfigFiles(state: State) {
-		if (workspace.workspaceFolders) {
-			context.workspaceState.update("dbFlux_mode", "dbFlux");
-			context.workspaceState.update("dbFlux_DB_TNS", state.dbConnection);
-			if (state.projectType.label === "SingleSchema") {
-					context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase());
-			} else {
-					context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase() + "_depl");
-			}
+  async function writeConfigFiles(state: State) {
+    if (workspace.workspaceFolders) {
+      context.workspaceState.update("dbFlux_mode", "dbFlux");
+      context.workspaceState.update("dbFlux_DB_TNS", state.dbConnection);
+      if (state.projectType.label === "SingleSchema") {
+          context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase());
+      } else {
+          context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase() + "_depl");
+      }
 
-			context.workspaceState.update("dbFlux_DB_APP_PWD", state.dbAppPwd);
-			context.workspaceState.update("dbFlux_DB_ADMIN_USER", state.dbAdminUser);
+      context.workspaceState.update("dbFlux_DB_APP_PWD", state.dbAppPwd);
+      context.workspaceState.update("dbFlux_DB_ADMIN_USER", state.dbAdminUser);
 
-			context.workspaceState.update("dbFlux_PROJECT", state.projectName.toLowerCase());
-			if (state.projectType.label === "MultiSchema") {
-				context.workspaceState.update("dbFlux_PROJECT_MODE", "MULTI");
-				context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
-				context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
-				context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
-			} else if (state.projectType.label === "SingleSchema") {
-				context.workspaceState.update("dbFlux_PROJECT_MODE", "SINGLE");
-				context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase());
-			} else if (state.projectType.label === "FlexSchema") {
-				context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
-			}
+      context.workspaceState.update("dbFlux_PROJECT", state.projectName.toLowerCase());
+      if (state.projectType.label === "MultiSchema") {
+        context.workspaceState.update("dbFlux_PROJECT_MODE", "MULTI");
+        context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
+        context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
+        context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
+      } else if (state.projectType.label === "SingleSchema") {
+        context.workspaceState.update("dbFlux_PROJECT_MODE", "SINGLE");
+        context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase());
+      } else if (state.projectType.label === "FlexSchema") {
+        context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
+      }
 
-			context.workspaceState.update("dbFlux_WORKSPACE", state.projectName.toLowerCase());
-			context.workspaceState.update("dbFlux_APEX_USER", state.apexSchemaName.toUpperCase());
+      context.workspaceState.update("dbFlux_WORKSPACE", state.projectName.toLowerCase());
+      context.workspaceState.update("dbFlux_APEX_USER", state.apexSchemaName.toUpperCase());
 
-		}
+    }
 
-	}
+  }
 
-	writeConfigFiles(state);
-	writeUserScritps(state);
-	openWebView(state);
-	commands.executeCommand("dbFlux.reloadExtension");
+  writeConfigFiles(state);
+  writeUserScritps(state);
+  openWebView(state);
+  commands.executeCommand("dbFlux.reloadExtension");
 
 
-	window.showInformationMessage(`Application structure for '${state.projectName}' successfully created`);
+  window.showInformationMessage(`Application structure for '${state.projectName}' successfully created`);
 }
 
 
 function writeInstallSQLFile(files:string[], userFile: string) {
-	let content = "";
-	files.forEach(file => {
-		content += `@@${file}\n`;
-	});
+  let content = "";
+  files.forEach(file => {
+    content += `@@${file}\n`;
+  });
 
-	fs.writeFileSync(userFile, content);
+  fs.writeFileSync(userFile, content);
 
 }
 
 export function writeCreateWorkspaceAdminScript(workspaceName:string, workspaceAdminName:string, primaryWorkspaceSchema:string):string {
-	{
-		const relativeFile = `db/_setup/workspaces/${workspaceName}/create_01_user_${workspaceAdminName}.sql`;
-		const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-		const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "create_workspace_user.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
-		const content = {
-			"app_schema": primaryWorkspaceSchema,
-			"workspace": workspaceName,
-			"user_name": workspaceAdminName,
-		};
+  {
+    const relativeFile = `db/_setup/workspaces/${workspaceName}/create_01_user_${workspaceAdminName}.sql`;
+    const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "create_workspace_user.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+    const content = {
+      "app_schema": primaryWorkspaceSchema,
+      "workspace": workspaceName,
+      "user_name": workspaceAdminName,
+    };
 
-		fs.writeFileSync(userFile, template(content));
+    fs.writeFileSync(userFile, template(content));
 
-		return relativeFile;
-	}
+    return relativeFile;
+  }
 }
 
 export function writeCreateWorkspaceScript(workspaceName:string, primaryWorkspaceSchema:string):string {
-	const relativePath = `db/_setup/workspaces/${workspaceName}`;
-	const wsPath = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativePath);
+  const relativePath = `db/_setup/workspaces/${workspaceName}`;
+  const wsPath = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativePath);
 
-	// create folder
-	if (!existsSync(wsPath)) {
-		mkdirSync(wsPath, { recursive: true });
-		commands.executeCommand('revealInExplorer', Uri.file(wsPath));
-	}
+  // create folder
+  if (!existsSync(wsPath)) {
+    mkdirSync(wsPath, { recursive: true });
+    commands.executeCommand('revealInExplorer', Uri.file(wsPath));
+  }
 
-	// Create script
-	{
-		const relativeFile = `${relativePath}/create_00_workspace.sql`;
-		const workspaceFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-		const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "create_workspace.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
-		const content = {
-			"app_schema": primaryWorkspaceSchema,
-			"workspace": workspaceName
-		};
+  // Create script
+  {
+    const relativeFile = `${relativePath}/create_00_workspace.sql`;
+    const workspaceFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "create_workspace.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+    const content = {
+      "app_schema": primaryWorkspaceSchema,
+      "workspace": workspaceName
+    };
 
-		fs.writeFileSync(workspaceFile, template(content));
-		return relativeFile;
-	}
+    fs.writeFileSync(workspaceFile, template(content));
+    return relativeFile;
+  }
 }
 
 function writeProxyUserCreationScript(projectName:string, proxyPassword:string) : string {
-	const relativeFile = `db/_setup/users/00_create_${projectName}_depl.sql`;
-	const proxyUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_proxy.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
-	const content = {
-		"proxy_user": `${projectName}_depl`,
-		"db_app_pwd": proxyPassword
-	};
+  const relativeFile = `db/_setup/users/00_create_${projectName}_depl.sql`;
+  const proxyUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
+  const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_proxy.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+  const content = {
+    "proxy_user": `${projectName}_depl`,
+    "db_app_pwd": proxyPassword
+  };
 
-	fs.writeFileSync(proxyUser, template(content));
-	return relativeFile;
+  fs.writeFileSync(proxyUser, template(content));
+  return relativeFile;
 }
 
 function writeSingleUserCreationScript(projectName:string, singlePassword:string) : string {
-	const relativeFile = `db/_setup/users/01_create_${projectName}.sql`;
-	const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
-	const content = {
-		"data_schema": `${projectName}`,
-		"db_app_pwd": singlePassword
-	};
+  const relativeFile = `db/_setup/users/01_create_${projectName}.sql`;
+  const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
+  const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+  const content = {
+    "data_schema": `${projectName}`,
+    "db_app_pwd": singlePassword
+  };
 
-	fs.writeFileSync(schemaUser, template(content));
-	return relativeFile;
+  fs.writeFileSync(schemaUser, template(content));
+  return relativeFile;
 }
 
 export function writeUserCreationScript(index: number, schema: string, projectName: string) {
-	let idx = index+1;
+  let idx = index+1;
 
-	// when addionally add schema, this will be -1
-	if (index === -1) {
-		idx = fs.readdirSync(path.resolve(workspace.workspaceFolders![0].uri.fsPath, 'db/_setup/users')).length;
-	}
+  // when addionally add schema, this will be -1
+  if (index === -1) {
+    idx = fs.readdirSync(path.resolve(workspace.workspaceFolders![0].uri.fsPath, 'db/_setup/users')).length;
+  }
 
-	const relativeFile = `db/_setup/users/0${idx}_create_${schema}.sql`;
-	const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-	const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_default.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
-	const content = {
-		"data_schema": schema,
-		"proxy_user": `${projectName}_depl`,
-	};
+  const relativeFile = `db/_setup/users/0${idx}_create_${schema}.sql`;
+  const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
+  const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_default.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+  const content = {
+    "data_schema": schema,
+    "proxy_user": `${projectName}_depl`,
+  };
 
-	fs.writeFileSync(schemaUser, template(content));
-	return relativeFile;
+  fs.writeFileSync(schemaUser, template(content));
+  return relativeFile;
 }
 
 export async function enableFlexMode(context: ExtensionContext, projectInfos:IProjectInfos) {
-	const mode = getDBFlowMode(context);
+  const mode = getDBFlowMode(context);
 
-	if (mode === "xcl") {
-		window.showErrorMessage('dbFlux: xcl does not support FlexMode, yet!');
-	} else {
-		window.showInformationMessage("Do you realy want to enable FlexMode? This is not revertable!", ... ["Yes", "No"])
-			.then(async (answer) => {
-				if (answer === "Yes") {
-					const wsName = projectInfos.workspace?projectInfos.workspace:projectInfos.projectName!;
-					const wsRoot = getWorkspaceRootPath();
+  if (mode === "xcl") {
+    window.showErrorMessage('dbFlux: xcl does not support FlexMode, yet!');
+  } else {
+    window.showInformationMessage("Do you realy want to enable FlexMode? This is not revertable!", ... ["Yes", "No"])
+      .then(async (answer) => {
+        if (answer === "Yes") {
+          const wsName = projectInfos.workspace?projectInfos.workspace:projectInfos.projectName!;
+          const wsRoot = getWorkspaceRootPath();
 
-					// temp store
-					renameSync(path.join(wsRoot, 'apex'), path.join(wsRoot, 'tempa_'+wsName));
-					renameSync(path.join(wsRoot, 'static'), path.join(wsRoot, 'temps_'+wsName));
-					renameSync(path.join(wsRoot, 'rest'), path.join(wsRoot, 'tempr_'+wsName));
+          // temp store
+          renameSync(path.join(wsRoot, 'apex'), path.join(wsRoot, 'tempa_'+wsName));
+          renameSync(path.join(wsRoot, 'static'), path.join(wsRoot, 'temps_'+wsName));
+          renameSync(path.join(wsRoot, 'rest'), path.join(wsRoot, 'tempr_'+wsName));
 
-					// create schemafolders inside apex, rest and static
-					mkdirSync(path.join(wsRoot, 'apex', projectInfos.appSchema.toLowerCase()), {recursive:true});
-					mkdirSync(path.join(wsRoot, 'rest'), {recursive:true});
-					mkdirSync(path.join(wsRoot, 'static', projectInfos.appSchema.toLowerCase()), {recursive:true});
+          // create schemafolders inside apex, rest and static
+          mkdirSync(path.join(wsRoot, 'apex', projectInfos.appSchema.toLowerCase()), {recursive:true});
+          mkdirSync(path.join(wsRoot, 'rest'), {recursive:true});
+          mkdirSync(path.join(wsRoot, 'static', projectInfos.appSchema.toLowerCase()), {recursive:true});
 
-					// restore
-					renameSync(path.join(wsRoot, 'tempa_'+wsName), path.join(wsRoot, 'apex', projectInfos.appSchema.toLowerCase(), wsName));
-					renameSync(path.join(wsRoot, 'temps_'+wsName), path.join(wsRoot, 'static', projectInfos.appSchema.toLowerCase(), wsName));
-					renameSync(path.join(wsRoot, 'tempr_'+wsName), path.join(wsRoot, 'rest', projectInfos.appSchema.toLowerCase()));
+          // restore
+          renameSync(path.join(wsRoot, 'tempa_'+wsName), path.join(wsRoot, 'apex', projectInfos.appSchema.toLowerCase(), wsName));
+          renameSync(path.join(wsRoot, 'temps_'+wsName), path.join(wsRoot, 'static', projectInfos.appSchema.toLowerCase(), wsName));
+          renameSync(path.join(wsRoot, 'tempr_'+wsName), path.join(wsRoot, 'rest', projectInfos.appSchema.toLowerCase()));
 
 
-					if (mode === "dbFlow"){
-						const file = path.join(wsRoot, "build.env");
-						setEnvValue(file, "PROJECT_MODE", "FLEX");
-					} else if (mode === "dbFlux"){
-						context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
-					}
+          if (mode === "dbFlow"){
+            const file = path.join(wsRoot, "build.env");
+            setEnvValue(file, "PROJECT_MODE", "FLEX");
+          } else if (mode === "dbFlux"){
+            context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
+          }
 
-					window.showInformationMessage("Your Project is now in FlexMode!");
-					commands.executeCommand("dbFlux.reloadExtension");
-				}
-			});
-	}
+          window.showInformationMessage("Your Project is now in FlexMode!");
+          commands.executeCommand("dbFlux.reloadExtension");
+        }
+      });
+  }
 
 }
 
 export function getFilesForInstallSQL() {
-	const rootPath = workspace.workspaceFolders![0].uri.fsPath;
-	const files:string[] = [];
-	const getFiles = (source: string) =>
+  const rootPath = workspace.workspaceFolders![0].uri.fsPath;
+  const files:string[] = [];
+  const getFiles = (source: string) =>
           readdirSync(path.join(rootPath, source), { withFileTypes: true })
           .filter((dirent) => {
             return dirent.isFile() && dirent.name.endsWith(".sql");
           })
           .map((dirent) => path.join(source, dirent.name).replace(/\\/g, '/'));
 
-	const getFolders = (source: string) =>
+  const getFolders = (source: string) =>
           readdirSync(path.join(rootPath, source), { withFileTypes: true })
           .filter((dirent) => {
             return dirent.isDirectory();
           })
           .map((dirent) =>  dirent.name);
 
-	const getWorkspacesFiles = (source: string):string[] => {
-		const folders:string[] = [];
-		getFolders(source).forEach(folder => {
-			folders.push(... getFiles(source + "/" + folder));
-		});
-		return folders;
-	};
+  const getWorkspacesFiles = (source: string):string[] => {
+    const folders:string[] = [];
+    getFolders(source).forEach(folder => {
+      folders.push(... getFiles(source + "/" + folder));
+    });
+    return folders;
+  };
 
-	files.push (... getFiles("db/_setup/users"));
-	files.push (... getWorkspacesFiles("db/_setup/workspaces"));
+  files.push (... getFiles("db/_setup/users"));
+  files.push (... getWorkspacesFiles("db/_setup/workspaces"));
 
-	return files;
+  return files;
 }
 
 export function rewriteInstall() {
-	{
-		const installFile = `db/_setup/install.sql`;
-		const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, installFile);
-		if (existsSync(userFile)) {
+  {
+    const installFile = `db/_setup/install.sql`;
+    const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, installFile);
+    if (existsSync(userFile)) {
 
-			writeInstallSQLFile(getFilesForInstallSQL(), userFile);
-		}
+      writeInstallSQLFile(getFilesForInstallSQL(), userFile);
+    }
 
-	}
+  }
 }
 
 export function registerEnableFlexModeCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
