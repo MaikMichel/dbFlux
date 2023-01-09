@@ -416,12 +416,12 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
 			// Workspace und initialen WSUser erstellen
 			if (state.createWorkspace && state.createWorkspace.label === "Yes") {
-
+				const schema_name = state.projectType.label !== "SingleSchema" ? state.projectName + "_app" : state.projectName;
 				// Create Folder if not exists
-				(fcontent.files as string[]).push(writeCreateWorkspaceScript(state.projectName, `${state.projectName}_app`));
+				(fcontent.files as string[]).push(writeCreateWorkspaceScript(state.projectName, schema_name));
 
 				// Create Workspace Admin
-				(fcontent.files as string[]).push(writeCreateWorkspaceAdminScript(state.projectName, state.developerName, `${state.projectName}_app`));
+				(fcontent.files as string[]).push(writeCreateWorkspaceAdminScript(state.projectName, state.developerName, schema_name));
 			}
 
 
