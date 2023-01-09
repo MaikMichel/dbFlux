@@ -186,8 +186,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
       step: 1,
       totalSteps: 5,
       value: state.projectName || '',
-      prompt: 'Choose a Name for your project',
-      validate: validateValueIsRequiered,
+      prompt: 'Choose a Name for your project, this will be part of schema name[s] -',
+      validate: validateRequiredValueOnlyNumbersAlphaUScore,
       shouldResume: shouldResume
     });
     return (input: MultiStepInput) => pickProjectType(input, state);
@@ -294,8 +294,11 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   }
 
   async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
     return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
+  }
+
+  async function validateRequiredValueOnlyNumbersAlphaUScore(name: string) {
+    return (name == undefined || name.length === 0) ? 'Value is required' : (!name.toLowerCase().match(/^[0-9a-z_]+$/)) ? 'Value not a valid schema name' : undefined;
   }
 
   async function validateValueNotRequiered(name: string) {
