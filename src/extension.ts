@@ -20,7 +20,7 @@ import { registerLockCurrentFileCommand, registerregisterRefreshLockedFiles, reg
 import { registerExportCurrentStaticFileCommand, registerExportStaticFilesCommand } from "./provider/ExportStaticFilesProvider";
 import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticFileProvider";
 import { DBLockTreeView } from "./ui/DBLockTreeView";
-import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
+// import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
 import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
 
 
@@ -239,7 +239,7 @@ export async function activate(context: ExtensionContext) {
     }
 
 
-    context.subscriptions.push(languages.registerCompletionItemProvider('plsql', new PlsqlCompletionItemProvider(), '.'));
+    // context.subscriptions.push(languages.registerCompletionItemProvider('plsql', new PlsqlCompletionItemProvider(), '.'));
 
 
 
