@@ -189,9 +189,15 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
         const dbSchemaFolders = await getDBSchemaFolders();
         if (dbSchemaFolders.length > 1) {
 
+          // preselect folders/schemas
+          dbSchemaFolders.forEach((v)=>{
+            v.picked = true;
+          })
+
           const items: QuickPickItem[] | undefined = await window.showQuickPick(dbSchemaFolders, {
             canPickMany: true, placeHolder: 'Choose Schema to compile'
           });
+
           schemaSelected = (items !== undefined && items?.length > 0);
           CompileTaskStore.getInstance().selectedSchemas = items?.map(function (element) { return element.description!; });
         } else if (dbSchemaFolders.length === 1) {
@@ -199,20 +205,22 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
           CompileTaskStore.getInstance().selectedSchemas = dbSchemaFolders?.map(function (element) { return element.description!; });
         }
 
-        const options = [{label:"Invalid", description: "Only invalid object will be compiled"},{label:"All", description: "All objects will be compiled"}];
-        const compileOption: QuickPickItem | undefined = await window.showQuickPick(options, {
-          canPickMany: false, placeHolder: 'Compile all or just the invalide ones'
-        });
-
-
-        if (schemaSelected && compileOption != undefined) {
-
-          which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileSchemasProvider(context, "compileSchemas", compileOption.label)));
-            await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileSchemas");
-          }).catch(() => {
-            window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
+        if (schemaSelected) {
+          const options = [{label:"Invalid", description: "Only invalid object will be compiled"},{label:"All", description: "All objects will be compiled"}];
+          const compileOption: QuickPickItem | undefined = await window.showQuickPick(options, {
+            canPickMany: false, placeHolder: 'Compile all or just the invalide ones'
           });
+
+
+          if (compileOption != undefined) {
+
+            which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+              context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileSchemasProvider(context, "compileSchemas", compileOption.label)));
+              await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileSchemas");
+            }).catch(() => {
+              window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
+            });
+          }
         }
       }
     }

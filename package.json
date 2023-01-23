@@ -52,53 +52,41 @@
 		"problemMatchers": [
 			{
 				"name": "dbflux-plsql",
-				"owner": "external",
-				"fileLocation": [
-					"relative",
-					"${workspaceFolder}"
-				],
+				"owner": "dbflux",
+				"fileLocation": "autoDetect",
 				"applyTo": "openDocuments",
 				"pattern": [
 					{
-						"regexp": "(WARNING|ERROR) (.*)",
-						"severity": 1,
-						"code": 2
-					},
-					{
-						"regexp": "(.*?):(\\d+):(\\d+)",
-						"file": 1,
-						"line": 2,
-						"column": 3
-					},
-					{
-						"regexp": "(.*)",
+						"regexp": "(.*)$",
 						"message": 1
+					},
+					{
+						"regexp": "(WARNING|ERROR) (.*): (.*?):(\\d+):(\\d+)$",
+						"severity": 1,
+						"code": 2,
+						"file": 3,
+						"line": 4,
+						"column": 5
 					}
 				]
 			},
 			{
 				"name": "dbflux-plsql-all",
-				"owner": "external",
-				"fileLocation": [
-					"relative",
-					"${workspaceFolder}"
-				],
+				"owner": "dbflux",
+				"fileLocation": "autoDetect",
 				"applyTo": "allDocuments",
 				"pattern": [
 					{
-						"regexp": "(WARNING|ERROR) (.*)",
-						"severity": 1,
-						"code": 2
-					},
-					{
-						"regexp": "(.*?):(\\d+):(\\d+)",
-						"file": 1,
-						"line": 2,
-						"column": 3
-					},
-					{
-						"regexp": "(.*)",
+						"regexp": "(.*)$",
 						"message": 1
+					},
+					{
+						"regexp": "(WARNING|ERROR) (.*): (.*?):(\\d+):(\\d+)$",
+						"severity": 1,
+						"code": 2,
+						"file": 3,
+						"line": 4,
+						"column": 5
 					}
 				]
 			}

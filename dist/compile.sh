@@ -58,10 +58,10 @@ Declare
   l_color_on   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[36m' end;
   l_color_off  constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[0m' end;
 Begin
-  dbms_output.put_line(l_color_on || 'DB-User:  ' || l_color_off || USER);
-  dbms_output.put_line(l_color_on || 'DB-Name:  ' || l_color_off || ORA_DATABASE_NAME);
-  dbms_output.put_line(l_color_on || 'DB-Now:      ' || l_color_off || SYSTIMESTAMP);
-  dbms_output.put_line(l_color_on || 'compile_schema(schema => '||USER||', compile_all => ${DBFLOW_SQL_COMPILE_OPTION})' || l_color_off);
+  dbms_output.put_line(l_color_on || 'DB-User:   ' || l_color_off || USER);
+  dbms_output.put_line(l_color_on || 'DB-Name:   ' || l_color_off || ORA_DATABASE_NAME);
+  dbms_output.put_line(l_color_on || 'DB-Now:            ' || l_color_off || SYSTIMESTAMP);
+  dbms_output.put_line(l_color_on || 'Compile All:    ' || l_color_off || '${DBFLOW_SQL_COMPILE_OPTION}');
 End;
 /
 
@@ -79,10 +79,11 @@ Declare
   l_color_on   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[36m' end;
   l_color_off  constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[0m' end;
 Begin
-  dbms_output.put_line(l_color_on || 'DB-Now:      ' || l_color_off || SYSTIMESTAMP);
+  dbms_output.put_line(l_color_on || 'DB-Now:            ' || l_color_off || SYSTIMESTAMP);
 End;
 /
 
+prompt
 
 Declare
   l_errors_exists   boolean := false;
@@ -118,12 +119,13 @@ Begin
                order by type, name, line, position)
   loop
     l_errors_exists := true;
+    dbms_output.put_line(replace(substr(cur.text, instr(cur.text, ': ', 1, 1) + 2), chr(10), ' '));
+
     dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_yellowb else l_color_redb end ||
                          cur.attribute || l_color_off || ' ' ||
                          case when cur.attribute = 'WARNING' then l_color_yellow else l_color_red end ||
-                         substr(cur.text, 1, instr(cur.text, ':', 1, 1) -1) || l_color_off);
-    dbms_output.put_line(l_color_blue|| cur.wsfile || ':' || cur.line || ':' || cur.position || l_color_off);
-    dbms_output.put_line(replace(substr(cur.text, instr(cur.text, ': ', 1, 1) + 2), chr(10), ' '));
+                         substr(cur.text, 1, instr(cur.text, ':', 1, 1) -1) || ': ' || l_color_blue|| cur.wsfile || ':' || cur.line || ':' || cur.position || l_color_off);
+
   end loop;
 
   if not l_errors_exists then

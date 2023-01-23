@@ -120,12 +120,13 @@ Begin
                order by type, name, line, position)
   loop
     l_errors_exists := true;
+    dbms_output.put_line(replace(substr(cur.text, instr(cur.text, ': ', 1, 1) + 2), chr(10), ' '));
+
     dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_yellowb else l_color_redb end ||
                          cur.attribute || l_color_off || ' ' ||
                          case when cur.attribute = 'WARNING' then l_color_yellow else l_color_red end ||
-                         substr(cur.text, 1, instr(cur.text, ':', 1, 1) -1) || l_color_off);
-    dbms_output.put_line(l_color_blue|| '${DBFLOW_WSPACE}' || ':' || cur.line || ':' || cur.position || l_color_off);
-    dbms_output.put_line(replace(substr(cur.text, instr(cur.text, ': ', 1, 1) + 2), chr(10), ' '));
+                         substr(cur.text, 1, instr(cur.text, ':', 1, 1) -1) || ': ' || l_color_blue|| '${DBFLOW_WSPACE}' || ':' || cur.line || ':' || cur.position || l_color_off);
+
   end loop;
 
   if not l_errors_exists then
