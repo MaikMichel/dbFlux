@@ -1,6 +1,6 @@
-[![](https://vsmarketplacebadges.dev/version-short/maikmichel.dbflow.svg)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
-[![](https://vsmarketplacebadges.dev/downloads-short/maikmichel.dbflow.svg)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
-[![](https://vsmarketplacebadges.dev/rating-star/maikmichel.dbflow.svg)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
+[![](https://img.shields.io/visual-studio-marketplace/v/maikmichel.dbflow?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
+[![](https://img.shields.io/visual-studio-marketplace/d/maikmichel.dbflow?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
+[![](https://img.shields.io/visual-studio-marketplace/r/maikmichel.dbflow?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
 
 <p align="center">
   <br />
