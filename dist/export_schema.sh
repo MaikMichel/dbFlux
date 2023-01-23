@@ -137,7 +137,7 @@ if [[ -f "db/${DBFLOW_SCHEMA}.zip.base64" ]]; then
     rm "db/${DBFLOW_SCHEMA}.zip.base64"
   else
     echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported schema file ... ${NC}"
-    base64 -di "db/${DBFLOW_SCHEMA}.zip.base64" > "db/${DBFLOW_SCHEMA}.zip"
+    base64 -d -i "db/${DBFLOW_SCHEMA}.zip.base64" > "db/${DBFLOW_SCHEMA}.zip"
 
     # remove base64 garbage
     rm "db/${DBFLOW_SCHEMA}.zip.base64"

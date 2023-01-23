@@ -123,7 +123,7 @@ fi
      rm "${DBFLOW_EXP_PATH}.zip.base64"
    else
      echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported static file ... ${NC}"
-     base64 -di "${DBFLOW_EXP_PATH}.zip.base64" > "${DBFLOW_EXP_PATH}.zip"
+     base64 -d -i "${DBFLOW_EXP_PATH}.zip.base64" > "${DBFLOW_EXP_PATH}.zip"
 
      # remove base64 garbage
      rm "${DBFLOW_EXP_PATH}.zip.base64"
