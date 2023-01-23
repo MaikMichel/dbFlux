@@ -1,6 +1,6 @@
-[![](https://vsmarketplacebadge.apphb.com/version-short/MaikMichel.dbflow.svg)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
-[![](https://vsmarketplacebadge.apphb.com/downloads-short/MaikMichel.dbflow.svg)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
-[![](https://vsmarketplacebadge.apphb.com/rating-short/MaikMichel.dbflow.svg)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
+[![](https://vsmarketplacebadges.dev/version-short/maikmichel.dbflow.svg)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
+[![](https://vsmarketplacebadges.dev/downloads-short/maikmichel.dbflow.svg)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
+[![](https://vsmarketplacebadges.dev/rating-star/maikmichel.dbflow.svg)](https://marketplace.visualstudio.com/items?itemName=MaikMichel.dbflow)
 
 <p align="center">
   <br />
