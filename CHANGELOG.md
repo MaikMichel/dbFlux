@@ -1,5 +1,15 @@
 # Change Log
 
+## [4.3.0 - 2023-01-23]
+- New: Add option to compile all or just invalid objects
+- New: Add command "Add .hook file"
+- New: Add Command "Convert Project to dbFlow - Project"
+- Fix: Set warning level prior compile point
+- Fix: Schema assignment in create workspace and workspace user scripts #8
+- Fix: Clear question of schema name with validiation to reflect that project name will be part of schemas #7
+- Fix: Modified call to base64 to work with MacOS
+- Fix: Add workaround to fix the wrong problem matcher interpretation
+
 ## [4.2.1 - 2022-11-21]
 - New: Viewpanel to show locked files wehn using dbLock
 - New: Option to export all Applications in folder
