@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, WebviewPanel, window, workspace } from "vscode";
+import { commands, ExtensionContext, languages, StatusBarAlignment, StatusBarItem, tasks, WebviewPanel, window, workspace } from "vscode";
 
 import { basename, join } from "path";
 import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
@@ -7,7 +7,7 @@ import { registerExportAPEXCommand } from "./provider/ExportTaskProvider";
 import { registerExportRESTCommand } from "./provider/RestTaskProvider";
 import { applyFileExists, getDBFlowMode, getProjectInfos} from "./provider/AbstractBashTaskProvider";
 import { openTestResult, registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand } from "./provider/TestTaskProvider";
-import { ConfigurationManager, removeDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
+import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
 import { outputLog } from './helper/OutputChannel';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
@@ -20,6 +20,8 @@ import { registerLockCurrentFileCommand, registerregisterRefreshLockedFiles, reg
 import { registerExportCurrentStaticFileCommand, registerExportStaticFilesCommand } from "./provider/ExportStaticFilesProvider";
 import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticFileProvider";
 import { DBLockTreeView } from "./ui/DBLockTreeView";
+import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
+import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
 
 
 
@@ -84,6 +86,7 @@ export async function activate(context: ExtensionContext) {
     commands.executeCommand("setContext", "dbLockEnabled", ConfigurationManager.isDBLockEnabled());
     commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
     commands.executeCommand("setContext", "existsAppSchemas", );
+    commands.executeCommand("setContext", "isDBFluxMode", (dbFluxMode === "dbFlux"));
 
 
     if (["dbFlow", "xcl"].includes(dbFluxMode) && workspace.workspaceFolders) {
@@ -211,6 +214,9 @@ export async function activate(context: ExtensionContext) {
     // Open SpecOrBody
     context.subscriptions.push(registerOpenSpecOrBody());
 
+    // Convert current project to dbFlow project
+    context.subscriptions.push(registerConvert2dbFLow(projectInfos, "dbFlux.convert.to.dbFlow", context));
+
     if (ConfigurationManager.isDBLockEnabled()) {
 
       // dbLock FileDecodations
@@ -232,6 +238,11 @@ export async function activate(context: ExtensionContext) {
 
     }
 
+
+    context.subscriptions.push(languages.registerCompletionItemProvider('plsql', new PlsqlCompletionItemProvider(), '.'));
+
+
+
     // Execute Something when task endet
     tasks.onDidEndTask((e) => {
       const task = e.execution.task;
@@ -246,6 +257,11 @@ export async function activate(context: ExtensionContext) {
           }
           case "executeTestPackage" : {
             webViewTestPanel = openTestResult(context, webViewTestPanel);
+            break;
+          }
+          case "convert2dbFlow" : {
+            rmDBFluxConfig(context);
+            window.showInformationMessage(`dbFLux Mode is now: 'dbFlow'`);
             break;
           }
           // case "compileFile" : {

@@ -169,7 +169,7 @@
 				"command": "dbFlux.removeConfiguration",
 				"title": "Remove dbFlux configuration from workspace",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject"
+				"enablement": "inDbFlowProject && isDBFluxMode"
 			},
 			{
 				"command": "dbFlux.compileFile",
@@ -356,6 +356,12 @@
 				"title": "Run SQL+",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.convert.to.dbFlow",
+				"title": "Convert Project to dbFlow - Project",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && isDBFluxMode"
 			}
 		],
 		"keybindings": [

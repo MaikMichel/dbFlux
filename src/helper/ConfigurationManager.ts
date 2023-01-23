@@ -110,23 +110,8 @@ export function removeDBFluxConfig(context:ExtensionContext){
   window.showInformationMessage("Do you realy want to remove you dbFlux configuration?", ... ["Yes", "No"])
     .then((answer) => {
       if (answer === "Yes") {
-        // Run function
-        outputLog("Removing Configuration", true);
 
-        context.workspaceState.update("dbFlux_mode", undefined);
-        context.workspaceState.update("dbFlux_DB_TNS", undefined);
-        context.workspaceState.update("dbFlux_DB_APP_USER", undefined);
-        context.workspaceState.update("dbFlux_DB_APP_PWD", undefined);
-        context.workspaceState.update("dbFlux_DB_ADMIN_USER", undefined);
-
-        context.workspaceState.update("dbFlux_PROJECT", undefined);
-        context.workspaceState.update("dbFlux_WORKSPACE", undefined);
-        context.workspaceState.update("dbFlux_DATA_SCHEMA", undefined);
-        context.workspaceState.update("dbFlux_LOGIC_SCHEMA", undefined);
-        context.workspaceState.update("dbFlux_APP_SCHEMA", undefined);
-
-        commands.executeCommand("dbFlux.reloadExtension");
-
+        rmDBFluxConfig(context);
         window.showInformationMessage(`Configuration successfully removed`);
       }
     });
@@ -134,6 +119,24 @@ export function removeDBFluxConfig(context:ExtensionContext){
 
 }
 
+export async function rmDBFluxConfig(context:ExtensionContext) {
+  // Run function
+  outputLog("Removing Configuration", true);
+
+  context.workspaceState.update("dbFlux_mode", undefined);
+  context.workspaceState.update("dbFlux_DB_TNS", undefined);
+  context.workspaceState.update("dbFlux_DB_APP_USER", undefined);
+  context.workspaceState.update("dbFlux_DB_APP_PWD", undefined);
+  context.workspaceState.update("dbFlux_DB_ADMIN_USER", undefined);
+
+  context.workspaceState.update("dbFlux_PROJECT", undefined);
+  context.workspaceState.update("dbFlux_WORKSPACE", undefined);
+  context.workspaceState.update("dbFlux_DATA_SCHEMA", undefined);
+  context.workspaceState.update("dbFlux_LOGIC_SCHEMA", undefined);
+  context.workspaceState.update("dbFlux_APP_SCHEMA", undefined);
+
+  await commands.executeCommand("dbFlux.reloadExtension");
+}
 
 export function focusProblemPanel() {
   if (ConfigurationManager.getFocusProblemPanelWhenExists()) {

@@ -166,12 +166,16 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
   async function collectInputs() {
     const state = {} as Partial<State>;
+    state.projectName = ""
     if (workspace.workspaceFolders) {
-
       state.projectName = context.workspaceState.get("dbFlux_PROJECT") || "";
       state.dbConnection = context.workspaceState.get("dbFlux_DB_TNS") || "";
       state.dbAdminUser = context.workspaceState.get("dbFlux_DB_ADMIN_USER") || "";
       state.apexSchemaName = context.workspaceState.get("dbFlux_APEX_USER") || "";
+    }
+
+    if (state.projectName.length === 0) {
+      state.projectName = getWorkspaceRootPath().split("/").pop();
     }
 
     await MultiStepInput.run(input => inputProjectName(input, state));
