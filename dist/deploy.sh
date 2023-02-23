@@ -63,7 +63,7 @@ fi
 
 if [[ ${DBFLOW_TRIGGER_ONLY} == "NO" ]]; then
 
-${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}${DBA_OPTION} <<!
+${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}${DBA_OPTION} << EOF
 $(
   for element in "${settings[@]}"
   do
@@ -108,36 +108,43 @@ Declare
   l_color_red       constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[1m' || chr(27) || '[38;5;1;197m' end;
 
   l_color_blue      constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[38;5;45m' end;
+  l_color_dgray     constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[90m' end;
 Begin
-  for cur in (select attribute, text, line, position, name
-                from user_errors
-               where attribute in ('ERROR', 'WARNING')
-                 and lower(name||decode(type, 'PACKAGE', '.pks',
+  for cur in (with errms as (select attribute, line||':'||position lpos, name, type,
+                                    replace(substr(text, 1, instr(text, ':', 1, 1) -1), ' ') errtype,
+                                    replace(substr(text, instr(text, ': ', 1, 1) + 2), chr(10), ' ') errtext
+                               from user_errors
+                              where attribute in ('ERROR', 'WARNING')
+                                and lower(name||decode(type, 'PACKAGE', '.pks',
                                               'PACKAGE BODY', '.pkb',
                                               'TYPE', '.tps',
                                               'TYPE BODY', '.tpb',
-                                              '.${extension}')) = lower('${basefl}')
-               order by type, name, line, position)
+                                              '.${extension}')) = lower('${basefl}'))
+                  select attribute, lpos, name, errtype, errtext, max(length(errtype)) over () mlen, max(length(lpos)) over () mlpos
+                    from errms
+               order by type, name, lpos)
   loop
     l_errors_exists := true;
-    dbms_output.put_line(replace(substr(cur.text, instr(cur.text, ': ', 1, 1) + 2), chr(10), ' '));
-
-    dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_yellowb else l_color_redb end ||
-                         cur.attribute || l_color_off || ' ' ||
-                         case when cur.attribute = 'WARNING' then l_color_yellow else l_color_red end ||
-                         substr(cur.text, 1, instr(cur.text, ':', 1, 1) -1) || ': ' || l_color_blue|| '${DBFLOW_WSPACE}' || ':' || cur.line || ':' || cur.position || l_color_off);
+    dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_yellowb else l_color_redb end || cur.attribute || l_color_off || ' ' ||
+                         case when cur.attribute = 'WARNING' then l_color_yellow else l_color_red end || rpad(cur.errtype, cur.mlen, ' ') || ' ' ||l_color_off ||
+                           '${DBFLOW_WSPACE}' || ':' || rpad(cur.lpos, cur.mlpos , ' ') ||
+                         ' '||l_color_blue|| cur.errtext || l_color_off
+                         );
 
   end loop;
 
   if not l_errors_exists then
     dbms_output.put_line(l_color_greenb || 'Successful' || l_color_off || '   ' || l_color_green || SYSTIMESTAMP || l_color_off);
+  else
+    dbms_output.put_line('------------------------------------------------------------------------------------');
+    dbms_output.put_line(l_color_dgray||'due to a bug ('||l_color_off||'#170898'||l_color_dgray||') in VSCode there are no multiline error messages at the moment'||l_color_off);
   end if;
 End;
 /
 
 
 
-!
+EOF
 
 fi
 
@@ -182,7 +189,5 @@ else
   if [[ -n $DBFLOW_ADDITIONAL_OUTPUT ]]; then
     echo -e ${BCYAN}${DBFLOW_ADDITIONAL_OUTPUT}${NC}
   fi
-  echo -e "-----------------------------------------------------"
   echo
-
 fi

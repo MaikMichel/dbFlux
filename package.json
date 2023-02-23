@@ -27,10 +27,6 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:dbFlux.initializeProject",
-		"onCommand:dbFlux.wrapLogSelection",
-		"onCommand:dbFlux.wrapLogSelection.down",
-		"onCommand:dbFlux.wrapLogSelection.up",
 		"workspaceContains:build.env",
 		"workspaceContains:xcl.yml",
 		"onStartupFinished",
@@ -57,16 +53,13 @@
 				"applyTo": "openDocuments",
 				"pattern": [
 					{
-						"regexp": "(.*)$",
-						"message": 1
-					},
-					{
-						"regexp": "(WARNING|ERROR) (.*): (.*?):(\\d+):(\\d+)$",
+						"regexp": "(WARNING|ERROR) (.*) (.*?):(\\d+):(\\d+) (.*)$",
 						"severity": 1,
 						"code": 2,
 						"file": 3,
 						"line": 4,
-						"column": 5
+						"column": 5,
+						"message": 6
 					}
 				]
 			},
@@ -77,16 +70,13 @@
 				"applyTo": "allDocuments",
 				"pattern": [
 					{
-						"regexp": "(.*)$",
-						"message": 1
-					},
-					{
-						"regexp": "(WARNING|ERROR) (.*): (.*?):(\\d+):(\\d+)$",
+						"regexp": "(WARNING|ERROR) (.*) (.*?):(\\d+):(\\d+) (.*)$",
 						"severity": 1,
 						"code": 2,
 						"file": 3,
 						"line": 4,
-						"column": 5
+						"column": 5,
+						"message": 6
 					}
 				]
 			}
