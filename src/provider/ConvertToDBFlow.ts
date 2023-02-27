@@ -74,7 +74,7 @@ export class ConvertToDBFlowProvider extends AbstractBashTaskProvider implements
     // taken from setInitialCompileInfo
     let projectInfos: IProjectInfos = getProjectInfos(this.context);
 
-    runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", "gen_dbflow.sh").split(path.sep).join(path.posix.sep);
+    runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", "shell", "gen_dbflow.sh").split(path.sep).join(path.posix.sep);
     if (existsSync(runnerInfo.runFile)) {
       chmodSync(runnerInfo.runFile, 0o755);
     }
@@ -94,17 +94,32 @@ export function registerConvert2dbFLow(projectInfos: IProjectInfos, command: str
     const ws = getWorkspaceRootPath();
 
     // write dbFlow build file
-    const buildTemplate = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "build.tmpl.env").split(path.sep).join('/'), "utf8"));
+    const buildTemplate = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "build.tmpl.env").split(path.sep).join('/'), "utf8"));
     const buildContent = projectInfos;
     const buildFile = path.join(ws, "build.env");
     fs.writeFileSync(buildFile, buildTemplate(buildContent));
 
     // write dbFlow apply file
-    const applyTemplate = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "apply.tmpl.env").split(path.sep).join('/'), "utf8"));
+    const applyTemplate = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "apply.tmpl.env").split(path.sep).join('/'), "utf8"));
     const applyContent:any = projectInfos;
     applyContent.sqlCLI = ConfigurationManager.getCliToUseForCompilation();
     const applyFile = path.join(ws, "apply.env");
     fs.writeFileSync(applyFile, applyTemplate(applyContent));
+
+    const removeLines = (data: string, lines:string[] = []) => {
+      return data
+          .split('\n')
+          .filter((val, idx) => !lines.includes(val))
+          .join('\n');
+    }
+
+    fs.readFile(buildFile, 'utf8', (err, data) => {
+        if (err) throw err;
+
+        fs.writeFile(buildFile, removeLines(data, ["LOGIC_SCHEMA=", "DATA_SCHEMA="]), 'utf8', function(err) {
+            if (err) throw err;
+        });
+    })
 
     // initialize dbFlow as submodule
     context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ConvertToDBFlowProvider(context)));

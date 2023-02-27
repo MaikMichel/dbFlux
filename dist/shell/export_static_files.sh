@@ -1,45 +1,26 @@
 #!/bin/bash
 
-# Reset
-NC="\033[0m"       # Text Reset
-
-# Regular Colors
-#BLACK="\033[0;30m"        # Black
-RED="\033[41m"          # Red
-GREEN="\033[0;32m"        # Green
-# BGREEN="\033[1;32m"       # Green
-# YELLOW="\033[0;33m"       # Yellow
-# BLUE="\033[0;34m"         # Blue
-# PURPLE="\033[0;35m"       # Purple
-CYAN="\033[0;36m"         # Cyan
-WHITE="\033[0;37m"        # White
-BYELLOW="\033[1;33m"      # Yellow
-ORANGE="\033[38;5;208m"
-
+# this is our source directory
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 
-export NLS_LANG="GERMAN_GERMANY.AL32UTF8"
-export NLS_DATE_FORMAT="DD.MM.YYYY HH24:MI:SS"
-export JAVA_TOOL_OPTIONS="-Duser.language=en -Duser.region=US -Dfile.encoding=UTF-8"
-export CUSTOM_JDBC="-XX:TieredStopAtLevel=1"
+# let's include some global vars like color or some methods
+source "${SCRIPT_DIR}/_lib.sh"
 
-# colored output in sqlplus inside git-bash
-case $(uname | tr '[:upper:]' '[:lower:]') in
-mingw64_nt-10*)
-  chcp.com 65001
-;;
-esac
+# initialze session vars like NLS or JAVA_TOOL_OPTIONS
+initialize_session;
 
-echo -e "${BYELLOW}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}"
-echo -e "${BYELLOW}AppID:${NC}         ${WHITE}${DBFLOW_EXP_APP_ID}${NC}"
-echo -e "${BYELLOW}File:${NC}          ${WHITE}${DBFLOW_EXP_FNAME}${NC}"
-echo -e "${BYELLOW}Target:${NC}        ${WHITE}${DBFLOW_EXP_PATH}${NC}"
+######################################################
 
-echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Files from ${DBFLOW_EXP_APP_ID} to static/${DBFLOW_EXP_APP_ID}/src ${NC}"
-echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}"
+echo -e "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}"
+echo -e "${CLR_LBLUE}AppID:${NC}         ${WHITE}${DBFLOW_EXP_APP_ID}${NC}"
+echo -e "${CLR_LBLUE}File:${NC}          ${WHITE}${DBFLOW_EXP_FNAME}${NC}"
+echo -e "${CLR_LBLUE}Target:${NC}        ${WHITE}${DBFLOW_EXP_PATH}${NC}"
+echo
+echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Files from ${DBFLOW_EXP_APP_ID} to static/${DBFLOW_EXP_APP_ID}/src ${NC}"
+echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}"
 
 
-ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/export_app_static_function.sql" )
+ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/export_app_static_function.sql" )
 
 # the export itself
 if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
@@ -115,14 +96,14 @@ fi
  if [[ -f "${DBFLOW_EXP_PATH}.zip.base64" ]]; then
    #if grep -q "ORA-20001:" "${DBFLOW_EXP_PATH}.zip.base64"; then
    if grep -q "ORA-.*:" "${DBFLOW_EXP_PATH}.zip.base64"; then
-     echo -e "${RED}Error detected on export${NC}"
+     echo -e "${CLR_REDBGR}Error detected on export${NC}"
      tput setaf 9
      cat "${DBFLOW_EXP_PATH}.zip.base64"
      tput setaf default
 
      rm "${DBFLOW_EXP_PATH}.zip.base64"
    else
-     echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported static file ... ${NC}"
+     echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported static file ... ${NC}"
      base64 -d -i "${DBFLOW_EXP_PATH}.zip.base64" > "${DBFLOW_EXP_PATH}.zip"
 
      # remove base64 garbage
@@ -131,10 +112,10 @@ fi
 
    # unzip file content
    if [[ -f "${DBFLOW_EXP_PATH}.zip" ]]; then
-     echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Unzipping exported schema file ... ${NC}"
+     echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Unzipping exported schema file ... ${NC}"
      unzip -o "${DBFLOW_EXP_PATH}.zip" -d "${DBFLOW_EXP_PATH}"
      rm "${DBFLOW_EXP_PATH}.zip"
-     echo -e "${GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
+     echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
    fi
  fi
 

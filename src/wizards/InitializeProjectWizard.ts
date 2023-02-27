@@ -446,7 +446,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   }
 
   function getWebviewContent(content:any, state: State) {
-    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", state.projectType.label==="FlexSchema" ? "welcomeFlex.tmpl.html": "welcome.tmpl.html").split(path.sep).join('/'), "utf8"));
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", state.projectType.label==="FlexSchema" ? "welcomeFlex.tmpl.html": "welcome.tmpl.html").split(path.sep).join('/'), "utf8"));
     return template(content);
   }
 
@@ -543,7 +543,7 @@ export function writeCreateWorkspaceAdminScript(workspaceName:string, workspaceA
   {
     const relativeFile = `db/_setup/workspaces/${workspaceName}/create_01_user_${workspaceAdminName}.sql`;
     const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "create_workspace_user.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "create_workspace_user.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
     const content = {
       "app_schema": primaryWorkspaceSchema,
       "workspace": workspaceName,
@@ -570,7 +570,7 @@ export function writeCreateWorkspaceScript(workspaceName:string, primaryWorkspac
   {
     const relativeFile = `${relativePath}/create_00_workspace.sql`;
     const workspaceFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "create_workspace.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "create_workspace.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
     const content = {
       "app_schema": primaryWorkspaceSchema,
       "workspace": workspaceName
@@ -584,7 +584,7 @@ export function writeCreateWorkspaceScript(workspaceName:string, primaryWorkspac
 function writeProxyUserCreationScript(projectName:string, proxyPassword:string) : string {
   const relativeFile = `db/_setup/users/00_create_${projectName}_depl.sql`;
   const proxyUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-  const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_proxy.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+  const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "user_proxy.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
   const content = {
     "proxy_user": `${projectName}_depl`,
     "db_app_pwd": proxyPassword
@@ -597,7 +597,7 @@ function writeProxyUserCreationScript(projectName:string, proxyPassword:string) 
 function writeSingleUserCreationScript(projectName:string, singlePassword:string) : string {
   const relativeFile = `db/_setup/users/01_create_${projectName}.sql`;
   const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-  const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+  const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
   const content = {
     "data_schema": `${projectName}`,
     "db_app_pwd": singlePassword
@@ -617,7 +617,7 @@ export function writeUserCreationScript(index: number, schema: string, projectNa
 
   const relativeFile = `db/_setup/users/0${idx}_create_${schema}.sql`;
   const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
-  const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "user_default.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+  const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "user_default.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
   const content = {
     "data_schema": schema,
     "proxy_user": `${projectName}_depl`,

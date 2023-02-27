@@ -36,7 +36,6 @@ interface ICompileInfos extends IBashInfos {
   enableWarnings:     string;
   trgRunsConn:        string;
   trgRunsFile:        string;
-  coloredOutput:      string;
   additionalOutput:   string;
   onlyTriggerRun:     string;
 }
@@ -122,7 +121,6 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
       runner.relativeWSPath     = workspace.asRelativePath(runner.activeFile);
       runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
       runner.moveYesNo          = "NO";
-      runner.coloredOutput      = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
 
 
       if (ConfigurationManager.getShowWarningMessages()) {

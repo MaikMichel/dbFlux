@@ -34,7 +34,7 @@ export class ReportTemplater {
         const inFileName = path.basename(this.sourceFile);
 
 
-        const template = Handlebars.compile(readFileSync(path.resolve(__dirname, "..", "..", "dist", "report.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
+        const template = Handlebars.compile(readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "report.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
         const content = {
           "inFileName": inFileName,
           "inFileContent": this.sourceContent.match(/.{1,200}/g),

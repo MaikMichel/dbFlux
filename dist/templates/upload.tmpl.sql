@@ -7,9 +7,6 @@ declare
 
   gc_red           varchar2(7) := chr(27) || '[31m';
   gc_green         varchar2(7) := chr(27) || '[32m';
-  gc_yellow        varchar2(7) := chr(27) || '[33m';
-  gc_blue          varchar2(7) := chr(27) || '[34m';
-  gc_cyan          varchar2(7) := chr(27) || '[36m';
   gc_reset         varchar2(7) := chr(27) || '[0m';
 
   function get_file_mime_type(p_file_name in varchar2) return varchar2 is

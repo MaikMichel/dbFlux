@@ -1,49 +1,23 @@
 #!/bin/bash
 
-# Reset
-NC="\033[0m"       # Text Reset
+# this is our source directory
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 
-# Regular Colors
-RED="\033[0;31m"          # Red
-BRED="\033[1;31m"         # Red Bold
-GREEN="\033[0;32m"        # Green
-BGREEN="\033[1;32m"       # Green Bold
-YELLOW="\033[0;33m"       # Yellow
-BYELLOW="\033[1;33m"      # Yellow Bold
-BLUE="\033[0;34m"         # Blue
-BBLUE="\033[1;34m"        # Blue Bold
-PURPLE="\033[0;35m"       # Purple
-BPURPLE="\033[1;35m"      # Purple Bold
-CYAN="\033[0;36m"         # Cyan
-BCYAN="\033[1;36m"        # Cyan Bold
-WHITE="\033[0;37m"        # White
-BWHITE="\033[1;37m"       # White Bold
+# let's include some global vars like color or some methods
+source "${SCRIPT_DIR}/_lib.sh"
 
-export NLS_LANG="GERMAN_GERMANY.AL32UTF8"
-export NLS_DATE_FORMAT="DD.MM.YYYY HH24:MI:SS"
-export LANG="de_DE.utf8"
+# initialze session vars like NLS or JAVA_TOOL_OPTIONS
+initialize_session;
 
-if [[ ${DBFLOW_SQLCLI} == "sql" ]]; then
-  export CUSTOM_JDBC="-XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none"
-  export JAVA_TOOL_OPTIONS="-Duser.language=en -Duser.region=US -Dfile.encoding=UTF-8"
-fi
-
-# colored output in sqlplus inside git-bash
-case $(uname | tr '[:upper:]' '[:lower:]') in
-mingw64_nt-10*)
-  chcp.com 65001
-;;
-esac
-
-
+######################################################
 
 basefl=$(basename -- "${DBFLOW_FILE}")
 extension="${basefl##*.}"
 MDATE=`date +%d.%m.%y_%H:%M:%S,%5N`
 
-echo -e "${BYELLOW}Connection:${NC}  ${WHITE}${DBFLOW_DBUSER}@${DBFLOW_DBTNS}${NC}"
-echo -e "${BYELLOW}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC} ${BYELLOW}(Trigger only:${NC} ${WHITE}${DBFLOW_TRIGGER_ONLY}${NC}${BYELLOW})${NC}"
-echo -e "${BYELLOW}OS-Now:${NC}      ${WHITE}${MDATE}${NC}"
+echo -e "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBUSER}@${DBFLOW_DBTNS}${NC}"
+echo -e "${CLR_LBLUE}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC} ${CLR_LBLUE}(Trigger only:${NC} ${WHITE}${DBFLOW_TRIGGER_ONLY}${NC}${BYELLOW})${NC}"
+echo -e "${CLR_LBLUE}OS-Now:${NC}      ${WHITE}${MDATE}${NC}"
 
 # define settings array
 settings=()
@@ -77,8 +51,8 @@ set heading off
 set feedback off
 
 Declare
-  l_color_on   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[36m' end;
-  l_color_off  constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[0m' end;
+  l_color_on   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_LVIOLETE}' end;
+  l_color_off  constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_RESET}' end;
 Begin
   dbms_output.put_line(l_color_on || 'DB-User:     ' || l_color_off || USER);
   dbms_output.put_line(l_color_on || 'DB-Name:     ' || l_color_off || ORA_DATABASE_NAME);
@@ -99,16 +73,16 @@ Rem prompt Errors
 
 Declare
   l_errors_exists   boolean := false;
-  l_color_off       constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[0m' end;
-  l_color_greenb    constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[48;5;28m' end;
-  l_color_green     constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[1m' || chr(27) || '[38;5;28m' end;
-  l_color_yellowb   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[48;5;202m' end;
-  l_color_yellow    constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[1m' || chr(27) || '[38;5;202m' end;
-  l_color_redb      constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[48;5;197m' end;
-  l_color_red       constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[1m' || chr(27) || '[38;5;1;197m' end;
+  l_color_off       constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_RESET}' end;
+  l_color_greenb    constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_GREENBGR}' end;
+  l_color_green     constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_GREEN}' end;
+  l_color_orangeb   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_ORANGEBGR}' end;
+  l_color_orange    constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_ORANGE}' end;
+  l_color_redb      constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_REDBGR}' end;
+  l_color_red       constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_RED}' end;
 
-  l_color_blue      constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[38;5;45m' end;
-  l_color_dgray     constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '[90m' end;
+  l_color_blue      constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_LVIOLETE}' end;
+  l_color_dgray     constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_DGRAY}' end;
 Begin
   for cur in (with errms as (select attribute, line||':'||position lpos, name, type,
                                     replace(substr(text, 1, instr(text, ':', 1, 1) -1), ' ') errtype,
@@ -125,10 +99,10 @@ Begin
                order by type, name, lpos)
   loop
     l_errors_exists := true;
-    dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_yellowb else l_color_redb end || cur.attribute || l_color_off || ' ' ||
-                         case when cur.attribute = 'WARNING' then l_color_yellow else l_color_red end || rpad(cur.errtype, cur.mlen, ' ') || ' ' ||l_color_off ||
-                           '${DBFLOW_WSPACE}' || ':' || rpad(cur.lpos, cur.mlpos , ' ') ||
-                         ' '||l_color_blue|| cur.errtext || l_color_off
+    dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_orangeb else l_color_redb end || cur.attribute || l_color_off || ' ' ||
+                         case when cur.attribute = 'WARNING' then l_color_orange else l_color_red end || rpad(cur.errtype, cur.mlen, ' ') || ' ' ||l_color_off ||
+                         l_color_dgray || '${DBFLOW_WSPACE}' || ':' || rpad(cur.lpos, cur.mlpos , ' ') || l_color_off ||' ' ||
+                         case when cur.attribute = 'WARNING' then l_color_orange else l_color_red end || cur.errtext || l_color_off
                          );
 
   end loop;
@@ -150,26 +124,26 @@ fi
 
 if [ $? -ne 0 ]
 then
-  echo -e "${BRED}Error when executing ${DBFLOW_FILE} ${NC}"
+  echo -e "${CLR_REDBGR}Error when executing ${DBFLOW_FILE} ${NC}"
   echo
 else
 
   if [[ ${DBFLOW_MOVEYN} == "YES" ]]; then
     target=${DBFLOW_FILE/\/src\//\/dist\/}
     target_dir=$(dirname "${target}")
-    mkdir --parents ${target_dir}
-    mv ${DBFLOW_FILE} ${target}
+    mkdir --parents "${target_dir}"
+    mv "${DBFLOW_FILE}" "${target}"
   fi
 
   if [[ -n ${DBFLOW_CONN_RUNS} ]]; then
     echo
-    echo -e "${BLUE}Running additional files ... ${NC}"
+    echo -e "${CLR_LBLUE}Running additional files ... ${NC}"
 
     IFS=',' read -r -a connection <<< "${DBFLOW_CONN_RUNS}"
     IFS=',' read -r -a files <<< "${DBFLOW_FILE_RUNS}"
 
     for i in "${!connection[@]}"; do
-      ${DBFLOW_SQLCLI} -s -l ${connection[$i]} <<!
+      ${DBFLOW_SQLCLI} -s -l ${connection[$i]} << EOF
       $(
         for element in "${settings[@]}"
         do
@@ -180,14 +154,15 @@ else
         echo "${files[$i]}"
       )
 
-!
+EOF
+
     done
 
     echo
   fi
 
   if [[ -n $DBFLOW_ADDITIONAL_OUTPUT ]]; then
-    echo -e ${BCYAN}${DBFLOW_ADDITIONAL_OUTPUT}${NC}
+    echo -e ${CLR_LBLUE}${DBFLOW_ADDITIONAL_OUTPUT}${NC}
   fi
   echo
 fi

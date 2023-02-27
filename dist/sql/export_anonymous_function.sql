@@ -558,7 +558,7 @@
   begin
     for cur in (select sequence_name, 'sequences/'||lower(sequence_name)||'.sql' filename
                   from user_sequences
-                 where sequence_name not like 'iseq%'
+                 where sequence_name not like 'ISEQ%'
                    and (    p_object_name is null
                          or (    upper(sequence_name) = upper(p_object_name)
                              and p_object_type = 'SEQUENCES')) )

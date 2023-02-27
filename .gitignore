@@ -1,7 +1,6 @@
 out/**
 !out/deploy.sh
 !out/upload.tmpl.sql
-!out/compile.tmpl
 
 #dist
 node_modules

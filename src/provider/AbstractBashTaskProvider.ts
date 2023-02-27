@@ -6,6 +6,7 @@ import * as yaml from 'yaml';
 import { CompileTaskStore } from "../stores/CompileTaskStore";
 import { outputLog } from "../helper/OutputChannel";
 import { commands, ExtensionContext, QuickPickItem, Uri, window, workspace } from "vscode";
+import { ConfigurationManager } from "../helper/ConfigurationManager";
 
 export interface IBashInfos {
   runFile:        string;
@@ -14,6 +15,7 @@ export interface IBashInfos {
   connectionPass: string;
   cwd:            string;
   projectInfos:   IProjectInfos;
+  coloredOutput:  string;
 }
 
 export interface IProjectInfos {
@@ -88,7 +90,7 @@ export abstract class AbstractBashTaskProvider {
     let projectInfos: IProjectInfos = getProjectInfos(this.context);
     const activeFile = fileUri.fsPath.split(path.sep).join(path.posix.sep);
 
-    runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", execFileName).split(path.sep).join(path.posix.sep);
+    runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", "shell", execFileName).split(path.sep).join(path.posix.sep);
     if (existsSync(runnerInfo.runFile)) {
       chmodSync(runnerInfo.runFile, 0o755);
     }
@@ -98,6 +100,8 @@ export abstract class AbstractBashTaskProvider {
     runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd, fileUri.path);
     runnerInfo.connectionPass = runnerInfo.connectionUser === projectInfos.dbAdminUser ? CompileTaskStore.getInstance().adminPwd! : CompileTaskStore.getInstance().appPwd!;
     runnerInfo.projectInfos   = projectInfos;
+
+    runnerInfo.coloredOutput  = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
 
     if (matchRuleShort(runnerInfo.connectionPass, "${*}") ||
         matchRuleShort(runnerInfo.connectionUser, "${*}") ||

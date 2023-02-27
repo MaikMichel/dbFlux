@@ -109,7 +109,7 @@ export class ExportTaskStore {
       if (!existsSync(dirName)){
         mkdirSync(dirName, { recursive: true });
 
-        copyFileSync(path.resolve(__dirname, "..", "..", "dist", "template.sql"), path.resolve(dirName+'/template.sql'));
+        copyFileSync(path.resolve(__dirname, "..", "..", "dist", "templates",  "template.sql"), path.resolve(dirName+'/template.sql'));
 
         let openPath = Uri.file(dirName+'/template.sql');
         workspace.openTextDocument(openPath).then(doc => {

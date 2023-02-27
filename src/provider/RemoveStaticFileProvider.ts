@@ -56,6 +56,7 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
   }
 
   createExpTask(definition: RemoveTaskDefinition): Task {
+    console.log('definition', definition);
     let _task = new Task(
       definition,
       TaskScope.Workspace,
@@ -70,7 +71,8 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
           DBFLOW_EXP_APP_ID:  definition.runner.exportAppID!,
           DBFLOW_EXP_PATH:    definition.runner.exportAppPath!,
           DBFLOW_EXP_FNAME:   definition.runner.exportFileName!,
-          DBFLOW_EXP_FEXT:    definition.runner.exportFileExt!
+          DBFLOW_EXP_FEXT:    definition.runner.exportFileExt!,
+          DBFLOW_COLOR_ON:    definition.runner.coloredOutput
         },
       })
 

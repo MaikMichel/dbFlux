@@ -1,45 +1,26 @@
 #!/bin/bash
 
-# Reset
-NC="\033[0m"       # Text Reset
-
-# Regular Colors
-#BLACK="\033[0;30m"        # Black
-RED="\033[41m"          # Red
-GREEN="\033[0;32m"        # Green
-# BGREEN="\033[1;32m"       # Green
-# YELLOW="\033[0;33m"       # Yellow
-# BLUE="\033[0;34m"         # Blue
-# PURPLE="\033[0;35m"       # Purple
-CYAN="\033[0;36m"         # Cyan
-WHITE="\033[0;37m"        # White
-BYELLOW="\033[1;33m"      # Yellow
-ORANGE="\033[38;5;208m"
-
+# this is our source directory
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 
-export NLS_LANG="GERMAN_GERMANY.AL32UTF8"
-export NLS_DATE_FORMAT="DD.MM.YYYY HH24:MI:SS"
-export JAVA_TOOL_OPTIONS="-Duser.language=en -Duser.region=US -Dfile.encoding=UTF-8"
-export CUSTOM_JDBC="-XX:TieredStopAtLevel=1"
+# let's include some global vars like color or some methods
+source "${SCRIPT_DIR}/_lib.sh"
 
-# colored output in sqlplus inside git-bash
-case $(uname | tr '[:upper:]' '[:lower:]') in
-mingw64_nt-10*)
-  chcp.com 65001
-;;
-esac
+# initialze session vars like NLS or JAVA_TOOL_OPTIONS
+initialize_session;
 
-echo -e "${BYELLOW}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}"
-echo -e "${BYELLOW}Schema:${NC}        ${WHITE}${DBFLOW_SCHEMA}${NC}"
-echo -e "${BYELLOW}Targetfolder:${NC}  ${WHITE}${DBFLOW_SCHEMA_NEW}${NC}"
-echo -e "${BYELLOW}Type:${NC}          ${WHITE}${DBFLOW_EXP_FOLDER}${NC}"
-echo -e "${BYELLOW}Object:${NC}        ${WHITE}${DBFLOW_EXP_FNAME}${NC}"
+######################################################
 
-echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Schema ${DBFLOW_SCHEMA} to db/${DBFLOW_SCHEMA} ${NC}"
-echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}"
+echo -e "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}"
+echo -e "${CLR_LBLUE}Schema:${NC}        ${WHITE}${DBFLOW_SCHEMA}${NC}"
+echo -e "${CLR_LBLUE}Targetfolder:${NC}  ${WHITE}${DBFLOW_SCHEMA_NEW}${NC}"
+echo -e "${CLR_LBLUE}Type:${NC}          ${WHITE}${DBFLOW_EXP_FOLDER}${NC}"
+echo -e "${CLR_LBLUE}Object:${NC}        ${WHITE}${DBFLOW_EXP_FNAME}${NC}"
+echo
+echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Schema ${DBFLOW_SCHEMA} to db/${DBFLOW_SCHEMA} ${NC}"
+echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}"
 
-ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/export_anonymous_function.sql" )
+ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/export_anonymous_function.sql" )
 
 # the export itself
 if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
@@ -51,7 +32,7 @@ if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
     PREPSTMT=":contents :=  to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}'));"
   fi
 
-  sqlplus -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! > db/"${DBFLOW_SCHEMA}".zip.base64
+  sqlplus -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" << EOF > db/"${DBFLOW_SCHEMA}".zip.base64
     set verify off
     set scan off
     set feedback off
@@ -81,7 +62,7 @@ if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
 
     print contents
 
-!
+EOF
 
 else
   ## FullExport
@@ -92,7 +73,7 @@ else
     PREPSTMT="v_content := to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}'));"
   fi
 
-    sql -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! > db/"${DBFLOW_SCHEMA}".zip.base64
+    sql -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" << EOF > db/"${DBFLOW_SCHEMA}".zip.base64
     set verify off
     set scan off
     set feedback off
@@ -122,21 +103,21 @@ else
     END;
     /
 
-!
+EOF
 
 fi
 
 if [[ -f "db/${DBFLOW_SCHEMA}.zip.base64" ]]; then
   # if grep -q "ORA-20001:" "db/${DBFLOW_SCHEMA}.zip.base64"; then
   if grep -q "ORA-.*:" "db/${DBFLOW_SCHEMA}.zip.base64"; then
-    echo -e "${RED}Error detected on export${NC}"
+    echo -e "${CLR_REDBGR}Error detected on export${NC}"
     tput setaf 9
     cat "db/${DBFLOW_SCHEMA}.zip.base64"
     tput setaf default
 
     rm "db/${DBFLOW_SCHEMA}.zip.base64"
   else
-    echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported schema file ... ${NC}"
+    echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported schema file ... ${NC}"
     base64 -d -i "db/${DBFLOW_SCHEMA}.zip.base64" > "db/${DBFLOW_SCHEMA}.zip"
 
     # remove base64 garbage
@@ -146,9 +127,9 @@ if [[ -f "db/${DBFLOW_SCHEMA}.zip.base64" ]]; then
 
   # unzip file content
   if [[ -f "db/${DBFLOW_SCHEMA}.zip" ]]; then
-    echo -e "${CYAN}$(date '+%d.%m.%Y %H:%M:%S') >> Unzipping exported schema file ... ${NC}"
+    echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Unzipping exported schema file ... ${NC}"
     unzip -o "db/${DBFLOW_SCHEMA}.zip" -d "db/${DBFLOW_SCHEMA_NEW}"
     rm "db/${DBFLOW_SCHEMA}.zip"
-    echo -e "${GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
+    echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
   fi
 fi

@@ -16,7 +16,6 @@ interface ISQLCompileInfos extends IBashInfos {
   connectionArray:    string[];
   executableCli:      string;
   enableWarnings:     string;
-  coloredOutput:      string;
   sqlWarningString:   string;
   sqlWarningExcList:  string;
   sqlCompileOption:   string;
@@ -98,7 +97,6 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
         };
 
         runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
-        runner.coloredOutput      = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
         runner.sqlCompileOption   = this.compileOption;
 
         if (ConfigurationManager.getShowWarningMessages()) {

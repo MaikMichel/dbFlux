@@ -18,7 +18,7 @@ export class SimpleUploader {
     const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile);
 
 
-    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
     const content = {
       "inAppID": inAppID,
       "files": [{
