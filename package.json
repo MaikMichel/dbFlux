@@ -492,6 +492,29 @@
 						"description": "Define regex to run files after you compile a file",
 						"scope": "window"
 					},
+					"dbFlux.customTriggerCalls": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"title": "run config",
+							"properties": {
+								"triggeringExpression": {
+									"type": "string",
+									"description": "whenever a file is compile matching that regex"
+								},
+								"runMethod": {
+									"type": "string",
+									"description": "Method to call to write return clob value to file. Method must have following signature: method_name(p_file_name in varcha2) return clob"
+								},
+								"runMethodTargetFile": {
+									"type": "string",
+									"description": "target filename return value is written to. this file will also be run afterwards"
+								}
+							}
+						},
+						"description": "Define regex to run files after you compile a file",
+						"scope": "window"
+					},
 					"dbFlux.javaScriptModification.createAndUploadJavascriptMinifiedVersion": {
 						"type": "boolean",
 						"default": true,

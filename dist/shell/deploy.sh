@@ -29,6 +29,20 @@ settings+=( "    set pagesize 9999" )
 settings+=( "    set trim on" )
 settings+=( "    set sqlblanklines on" )
 
+# define setting for writing output to file
+call_settings=()
+call_settings+=( "set verify off" )
+call_settings+=( "set scan off" )
+call_settings+=( "set feedback off" )
+call_settings+=( "set heading off" )
+call_settings+=( "set trimout on" )
+call_settings+=( "set trimspool on" )
+call_settings+=( "set pagesize 0" )
+call_settings+=( "set linesize 5000" )
+call_settings+=( "set long 100000000" )
+call_settings+=( "set longchunksize 32767" )
+call_settings+=( "whenever sqlerror exit sql.sqlcode rollback" )
+
 # used when admin user is sys
 DBA_OPTION=""
 if [[ ${DBFLOW_DBUSER} == "sys" ]]; then
@@ -116,8 +130,6 @@ Begin
 End;
 /
 
-
-
 EOF
 
 fi
@@ -135,9 +147,75 @@ else
     mv "${DBFLOW_FILE}" "${target}"
   fi
 
+  if [[ -n ${DBFLOW_CONN_CALLS} ]]; then
+    ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/call_methods_function.sql" )
+    echo
+    echo -e "${CLR_LBLUE}Calling additional methods ... ${NC}"
+
+    IFS='°' read -r -a connection <<< "${DBFLOW_CONN_CALLS}"
+    IFS='°' read -r -a methods <<< "${DBFLOW_METHOD_CALLS}"
+    IFS='°' read -r -a tfiles <<< "${DBFLOW_METHOD_TFILES}"
+
+    for i in "${!connection[@]}"; do
+      echo -e "${CLR_LBLUE}Write Method: ${methods[$i]} to File: ${tfiles[$i]}${NC}"
+      ${DBFLOW_SQLCLI} -s -l ${connection[$i]} << EOF > "${tfiles[$i]}"
+      $(
+        for call_setting in "${call_settings[@]}"
+        do
+          echo "$call_setting"
+        done
+
+        if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
+          echo "variable contents clob"
+        else
+          echo "set serveroutput on"
+        fi
+
+        echo "DECLARE"
+        echo "  ${ANOFUNCTIONS}"
+        echo "BEGIN"
+
+        if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
+         echo "  :contents := ${methods[$i]};"
+        else
+         echo "  print_clob_to_output(${methods[$i]});"
+        fi
+
+        echo "END;"
+        echo "/"
+
+        if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
+          echo "print contents"
+        fi
+      )
+
+EOF
+
+      # remove first line wehn empty (happening on sqlcl)
+      sed -i~ -e '2,$b' -e '/^$/d;' ${tfiles[$i]}
+
+      # run file
+      echo -e "${CLR_LBLUE}Running File: ${tfiles[$i]}${NC}"
+      ${DBFLOW_SQLCLI} -s -l ${connection[$i]} << EOF
+      $(
+        for element in "${settings[@]}"
+        do
+          echo "$element"
+        done
+
+        # echo "Prompt :: calling ${tfiles[$i]}"
+        echo "@${tfiles[$i]}"
+      )
+
+EOF
+      done
+
+    echo
+  fi
+
   if [[ -n ${DBFLOW_CONN_RUNS} ]]; then
     echo
-    echo -e "${CLR_LBLUE}Running additional files ... ${NC}"
+    echo -e "${BSE_LVIOLETE}Running additional files ... ${NC}"
 
     IFS=',' read -r -a connection <<< "${DBFLOW_CONN_RUNS}"
     IFS=',' read -r -a files <<< "${DBFLOW_FILE_RUNS}"
@@ -150,7 +228,7 @@ else
           echo "$element"
         done
 
-        echo "Prompt:: calling ${files[$i]}"
+        echo "Prompt :: calling ${files[$i]}"
         echo "${files[$i]}"
       )
 

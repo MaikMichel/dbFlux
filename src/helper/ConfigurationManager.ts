@@ -3,9 +3,16 @@ import { outputLog } from "./OutputChannel";
 
 interface ICustomTriggerRuns {
   triggeringExpression: string,
-  runFile: string
-  runFileParameters: string[];
+  runFile:             string
+  runFileParameters:   string[];
 }
+
+interface ICustomTriggerCalls {
+  triggeringExpression: string,
+  runMethod:           string,
+  runMethodTargetFile: string
+}
+
 export class ConfigurationManager {
 
   static dbFlux:string = "dbFlux";
@@ -52,6 +59,10 @@ export class ConfigurationManager {
 
   static getCustomTriggerRuns():ICustomTriggerRuns[] {
     return this.get<ICustomTriggerRuns[]>("customTriggerRuns");
+  }
+
+  static getCustomTriggerCalls():ICustomTriggerCalls[] {
+    return this.get<ICustomTriggerCalls[]>("customTriggerCalls");
   }
 
   static getShowWarningsAndErrorsWithColoredOutput(): boolean {

@@ -36,6 +36,9 @@ interface ICompileInfos extends IBashInfos {
   enableWarnings:     string;
   trgRunsConn:        string;
   trgRunsFile:        string;
+  trgCallsConn:       string;
+  trgCallsMethod:     string;
+  trgCallsTFile:      string;
   additionalOutput:   string;
   onlyTriggerRun:     string;
 }
@@ -98,6 +101,10 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
           DBFLOW_CONN_RUNS:         definition.runner.trgRunsConn,
           DBFLOW_FILE_RUNS:         definition.runner.trgRunsFile,
 
+          DBFLOW_CONN_CALLS:        definition.runner.trgCallsConn,
+          DBFLOW_METHOD_CALLS:      definition.runner.trgCallsMethod,
+          DBFLOW_METHOD_TFILES:     definition.runner.trgCallsTFile,
+
           DBFLOW_COLOR_ON:          definition.runner.coloredOutput
         },
       }),
@@ -148,6 +155,8 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
       // Trigger?
       this.setCustomTriggerRuns(runner);
 
+      // Calls?
+      this.setCustomTriggerCalls(runner);
     }
 
     return runner;
@@ -168,9 +177,26 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
 
     compInfos.trgRunsConn = myList.map((elem)=>elem.connection).join(',');
     compInfos.trgRunsFile = myList.map((elem)=>elem.file).join(',');
-
   }
 
+  setCustomTriggerCalls(compInfos: ICompileInfos): void {
+    let myList:any[] = [];
+
+    ConfigurationManager.getCustomTriggerCalls().forEach((runner)=>{
+      if (compInfos.activeFile.match(runner.triggeringExpression)) {
+        const obj = {
+          "connection": this.getConnection(compInfos.projectInfos, runner.runMethodTargetFile),
+          "method": runner.runMethod,
+          "tfile": runner.runMethodTargetFile
+        };
+        myList.push(obj);
+      }
+    });
+
+    compInfos.trgCallsConn = myList.map((elem)=>elem.connection).join('°');
+    compInfos.trgCallsMethod = myList.map((elem)=>elem.method).join('°');
+    compInfos.trgCallsTFile = myList.map((elem)=>elem.tfile).join('°');
+  }
 
 }
 
