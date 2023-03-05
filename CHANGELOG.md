@@ -1,5 +1,10 @@
 # Change Log
 
+## [4.4.0 - 2023-03-05]
+- New: Add or define options in settings to call methods based on compiling file, save the output and run that generated file
+- Fix: Output error or warning messages as one file due to a big in VSCode consering multiline-problem matcher
+- Fix: Some refactoring using bash files
+
 ## [4.3.0 - 2023-01-23]
 - New: Add option to compile all or just invalid objects
 - New: Add command "Add .hook file"
