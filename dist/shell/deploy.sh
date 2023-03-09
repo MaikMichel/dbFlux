@@ -215,7 +215,7 @@ EOF
 
   if [[ -n ${DBFLOW_CONN_RUNS} ]]; then
     echo
-    echo -e "${BSE_LVIOLETE}Running additional files ... ${NC}"
+    echo -e "${CLR_LBLUE}Running additional files ... ${NC}"
 
     IFS=',' read -r -a connection <<< "${DBFLOW_CONN_RUNS}"
     IFS=',' read -r -a files <<< "${DBFLOW_FILE_RUNS}"
