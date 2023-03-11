@@ -58,6 +58,8 @@ export class RestTaskStore {
           }
         });
 
+        apps.unshift(projectInfos.isFlexMode?'rest/*/modules/*':'rest/modules/*');
+
         return apps;
       };
 

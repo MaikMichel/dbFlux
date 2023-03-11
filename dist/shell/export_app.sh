@@ -60,6 +60,7 @@ EOF
           mv "f${DBFLOW_DIR_APPID}_bck" "f${DBFLOW_DIR_APPID}"
         fi
 
+        exit 0
       elif [[ -d "f${DBFLOW_DIR_APPID}_bck" ]] && [[ ! -d "f${DBFLOW_DIR_APPID}" ]]; then
         echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of Application ${DBFLOW_DIR_APPID}${NC}"
 
@@ -67,6 +68,7 @@ EOF
         if [[ -d f${DBFLOW_DIR_APPID}_bck ]]; then
           mv "f${DBFLOW_DIR_APPID}_bck" "f${DBFLOW_DIR_APPID}"
         fi
+        exit 0
       else
 
         # remove the full export file
@@ -94,7 +96,7 @@ echo -e "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
 echo -e "${CLR_LBLUE}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
 echo -e "${CLR_LBLUE}AppID:${NC}       ${WHITE}${DBFLOW_APPID}${NC}"
 echo -e "${CLR_LBLUE}Folder:${NC}      ${WHITE}${DBFLOW_APPFOLDER}${NC}"
-echo -e "${CLR_LBLUE}Mode:${NC}        ${WHITE}${DBFLOW_MODE}${NC}"
+echo -e "${CLR_LBLUE}ProjectMode:${NC} ${WHITE}${DBFLOW_MODE}${NC}"
 echo
 
 if [[ "${DBFLOW_APPID}" == "*" ]]; then
