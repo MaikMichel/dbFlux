@@ -84,7 +84,6 @@ EOF
         rm history.log
       fi
 
-      cd ..
     done
     cd "${basepath}"
   else
