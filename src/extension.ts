@@ -22,6 +22,7 @@ import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticF
 import { DBLockTreeView } from "./ui/DBLockTreeView";
 // import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
 import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
+import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
 
 
 
@@ -58,6 +59,9 @@ export async function activate(context: ExtensionContext) {
 
   // Add Command wizard > create Initial Project Structure and DB Scripts
   context.subscriptions.push(commands.registerCommand('dbFlux.initializeProject', async () =>  initializeProjectWizard(context)));
+
+  // Add Command wizard > create Initial Project Structure and DB Scripts as dbFlow Project
+  context.subscriptions.push(registerCreateDBFlowProject("dbFlux.initialize.dbFlow.Project", context));
 
   // Wrap Selection for Logging
   context.subscriptions.push(registerWrapLogSelection());
@@ -262,6 +266,11 @@ export async function activate(context: ExtensionContext) {
           case "convert2dbFlow" : {
             rmDBFluxConfig(context);
             window.showInformationMessage(`dbFLux Mode is now: 'dbFlow'`);
+            break;
+          }
+          case "createDBFlow" : {
+            window.showInformationMessage(`dbFlow Project initialized, reloading extension settings`);
+            commands.executeCommand("dbFlux.reloadExtension")
             break;
           }
           // case "compileFile" : {

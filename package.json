@@ -114,6 +114,11 @@
 				"category": "dbFlux"
 			},
 			{
+				"command": "dbFlux.initialize.dbFlow.Project",
+				"title": "Initialize dbFlow Project",
+				"category": "dbFlux"
+			},
+			{
 				"command": "dbFlux.splitToFiles",
 				"title": "Split File",
 				"category": "dbFlux",

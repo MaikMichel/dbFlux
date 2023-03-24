@@ -311,16 +311,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   }
 
 
-  async function getAvailableProjectTypes(): Promise<QuickPickItem[]> {
-    return [
-      {label: "FlexSchema",
-       description: "Multiple Schemas are supported and defined by folder names. Connection uses proxy syntax when not equals folder name."},
-      {label: "MultiSchema",
-       description: "3 Schemas are supported data, logic, app. All prefixed with projectname. Connection is started with a proxy user depl."},
-      {label: "SingleSchema",
-      description: "There will be only one Schema named app and prefix with project name. Connection is startet with Schema-Owner."}
-    ];
-  }
+
 
   const state = await collectInputs();
 
@@ -528,6 +519,16 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   window.showInformationMessage(`Application structure for '${state.projectName}' successfully created`);
 }
 
+export async function getAvailableProjectTypes(): Promise<QuickPickItem[]> {
+  return [
+    {label: "FlexSchema",
+     description: "Schemas defined by folder names. Connection with a proxy user prefixed with depl."},
+    {label: "MultiSchema",
+     description: "3 Schemas Tier (data, logic, app). All prefixed with project-name. Connection with a proxy user prefixed with depl."},
+    {label: "SingleSchema",
+    description: "One Schema, named by project-name. Connection with Schema-Owner."}
+  ];
+}
 
 function writeInstallSQLFile(files:string[], userFile: string) {
   let content = "";
