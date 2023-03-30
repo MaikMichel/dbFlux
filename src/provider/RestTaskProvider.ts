@@ -64,7 +64,8 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
           DBFLOW_DBUSER:       definition.runner.connectionUser,
           DBFLOW_DBPASS:       definition.runner.connectionPass,
           DBFLOW_RESTMODULE:   module?module:"NULL",
-          DBFLOW_MODULEFOLDER: folder?folder:"NULL"
+          DBFLOW_MODULEFOLDER: folder?folder:"NULL",
+          DBFLOW_MODE:         definition.runner.projectInfos.projectMode+""
         },
       })
 

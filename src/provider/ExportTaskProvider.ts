@@ -66,7 +66,8 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
           DBFLOW_DBUSER:    definition.runner.connectionUser,
           DBFLOW_DBPASS:    definition.runner.connectionPass,
           DBFLOW_APPID:     appID.length>0?appID:appFolder==="*"?"*":"NULL",
-          DBFLOW_APPFOLDER: folder?folder:"NULL"
+          DBFLOW_APPFOLDER: folder?folder:"NULL",
+          DBFLOW_MODE:      definition.runner.projectInfos.projectMode+""
         },
       })
 
