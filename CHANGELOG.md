@@ -1,5 +1,12 @@
 # Change Log
 
+## [4.5.0 - 2023-03-24]
+- New: Command to initialize a dbFlow project
+- New: Export all REST Modules like all Applications
+- Fix: Wrong folder on export
+- Fix: Error when Exporting All Application in Flex Mode
+- Some small improvements
+
 ## [4.4.0 - 2023-03-05]
 - New: Add or define options in settings to call methods based on compiling file, save the output and run that generated file
 - Fix: Output error or warning messages as one file due to a big in VSCode consering multiline-problem matcher
