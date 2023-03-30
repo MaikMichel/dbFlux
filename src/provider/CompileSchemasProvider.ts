@@ -68,7 +68,7 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
           DBFLOW_COLOR_ON:          definition.runner.coloredOutput,
           DBFLOW_ENABLE_WARNINGS:   definition.runner.enableWarnings,
           DBFLOW_SQL_WARNING_STRING:  definition.runner.sqlWarningString?definition.runner.sqlWarningString:"NIX",
-          DBFLOW_SQL_WARNING_EXCLUDE: definition.runner.sqlWarningExcList?definition.runner.sqlWarningExcList:"0",
+          DBFLOW_SQL_WARNING_EXCLUDE: definition.runner.sqlWarningExcList?definition.runner.sqlWarningExcList:"-1",
           DBFLOW_SQL_COMPILE_OPTION: definition.runner.sqlCompileOption==="Invalid"?"false":"true"
         }
       }),
