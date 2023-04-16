@@ -143,7 +143,7 @@ else
   if [[ ${DBFLOW_MOVEYN} == "YES" ]]; then
     target=${DBFLOW_FILE/\/src\//\/dist\/}
     target_dir=$(dirname "${target}")
-    mkdir --parents "${target_dir}"
+    mkdir -p "${target_dir}"
     mv "${DBFLOW_FILE}" "${target}"
   fi
 
