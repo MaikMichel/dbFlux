@@ -47,7 +47,7 @@ function export_app() {
       fi
 
       # the export itself
-      sql -s -l ${CONN_DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} << EOF
+      sql -s -l ${CONN_DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF
         WHENEVER SQLERROR EXIT SQL.SQLCODE
         apex export -applicationid ${DBFLOW_DIR_APPID} -split -skipExportDate
 EOF

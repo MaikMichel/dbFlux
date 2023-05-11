@@ -51,7 +51,7 @@ fi
 
 if [[ ${DBFLOW_TRIGGER_ONLY} == "NO" ]]; then
 
-${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}${DBA_OPTION} << EOF
+${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS}${DBA_OPTION} << EOF
 $(
   for element in "${settings[@]}"
   do
@@ -77,6 +77,9 @@ End;
 
 Rem enable some PL/SQL Warnings
 ${DBFLOW_ENABLE_WARNINGS}
+
+truncate table sperrorlog;
+set errorlogging on
 
 Rem Run the Sublime File
 set feedback on
@@ -107,7 +110,24 @@ Begin
                                               'PACKAGE BODY', '.pkb',
                                               'TYPE', '.tps',
                                               'TYPE BODY', '.tpb',
-                                              '.${extension}')) = lower('${basefl}'))
+                                              '.${extension}')) = lower('${basefl}')                              )
+                  select attribute, lpos, name, errtype, errtext, max(length(errtype)) over () mlen, max(length(lpos)) over () mlpos
+                    from errms
+               order by type, name, lpos)
+  loop
+    l_errors_exists := true;
+    dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_orangeb else l_color_redb end || cur.attribute || l_color_off || ' ' ||
+                         case when cur.attribute = 'WARNING' then l_color_orange else l_color_red end || rpad(cur.errtype, cur.mlen, ' ') || ' ' ||l_color_off ||
+                         l_color_dgray || '${DBFLOW_WSPACE}' || ':' || rpad(cur.lpos, cur.mlpos , ' ') || l_color_off ||' ' ||
+                         case when cur.attribute = 'WARNING' then l_color_orange else l_color_red end || cur.errtext || l_color_off
+                         );
+
+  end loop;
+
+  for cur in (with errms as (select 'ERROR' attribute, '1:1' lpos, '${DBFLOW_WSPACE}' name, 'SQL' type,
+                                     replace(substr(message, 1, instr(message, ':', 1, 1) -1), ' ') errtype,
+                                     replace(substr(message, instr(message, ': ', 1, 1) + 2), chr(10), ' ') errtext
+                               from sperrorlog)
                   select attribute, lpos, name, errtype, errtext, max(length(errtype)) over () mlen, max(length(lpos)) over () mlpos
                     from errms
                order by type, name, lpos)

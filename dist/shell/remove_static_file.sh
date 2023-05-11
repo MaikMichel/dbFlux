@@ -20,7 +20,7 @@ echo -e "${CLR_LBLUE}Extension:${NC}     ${WHITE}${DBFLOW_EXP_FEXT}${NC}"
 echo -e "${CLR_LBLUE}OS-Now:${NC}        ${WHITE}${MDATE}${NC}"
 
 
-${DBFLOW_SQLCLI} -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" << EOF
+${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF
     set verify off
     set scan off
     set feedback off

@@ -49,7 +49,7 @@ function export_module() {
       fi
 
       # the export itself
-      sql -s -l ${CONN_DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} << EOF > "${DBFLOW_MODULE_NAME}/${DBFLOW_MODULE_NAME}.module.sql"
+      sql -s -l ${CONN_DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF > "${DBFLOW_MODULE_NAME}/${DBFLOW_MODULE_NAME}.module.sql"
         rest export ${DBFLOW_MODULE_NAME}
         prompt /
 EOF

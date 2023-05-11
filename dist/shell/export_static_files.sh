@@ -32,7 +32,7 @@ if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
     PREPSTMT=":contents :=  to_base64(get_zip(p_app_id => ${DBFLOW_EXP_APP_ID}, p_file_name => '${DBFLOW_EXP_FNAME}'));"
   fi
 
-  sqlplus -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! > "${DBFLOW_EXP_PATH}".zip.base64
+  sqlplus -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<! > "${DBFLOW_EXP_PATH}".zip.base64
     set verify off
     set scan off
     set feedback off
@@ -65,7 +65,7 @@ else
     PREPSTMT="v_content := to_base64(get_zip(p_app_id => ${DBFLOW_EXP_APP_ID}, p_file_name => '${DBFLOW_EXP_FNAME}'));"
   fi
 
-  sql -s -l "${DBFLOW_DBUSER}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" <<! > "${DBFLOW_EXP_PATH}".zip.base64
+  sql -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<! > "${DBFLOW_EXP_PATH}".zip.base64
     set verify off
     set scan off
     set feedback off

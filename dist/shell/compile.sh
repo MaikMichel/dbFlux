@@ -18,7 +18,7 @@ CONN_ARRY=( "$@" )
 for arg in "${CONN_ARRY[@]}"; do
   echo -e "${CLR_LBLUE}Compiling Connection ${arg}@${DBFLOW_DBTNS} ${NC}"
 
-  ${DBFLOW_SQLCLI} -s -l "${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS}" << EOF
+  ${DBFLOW_SQLCLI} -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'${DBFLOW_DBTNS} << EOF
 
 set scan off
 set define off

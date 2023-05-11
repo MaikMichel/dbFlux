@@ -45,7 +45,7 @@ touch $full_log_file
 for arg in "${CONN_ARRY[@]}"; do
   echo -e "${CLR_LBLUE}Executing tests on Connection ${arg}@${DBFLOW_DBTNS} ${NC}" | tee -a ${full_log_file}
 
-  ${DBFLOW_SQLCLI} -s -l ${arg}/${DBFLOW_DBPASS}@${DBFLOW_DBTNS} << EOF | tee -a ${full_log_file}
+  ${DBFLOW_SQLCLI} -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF | tee -a ${full_log_file}
   $(
       for element in "${array[@]}"
       do
