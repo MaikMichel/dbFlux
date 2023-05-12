@@ -196,7 +196,7 @@ export function getSchemaFromFile(filePath:string):string {
   throw new Error("Unknown directory structur (getSchemaFromFile) first part is not 'db != '" + parts[0]);
 }
 
-export function getObjectTypeFromFile(filePath:string):string {
+export function getObjectTypePathFromFile(filePath:string):string {
   const parts:string[] = getRelativePartsFromFile(filePath);
 
   if (parts[0] === "db") {
@@ -204,7 +204,11 @@ export function getObjectTypeFromFile(filePath:string):string {
     parts.shift();
     parts.pop();
 
-  return parts.join('/');
+    if (parts.length > 1 && parts[1] === "tables_ddl") {
+      parts.pop();
+    }
+
+    return parts.join('/');
   }
 
   throw new Error("Unknown directory structur (getObjectTypeFromFile) first part is not 'db != '" + parts[0]);
