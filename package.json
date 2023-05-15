@@ -251,6 +251,12 @@
 				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|/)static(\\\\|/).*$/"
 			},
 			{
+				"command": "dbFlux.exportCurrentTableAsJSONDefinition",
+				"title": "Export Table as JSON (current)",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*(tables|tables(\\\\|/)tables_ddl)$/"
+			},
+			{
 				"command": "dbFlux.addReportFolder",
 				"title": "Add REPORT type",
 				"category": "dbFlux",
@@ -443,6 +449,12 @@
 						"description": "Which CLI should be used to compile your source to specified database. Please make sure to set binaries to path",
 						"scope": "window"
 					},
+					"dbFlux.configCLI.UseSQLplusSPERRORLOGTable": {
+						"type": "boolean",
+						"default": true,
+						"description": "Use `set errorlogging on` to log errors during compiliation",
+						"scope": "window"
+					},
 					"dbFlux.showWarningMessages.FocusProblemPanelWhenExists": {
 						"type": "boolean",
 						"default": true,
@@ -482,7 +494,7 @@
 							"properties": {
 								"triggeringExpression": {
 									"type": "string",
-									"description": "whenever a file is compile matching that regex"
+									"description": "whenever a file is compiled matching that regex"
 								},
 								"runFile": {
 									"type": "string",
@@ -505,11 +517,11 @@
 							"properties": {
 								"triggeringExpression": {
 									"type": "string",
-									"description": "whenever a file is compile matching that regex"
+									"description": "whenever a file is compiled matching that regex"
 								},
 								"runMethod": {
 									"type": "string",
-									"description": "Method to call to write return clob value to file. Method must have following signature: method_name(p_file_name in varcha2) return clob"
+									"description": "Method to call to write return clob value to file. Method must have following signature: method_name(p_file_name in varchar2) return clob"
 								},
 								"runMethodTargetFile": {
 									"type": "string",

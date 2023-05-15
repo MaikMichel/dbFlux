@@ -1,7 +1,7 @@
-import { commands, ExtensionContext, languages, StatusBarAlignment, StatusBarItem, tasks, WebviewPanel, window, workspace } from "vscode";
+import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, WebviewPanel, window, workspace } from "vscode";
 
 import { basename, join } from "path";
-import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
+import { CompileMode, registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
 import { registerExportAPEXCommand } from "./provider/ExportTaskProvider";
 
 import { registerExportRESTCommand } from "./provider/RestTaskProvider";
@@ -23,6 +23,8 @@ import { DBLockTreeView } from "./ui/DBLockTreeView";
 // import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
 import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
 import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
+import { registerExportCurrentTableDefinitionCommand } from "./provider/ExportTableAsJSONProvider";
+
 
 
 
@@ -130,7 +132,8 @@ export async function activate(context: ExtensionContext) {
 
     // Compile
     context.subscriptions.push(registerCompileFileCommand(projectInfos, context));
-    context.subscriptions.push(registerCompileFileCommand(projectInfos, context, true));
+    context.subscriptions.push(registerCompileFileCommand(projectInfos, context, CompileMode.triggerOnly));
+    context.subscriptions.push(registerCompileFileCommand(projectInfos, context, CompileMode.handleCallsOnly));
 
 
     // Export APEX
@@ -154,6 +157,8 @@ export async function activate(context: ExtensionContext) {
     // Remove current APEX Static File
     context.subscriptions.push(registerRemoveCurrentStaticFileCommand(projectInfos, context));
 
+    // Export current Table Definition
+    context.subscriptions.push(registerExportCurrentTableDefinitionCommand(projectInfos, context));
 
     // Enable FLEX Mode
     context.subscriptions.push(registerEnableFlexModeCommand(projectInfos, context));
@@ -273,6 +278,10 @@ export async function activate(context: ExtensionContext) {
             commands.executeCommand("dbFlux.reloadExtension")
             break;
           }
+          // case "exportCurrentTableAsJSONDefinition" : {
+          //   processTableJSON(projectInfos, context);
+          //   break;
+          // }
           // case "compileFile" : {
           //   lockFileByRest(task, projectInfos, decoProvider);
           //   break;

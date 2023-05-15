@@ -6,7 +6,7 @@ import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskP
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ExportDBSchemaStore } from "../stores/ExportDBSchemaStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
-import { getActiveFileUri, getObjectNameFromFile, getObjectTypeFromFile, getRelativePartsFromFile, getSchemaFromFile, getWorkingFile, getWorkspaceRootPath, ltrim, matchRuleShort } from "../helper/utilities";
+import { getActiveFileUri, getObjectNameFromFile, getObjectTypePathFromFile, getRelativePartsFromFile, getSchemaFromFile, getWorkingFile, getWorkspaceRootPath, ltrim, matchRuleShort } from "../helper/utilities";
 import { existsSync } from "fs";
 import { exportObjectWizard, exportSchemaWizard, ExportSchemaWizardState } from "../wizards/ExportSchemaWizard";
 
@@ -203,7 +203,7 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
 
         const parts:string[] = getRelativePartsFromFile(activeFilePath);
         if (parts[0] === "db") {
-          runner.exportFolder           = getObjectTypeFromFile(activeFilePath!);
+          runner.exportFolder           = getObjectTypePathFromFile(activeFilePath!);
           runner.exportFileName         = getObjectNameFromFile(activeFilePath!);
         }
       }
