@@ -82,7 +82,7 @@ export abstract class AbstractBashTaskProvider {
 
 
   getConnection(projectInfos: IProjectInfos, currentPath: string): string {
-    return this.buildConnectionUser(projectInfos, currentPath) + `/${projectInfos.dbAppPwd}@${projectInfos.dbTns}`;
+    return this.buildConnectionUser(projectInfos, currentPath) + `/"${projectInfos.dbAppPwd}"@${projectInfos.dbTns}`;
   }
 
 

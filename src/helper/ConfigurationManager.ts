@@ -45,6 +45,10 @@ export class ConfigurationManager {
     return this.get<boolean>("showWarningMessages.AfterCompilation");
   }
 
+  static getUseSQLplusSPERRORLOGTable():boolean {
+    return this.get<boolean>("configCLI.UseSQLplusSPERRORLOGTable");
+  }
+
   static getFocusProblemPanelWhenExists():boolean {
     return this.get<boolean>("showWarningMessages.FocusProblemPanelWhenExists");
   }

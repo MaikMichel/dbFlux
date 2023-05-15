@@ -49,6 +49,31 @@ if [[ ${DBFLOW_DBUSER} == "sys" ]]; then
   DBA_OPTION=" as sysdba"
 fi
 
+use_error_log=()
+read_error_log=()
+if [[ ${DBFLOW_USE_SLOG} == "YES" ]]; then
+  use_error_log+=( "set errorlogging on" )
+  use_error_log+=( "truncate table sperrorlog;" )
+  use_error_log+=( "set errorlogging on" )
+
+  read_error_log+=( "for cur in (with errms as (select 'ERROR' attribute, '1:1' lpos, '${DBFLOW_WSPACE}' name, 'SQL' type," )
+  read_error_log+=( "                                  replace(substr(message, 1, instr(message, ':', 1, 1) -1), ' ') errtype," )
+  read_error_log+=( "                                  replace(substr(message, instr(message, ': ', 1, 1) + 2), chr(10), ' ') errtext" )
+  read_error_log+=( "                            from sperrorlog)" )
+  read_error_log+=( "                select attribute, lpos, name, errtype, errtext, max(length(errtype)) over () mlen, max(length(lpos)) over () mlpos" )
+  read_error_log+=( "                  from errms" )
+  read_error_log+=( "            order by type, name, lpos)" )
+  read_error_log+=( "loop" )
+  read_error_log+=( "  l_errors_exists := true;" )
+  read_error_log+=( "  dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_orangeb else l_color_redb end || cur.attribute || l_color_off || ' ' ||" )
+  read_error_log+=( "                      case when cur.attribute = 'WARNING' then l_color_orange else l_color_red end || rpad(cur.errtype, cur.mlen, ' ') || ' ' ||l_color_off ||" )
+  read_error_log+=( "                      l_color_dgray || '${DBFLOW_WSPACE}' || ':' || rpad(cur.lpos, cur.mlpos , ' ') || l_color_off ||' ' ||" )
+  read_error_log+=( "                      case when cur.attribute = 'WARNING' then l_color_orange else l_color_red end || cur.errtext || l_color_off);" )
+  read_error_log+=( "end loop;" )
+fi
+
+
+
 if [[ ${DBFLOW_TRIGGER_ONLY} == "NO" ]]; then
 
 ${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS}${DBA_OPTION} << EOF
@@ -78,8 +103,13 @@ End;
 Rem enable some PL/SQL Warnings
 ${DBFLOW_ENABLE_WARNINGS}
 
-truncate table sperrorlog;
-set errorlogging on
+REM use error log or not
+$(
+  for element in "${use_error_log[@]}"
+  do
+    echo "$element"
+  done
+)
 
 Rem Run the Sublime File
 set feedback on
@@ -124,22 +154,12 @@ Begin
 
   end loop;
 
-  for cur in (with errms as (select 'ERROR' attribute, '1:1' lpos, '${DBFLOW_WSPACE}' name, 'SQL' type,
-                                     replace(substr(message, 1, instr(message, ':', 1, 1) -1), ' ') errtype,
-                                     replace(substr(message, instr(message, ': ', 1, 1) + 2), chr(10), ' ') errtext
-                               from sperrorlog)
-                  select attribute, lpos, name, errtype, errtext, max(length(errtype)) over () mlen, max(length(lpos)) over () mlpos
-                    from errms
-               order by type, name, lpos)
-  loop
-    l_errors_exists := true;
-    dbms_output.put_line(case when cur.attribute = 'WARNING' then l_color_orangeb else l_color_redb end || cur.attribute || l_color_off || ' ' ||
-                         case when cur.attribute = 'WARNING' then l_color_orange else l_color_red end || rpad(cur.errtype, cur.mlen, ' ') || ' ' ||l_color_off ||
-                         l_color_dgray || '${DBFLOW_WSPACE}' || ':' || rpad(cur.lpos, cur.mlpos , ' ') || l_color_off ||' ' ||
-                         case when cur.attribute = 'WARNING' then l_color_orange else l_color_red end || cur.errtext || l_color_off
-                         );
-
-  end loop;
+$(
+  for element in "${read_error_log[@]}"
+  do
+    echo "$element"
+  done
+)
 
   if not l_errors_exists then
     dbms_output.put_line(l_color_greenb || 'Successful' || l_color_off || '   ' || l_color_green || SYSTIMESTAMP || l_color_off);
