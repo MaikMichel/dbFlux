@@ -17,7 +17,7 @@ echo -e "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS
 echo -e "${CLR_LBLUE}AppID:${NC}         ${WHITE}${DBFLOW_EXP_APP_ID}${NC}"
 echo -e "${CLR_LBLUE}File:${NC}          ${WHITE}${DBFLOW_EXP_FNAME}${NC}"
 echo -e "${CLR_LBLUE}Extension:${NC}     ${WHITE}${DBFLOW_EXP_FEXT}${NC}"
-echo -e "${CLR_LBLUE}OS-Now:${NC}        ${WHITE}${MDATE}${NC}"
+echo -e "${CLR_LBLUE}OS-Time:${NC}       ${WHITE}${MDATE}${NC}"
 
 
 ${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF
@@ -40,7 +40,7 @@ ${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS}
     Begin
       dbms_output.put_line(l_color_on || 'DB-User:  ' || l_color_off || USER);
       dbms_output.put_line(l_color_on || 'DB-Name:  ' || l_color_off || ORA_DATABASE_NAME);
-      dbms_output.put_line(l_color_on || 'DB-Now:   ' || l_color_off || SYSTIMESTAMP);
+      dbms_output.put_line(l_color_on || 'DB-Time:  ' || l_color_off || SYSTIMESTAMP);
     End;
     /
 

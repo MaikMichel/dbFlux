@@ -17,7 +17,7 @@ MDATE=`date +%d.%m.%y_%H:%M:%S,%5N`
 
 echo -e "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBUSER}@${DBFLOW_DBTNS}${NC}"
 echo -e "${CLR_LBLUE}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC} ${CLR_LBLUE}(Trigger only:${NC} ${WHITE}${DBFLOW_TRIGGER_ONLY}${NC}${BYELLOW})${NC}"
-echo -e "${CLR_LBLUE}OS-Now:${NC}      ${WHITE}${MDATE}${NC}"
+echo -e "${CLR_LBLUE}OS-Time:${NC}     ${WHITE}${MDATE}${NC}"
 
 # define settings array
 settings=()
@@ -70,7 +70,7 @@ Declare
 Begin
   dbms_output.put_line(l_color_on || 'DB-User:     ' || l_color_off || USER);
   dbms_output.put_line(l_color_on || 'DB-Name:     ' || l_color_off || ORA_DATABASE_NAME);
-  dbms_output.put_line(l_color_on || 'DB-Now:      ' || l_color_off || SYSTIMESTAMP);
+  dbms_output.put_line(l_color_on || 'DB-Time:     ' || l_color_off || SYSTIMESTAMP);
 End;
 /
 

@@ -17,8 +17,7 @@ CONN_ARRY=( "$@" )
 
 for arg in "${CONN_ARRY[@]}"; do
   echo -e "${CLR_LBLUE}Compiling Connection ${arg}@${DBFLOW_DBTNS} ${NC}"
-
-  ${DBFLOW_SQLCLI} -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'${DBFLOW_DBTNS} << EOF
+  ${DBFLOW_SQLCLI} -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF
 
 set scan off
 set define off
@@ -34,10 +33,10 @@ Declare
   l_color_on   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_LVIOLETE}' end;
   l_color_off  constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_RESET}' end;
 Begin
-  dbms_output.put_line(l_color_on || 'DB-User:      ' || l_color_off || USER);
-  dbms_output.put_line(l_color_on || 'DB-Name:      ' || l_color_off || ORA_DATABASE_NAME);
-  dbms_output.put_line(l_color_on || 'DB-Now:               ' || l_color_off || SYSTIMESTAMP);
-  dbms_output.put_line(l_color_on || 'Compile All:  ' || l_color_off || '${DBFLOW_SQL_COMPILE_OPTION}');
+  dbms_output.put_line(l_color_on || rpad('DB-User:',     13, ' ') || l_color_off || USER);
+  dbms_output.put_line(l_color_on || rpad('DB-Name:',     13, ' ') || l_color_off || ORA_DATABASE_NAME);
+  dbms_output.put_line(l_color_on || rpad('DB-Time:',     13, ' ') || l_color_off || SYSTIMESTAMP);
+  dbms_output.put_line(l_color_on || rpad('Compile All:', 13, ' ') || l_color_off || '${DBFLOW_SQL_COMPILE_OPTION}');
 End;
 /
 
@@ -55,7 +54,7 @@ Declare
   l_color_on   constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_LVIOLETE}' end;
   l_color_off  constant varchar2(200) := case when ${DBFLOW_COLOR_ON} then chr(27) || '${BSE_RESET}' end;
 Begin
-  dbms_output.put_line(l_color_on || 'DB-Now:               ' || l_color_off || SYSTIMESTAMP);
+  dbms_output.put_line(l_color_on || rpad('DB-Time:',     13, ' ') || l_color_off || SYSTIMESTAMP);
 End;
 /
 
