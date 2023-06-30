@@ -110,12 +110,12 @@
 			},
 			{
 				"command": "dbFlux.initializeProject",
-				"title": "Initialize Project structure",
+				"title": "Initialize Project structure (dbFlux)",
 				"category": "dbFlux"
 			},
 			{
 				"command": "dbFlux.initialize.dbFlow.Project",
-				"title": "Initialize dbFlow Project",
+				"title": "Initialize Project structure (dbFlow)",
 				"category": "dbFlux"
 			},
 			{
@@ -230,7 +230,7 @@
 				"command": "dbFlux.exportObject",
 				"title": "Export DB Object (current)",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|/)db(\\\\|/).*$/"
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|\\/)db(\\\\|\\/).*$/"
 			},
 			{
 				"command": "dbFlux.exportStaticFiles",
@@ -242,19 +242,19 @@
 				"command": "dbFlux.removeCurrentStaticFile",
 				"title": "Remove Static Application File (current)",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|/)static(\\\\|/).*$/"
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|\\/)static(\\\\|\\/).*$/"
 			},
 			{
 				"command": "dbFlux.exportCurrentStaticFile",
 				"title": "Export Static Application File (current)",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|/)static(\\\\|/).*$/"
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|\\/)static(\\\\|\\/).*$/"
 			},
 			{
 				"command": "dbFlux.exportCurrentTableAsJSONDefinition",
 				"title": "Export Table as JSON (current)",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*(tables|tables(\\\\|/)tables_ddl)$/"
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*(tables|tables(\\\\|\\/)tables_ddl)$/"
 			},
 			{
 				"command": "dbFlux.addReportFolder",
@@ -326,13 +326,13 @@
 				"command": "dbFlux.lockCurrentFile",
 				"title": "Lock current File",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && dbLockEnabled && resourceDirname =~ /^.*(\\\\|/)(db|static)(\\\\|/).*$/"
+				"enablement": "inDbFlowProject && dbLockEnabled && resourceDirname =~ /^.*(\\\\|\\/)(db|static)(\\\\|\\/).*$/"
 			},
 			{
 				"command": "dbFlux.unlockCurrentFile",
 				"title": "Unlock current File",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && dbLockEnabled && resourceDirname =~ /^.*(\\\\|/)(db|static)(\\\\|/).*$/"
+				"enablement": "inDbFlowProject && dbLockEnabled && resourceDirname =~ /^.*(\\\\|\\/)(db|static)(\\\\|\\/).*$/"
 			},
 			{
 				"command": "dbFlux.refreshLockedFiles",
@@ -463,8 +463,8 @@
 					},
 					"dbFlux.configCLI.UseSQLplusSPERRORLOGTable": {
 						"type": "boolean",
-						"default": true,
-						"description": "Use `set errorlogging on` to log errors during compiliation",
+						"default": false,
+						"description": "Use `set errorlogging on` to log errors during compiliation. Keep in mind, that this will create then table SPERRORLOG in your scheme(s)!",
 						"scope": "window"
 					},
 					"dbFlux.showWarningMessages.FocusProblemPanelWhenExists": {
@@ -602,6 +602,16 @@
 						"type": "string",
 						"markdownDescription": "Token/Mandant identification. (Displayed during installation of dbLock)",
 						"scope": "window"
+					},
+					"dbFlux.test.Output.Format": {
+						"type": "string",
+						"default": "ANSI Console",
+						"enum": [
+							"ANSI Console",
+							"HTML Report"
+						],
+						"description": "Whick output format should be used to report utPLSQL Results",
+						"scope": "window"
 					}
 				}
 			}
@@ -656,14 +666,17 @@
 	},
 	"dependencies": {
 		"@types/node-fetch": "^2.6.2",
+		"@types/xml2js": "^0.4.11",
 		"ansi-to-html": "^0.7.2",
 		"dotenv": "^8.2.0",
 		"fs-extra": "^10.0.0",
 		"handlebars": "^4.7.7",
+		"junit2json": "^3.1.1",
 		"node-fetch": "^2.6.7",
 		"terser": "^5.6.1",
 		"uglifycss": "0.0.29",
 		"which": "^2.0.2",
+		"xml2js": "^0.6.0",
 		"yaml": "^1.10.2"
 	}
 }

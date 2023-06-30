@@ -11,7 +11,7 @@ import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig, s
 import { outputLog } from './helper/OutputChannel';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
-import { registerAddApplicationCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
+import { registerAddApplicationCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerCopyFunctionWithPackagenameToClipBoard, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
 import { revealItemWizard } from "./wizards/RevealItemWizard";
 import { registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
@@ -24,6 +24,8 @@ import { DBLockTreeView } from "./ui/DBLockTreeView";
 import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
 import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
 import { registerExportCurrentTableDefinitionCommand } from "./provider/ExportTableAsJSONProvider";
+import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
+import { ApplicationItemsCompletitionProvider } from "./provider/ApplicationItemsCompletitionProvider";
 
 
 
@@ -41,10 +43,6 @@ export async function activate(context: ExtensionContext) {
 
   // get Mode
   const dbFluxMode = getDBFlowMode(context);
-
-  // Panel showing TestResults
-  let webViewTestPanel: WebviewPanel | undefined = undefined;
-
 
   // Add Command reloadExtension > which reloads the extendion itself
   context.subscriptions.push(commands.registerCommand("dbFlux.reloadExtension", async () => {
@@ -222,6 +220,7 @@ export async function activate(context: ExtensionContext) {
 
     // Open SpecOrBody
     context.subscriptions.push(registerOpenSpecOrBody());
+    context.subscriptions.push(registerCopyFunctionWithPackagenameToClipBoard());
 
     // Convert current project to dbFlow project
     context.subscriptions.push(registerConvert2dbFLow(projectInfos, "dbFlux.convert.to.dbFlow", context));
@@ -249,6 +248,7 @@ export async function activate(context: ExtensionContext) {
 
 
     // context.subscriptions.push(languages.registerCompletionItemProvider('plsql', new PlsqlCompletionItemProvider(), '.'));
+    // context.subscriptions.push(languages.registerCompletionItemProvider({language: 'plsql'}, new ApplicationItemsCompletitionProvider(), 'P', 'p'));
 
 
 
@@ -261,11 +261,11 @@ export async function activate(context: ExtensionContext) {
         outputLog(task.name + " done");
         switch (task.name) {
           case "executeTests" : {
-            webViewTestPanel = openTestResult(context, webViewTestPanel);
+            openTestResult(context);
             break;
           }
           case "executeTestPackage" : {
-            webViewTestPanel = openTestResult(context, webViewTestPanel);
+            openTestResult(context);
             break;
           }
           case "convert2dbFlow" : {
@@ -288,13 +288,6 @@ export async function activate(context: ExtensionContext) {
           // }
         }
 
-        // Reset when the current panel is closed
-        webViewTestPanel?.onDidDispose(() => {
-          webViewTestPanel = undefined;
-          },
-          null,
-          context.subscriptions
-        );
       }
 
     }, undefined, context.subscriptions);

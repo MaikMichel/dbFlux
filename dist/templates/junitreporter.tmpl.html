@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{report_title}}</title>
+    <style type="text/css">
+        html,
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            padding: 10px 40px;
+        }
+
+        table {
+            border-spacing: 0;
+        }
+        th, td {
+            border: 1px solid lightgray;
+            padding: 0.2rem 1rem;
+            text-align: left;
+        }
+
+
+
+        .system-out {
+            margin: 0.4rem 0;
+        }
+
+        .utitle {
+            padding: 0.2rem 0.8rem;
+            margin: 0.3rem 0;
+        }
+
+        .utest {
+            padding: 0.8rem;
+            margin: 0.3rem 0;
+        }
+
+        .utest--pass {
+            color: #3c763d;
+            background-color: #dff0d8;
+            border: 1px solid #d6e9c6;
+        }
+
+        .utest--Disabled {
+            color: #8a6d3b;
+            background-color: #ece2b1;
+            border: 1px solid #faebcc;
+        }
+
+        .utest--Failure {
+            color: #a94442;
+            background-color: #f2dede;
+            border: 1px solid #ebccd1;
+        }
+
+        .utest--Error {
+            color: #ffffff;
+            background-color: #fc0d00;
+            border: 1px solid #b30c04;
+        }
+
+
+
+
+        .utest__status {
+            float: right;
+            font-size: x-small;
+        }
+
+        .utest__assert {
+            float: left;
+            font-size: x-small;
+        }
+
+        .utest__log {
+            padding-left: 2.3rem;
+            font-family: monospace;
+            margin: 1em 0px;
+        }
+
+        .testresults {
+            padding-left: 1.5rem;
+        }
+
+        section {
+            margin-top: 1rem;
+        }
+        section>h3.utest {
+            margin-bottom: 0.2rem;
+        }
+
+    </style>
+</head>
+
+<body>
+    <h2>{{report_title}}</h2>
+    <div class="container">
+        <div class="projectinfos">
+            <p class="results">
+                Project: <strong> {{project_name}} </strong> | Mode: <strong> {{project_mode}} </strong> | Schema: <strong> {{report_schema}} </strong>
+            </p>
+        </div>
+        <div class="summarytop">
+            <h2 class="utitle utest--{{resultClassName unit.errors unit.failures}}">Result Total: {{resultName unit.errors unit.failures}}</h2>
+            <div class="results">
+                <span class="utest--pass">{{unit.tests}} tests</span> |
+                <span class="utest--Error">{{unit.errors}} errors</span> |
+                <span class="utest--Failure">{{unit.failures}} failures</span> |
+                <span class="utest--Disabled">{{unit.disabled}} skipped</span> |
+                runtime: {{unit.time}}
+            </div>
+        </div>
+        <div class="testresults">
+
+            {{#each  unit.testsuite}}
+            <section>
+                <h3 class="utitle utest--{{resultClassName errors failures}}">{{package}}: {{name}}</h3>
+                <details>
+                    <summary>
+                        <span class="utest--pass">{{tests}} tests</span> |
+                        <span class="utest--Error">{{errors}} errors</span> |
+                        <span class="utest--Failure">{{failures}} failures</span> |
+                        <span class="utest--Disabled">{{disabled}} skipped</span> |
+                        runtime: {{time}}
+                    </summary>
+
+                    <div class="testresults">
+                        {{#each  testcase}}
+                        <div class="utest utest--{{#if status}}{{status}}{{else}}pass{{/if}}">
+                            <div class="utest__header">
+                                <div class="utest__title">
+                                    {{name}}
+                                </div>
+                                <div class="utest__assert">assertions: {{assertions}}</div>
+                                <div class="utest__status">{{#if status}}{{status}}{{else}}passed{{/if}} in {{time}}
+                                </div>
+                            </div>
+                            {{#each failure}}
+                            <details>
+                                <summary>Output</summary>
+                                <div class="utest__log">
+                                    {{{split inner}}}
+                                </div>
+                            </details>
+                            {{/each}}
+                            {{#each error}}
+                            <details>
+                                <summary>Output</summary>
+                                <div class="utest__log">
+                                    {{{split inner}}}
+                                </div>
+                            </details>
+                            {{/each}}
+                        </div>
+                        {{/each}}
+                    </div>
+                </details>
+            </section>
+            {{/each}}
+        </div>
+    <div>
+
+</body>
+
+</html>

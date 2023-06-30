@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, ViewColumn, WebviewPanel, window, workspace } from "vscode";
+import { commands, ExtensionContext, QuickPickItem, Range, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, ViewColumn, window, workspace } from "vscode";
 import * as path from "path";
-
+import * as Handlebars from "handlebars";
 import { getWorkingFile, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import { AbstractBashTaskProvider, getDBSchemaFolders, getDBUserFromPath, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { TestTaskStore } from "../stores/TestTaskStore";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { outputLog } from "../helper/OutputChannel";
-import { existsSync, readFileSync } from "fs";
-import { removeSync } from "fs-extra";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+
+import { parse } from "junit2json";
 
 
 const which = require('which');
@@ -24,6 +25,7 @@ interface ISQLTestInfos extends IBashInfos {
   connectionArray:    string[];
   executableCli:      string;
   fileToTest:         string;
+  methodToTest:       string;
 }
 
 export class TestTaskProvider extends AbstractBashTaskProvider implements TaskProvider {
@@ -71,7 +73,9 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
           DBFLOW_SQLCLI:     definition.runner.executableCli,
           DBFLOW_DBTNS:      definition.runner.connectionTns,
           DBFLOW_DBPASS:     definition.runner.connectionPass,
-          DBFLOW_FILE2TEST:  this.mode === "executeTests" ? "" : definition.runner.fileToTest
+          DBFLOW_FILE2TEST:  this.mode === "executeTests" ? "" : definition.runner.fileToTest,
+          DBFLOW_METHOD2TEST: this.mode === "executeTests" ? "" : definition.runner.methodToTest.length > 0 ? "."+definition.runner.methodToTest : "",
+          DBFLOW_TESTOUTPUT:  ConfigurationManager.getTestOutputFormat()
         }
       })
 
@@ -99,6 +103,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
         };
 
         runner.fileToTest = "" + TestTaskStore.getInstance().fileName;
+        runner.methodToTest = "" + TestTaskStore.getInstance().selectedMethod;
 
         runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
 
@@ -118,6 +123,19 @@ export function registerExecuteTestPackageCommand(projectInfos: IProjectInfos, c
 
       // check what file has to build
       let fileName = await getWorkingFile();
+      let methodName = "";
+      const editor = window.activeTextEditor!;
+      const selection = editor.selection;
+        if (selection && !selection.isEmpty) {
+
+          const lineText = editor.document.getText(editor.document.lineAt(selection.active.line).range).trim().toLowerCase();
+          const selectionRange = new Range(selection.start.line, selection.start.character, selection.end.line, selection.end.character);
+          methodName = editor.document.getText(selectionRange);
+
+          if (methodName.startsWith('procedure') || !lineText.startsWith('procedure') || methodName.includes(" ")) {
+            methodName = "";
+          }
+        }
 
       // now check connection infos
       setAppPassword(projectInfos);
@@ -134,6 +152,7 @@ export function registerExecuteTestPackageCommand(projectInfos: IProjectInfos, c
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
             TestTaskStore.getInstance().selectedSchemas = ["db/" + getDBUserFromPath(fileName, projectInfos)];
             TestTaskStore.getInstance().fileName = fileName;
+            TestTaskStore.getInstance().selectedMethod = methodName;
 
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTestPackage")));
             commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTestPackage");
@@ -183,46 +202,124 @@ export function registerExecuteTestsTaskCommand(projectInfos: IProjectInfos, con
   });
 }
 
-export function openTestResult(context: ExtensionContext, webViewTestPanel: WebviewPanel | undefined){
+async function testDashBoard(wsRoot:string, projectInfos: IProjectInfos, schemaName:string):Promise<string>{
+  const fileName = schemaName + "_test_junit.xml";
+  const junitXmlFilePath = path.join(wsRoot, 'tests/results/', fileName);
+  const junitJsonFilePath = path.join(wsRoot, 'tests/results/', fileName.replace(".xml", ".json"));
+  // JUnit XML-Datei lesen
+  const xmlData = readFileSync(junitXmlFilePath);
+  // const parser = new xml2js.Parser({mergeAttrs :true});
+  const result = await parse(xmlData)
+  writeFileSync(junitJsonFilePath, JSON.stringify(result, null, 2));
+  // parser.parseString(xmlData, (err, result) => {
+    // console.log('result', JSON.stringify(result));
+
+    // 2. Handlebars-Vorlagen erstellen
+    const templateSource = readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "junitreporter.tmpl.html").split(path.sep).join('/'), "utf8")
+    // console.log('templateSource', templateSource);
+    Handlebars.registerHelper('json', function(context) {
+        return JSON.stringify(context);
+    });
+
+    Handlebars.registerHelper('split', function(context) {
+      let outputString = context.replace(/(ut\.expect.*?)\"/g, '$1,<br/><br/>');
+      outputString = outputString.replace(/("Actual:)/g, '<br/>$1');
+      outputString = outputString.replace(/(line\s[0-9]*\sut\.)/g, '<br/>$1');
+      outputString = outputString.replace(/(ORA\-[0-9]*)/g, '<br/>$1');
+      return outputString;
+    });
+
+    Handlebars.registerHelper('add', function(a, b) {
+      return a + b;
+    });
+
+    Handlebars.registerHelper('resultClassName', function(error, failure) {
+      if (error > 0 ) {
+        return "Error"
+      } else if (failure > 0 ) {
+        return "Failure"
+      } else {
+        return "pass"
+      };
+    });
+
+    Handlebars.registerHelper('resultName', function(error, failure) {
+      if (error > 0 ) {
+        return "Error"
+      } else if (failure > 0 ) {
+        return "Failure"
+      } else {
+        return "Success"
+      };
+    });
+
+
+
+    const template = Handlebars.compile(templateSource);
+    // console.log('template', template);
+    // const projectInfos = getProjectInfos(context);
+    // 4. Rendern des HTML-Reports
+    const reportData = {
+      unit: result,
+      report_title: "dbFlux - Test Results",
+      project_name: projectInfos.projectName,
+      project_mode: projectInfos.projectMode,
+      report_schema: schemaName
+    };
+    // console.log('reportData', reportData);
+
+    const html = template(reportData);
+
+
+    // 5. HTML-Report speichern
+    const htmlFile = path.join(wsRoot, 'tests/results/', fileName.replace(".xml", ".html"));
+    writeFileSync(htmlFile, html);
+
+    return htmlFile;
+  // });
+
+}
+
+async function getAnsiHtmlFile(wsRoot:string, projectInfos: IProjectInfos, schemaName:string):Promise<string>{
+  const fileName = schemaName + "_test_console.log";
+  const logFile = path.join(wsRoot, "tests/results/", fileName);
+
+  const logContent = readFileSync(logFile, "utf8");
+
+  var Convert = require('ansi-to-html');
+  var convert = new Convert({fg: '#FFF',
+                              bg: '#222',
+                              newline: true});
+
+  const htmlContent = convert.toHtml(logContent);
+
+  const htmlFile = logFile.replace(".log", ".html");
+  writeFileSync(htmlFile, htmlContent);
+
+   return htmlFile;
+}
+
+export async function openTestResult(context: ExtensionContext){
   const wsRoot = getWorkspaceRootPath();
-  const logFile = path.join(wsRoot, "utoutput.log");
+  const projectInfos = getProjectInfos(context);
 
-  if ( existsSync(logFile)) {
-    const logContent = readFileSync(logFile, "utf8");
+  TestTaskStore.getInstance().selectedSchemas?.forEach(async element => {
+    const schemaName = element.split('/')[1];
+    const htmlFile = ConfigurationManager.getTestOutputFormat() === "ANSI Console"
+                    ? await getAnsiHtmlFile(wsRoot, projectInfos, schemaName)
+                    : await testDashBoard(wsRoot, projectInfos, schemaName);
 
-    var Convert = require('ansi-to-html');
-    var convert = new Convert({fg: '#FFF',
-                               bg: '#222',
-                               newline: true});
-
-    const htmlContent = convert.toHtml(logContent);
-    removeSync(logFile);
-
-    // Create and show panel
-    if (!webViewTestPanel) {
-      webViewTestPanel = window.createWebviewPanel(
-        'dbFLux ',
-        'dbFlux - utPLSQL UnitTest Output',
+    if ( existsSync(htmlFile)) {
+      // Create and show panel
+      const webViewTestPanel = window.createWebviewPanel(
+        'dbFLux',
+        'utPLSQL Output - ' + schemaName,
         ViewColumn.Beside,
         {}
       );
+
+      webViewTestPanel.webview.html = readFileSync(htmlFile, "utf8");
     }
-
-    // And set its HTML content
-    webViewTestPanel.webview.html = /*html*/ `<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>dbFLux - utPLSQL - output</title>
-    </head>
-    <body>
-       ${htmlContent}
-    </body>
-    </html>`;
-
-    context.subscriptions.push(window.setStatusBarMessage(`Tests completed, Showing Output as Html`));
-
-    return webViewTestPanel;
-  }
+  });
+  window.setStatusBarMessage(`Tests completed, Showing Output as Html`, 2000);
 }

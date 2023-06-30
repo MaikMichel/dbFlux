@@ -85,6 +85,10 @@ export class ConfigurationManager {
     return this.get<string>("dbLock.RestAPIToken");
   }
 
+  static getTestOutputFormat(): string {
+    return this.get<string>("test.Output.Format")
+  }
+
 }
 
 export function showConfig(applyFileName:string, buildFileName:string){

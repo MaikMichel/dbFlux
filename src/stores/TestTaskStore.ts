@@ -3,6 +3,14 @@ export class TestTaskStore {
   private static _instance: TestTaskStore;
   private _selectedSchemas: string[] | undefined;
   private _fileName: string | undefined;
+  private _selectedMethod: string | undefined;
+
+  public get selectedMethod(): string | undefined {
+    return this._selectedMethod;
+  }
+  public set selectedMethod(value: string | undefined) {
+    this._selectedMethod = value;
+  }
 
   public get fileName(): string | undefined {
     return this._fileName;
