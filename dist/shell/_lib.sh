@@ -25,6 +25,7 @@ CLR_LBLUE="${ESC}${BSE_LBLUE}"     # Light Blue
 CLR_REDBGR="${ESC}${BSE_REDBGR}"         # Red Background
 CLR_ORANGE="${ESC}${BSE_ORANGE}"    # Orange
 CLR_GREEN="${ESC}${BSE_GREEN}"        # Green
+CLR_LVIOLETE="${ESC}${BSE_LVIOLETE}"        # Green
 
 
 lsourced="TRUE"
