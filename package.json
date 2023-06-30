@@ -293,6 +293,12 @@
 				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
 			},
 			{
+				"command": "dbFlux.copyFunctionWithPackagenameToClipBoard",
+				"title": "Write package name.selectio to ClipBoard",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
+			},
+			{
 				"command": "dbFlux.wrapLogSelection",
 				"title": "Wrap Selection with Logging Method",
 				"category": "dbFlux",
@@ -377,6 +383,12 @@
 				"command": "dbFlux.openSpecOrBody",
 				"key": "ctrl+alt+o",
 				"mac": "ctrl+alt+o",
+				"when": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
+			},
+			{
+				"command": "dbFlux.copyFunctionWithPackagenameToClipBoard",
+				"key": "ctrl+alt+a",
+				"mac": "ctrl+alt+a",
 				"when": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
 			},
 			{

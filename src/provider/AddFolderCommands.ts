@@ -1,4 +1,4 @@
-import { QuickPickItem, window, ExtensionContext, Uri, workspace, commands, ViewColumn } from 'vscode';
+import { QuickPickItem, window, ExtensionContext, Uri, workspace, commands, ViewColumn, Range, env } from 'vscode';
 
 import * as path from "path";
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFile, writeFileSync } from 'fs';
@@ -851,6 +851,31 @@ export function registerOpenSpecOrBody() {
             window.showTextDocument(doc, {preview: false});
           });
         }
+      }
+    }
+  });
+}
+
+
+
+export function registerCopyFunctionWithPackagenameToClipBoard() {
+  return commands.registerCommand("dbFlux.copyFunctionWithPackagenameToClipBoard", async () => {
+    const fileName = window.activeTextEditor?.document.fileName;
+    if (fileName) {
+      const extension = path.extname(fileName);
+      if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
+        const packageName = path.basename(fileName).split('.')[0].toLowerCase();
+
+        const editor = window.activeTextEditor!;
+        const selection = editor.selection;
+        if (selection && !selection.isEmpty) {
+            const selectionRange = new Range(selection.start.line, selection.start.character, selection.end.line, selection.end.character);
+            const highlighted = editor.document.getText(selectionRange);
+
+            env.clipboard.writeText(packageName + '.' + highlighted)
+            window.setStatusBarMessage('dbFlux: ' + packageName + '.' + highlighted + ' written to ClipBoard', 2000);
+        }
+
       }
     }
   });
