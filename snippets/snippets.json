@@ -275,5 +275,31 @@
 		";$0"
 		],
 		"description": "Add a non unique index from tablescript to split later"
+	},
+  "dbflux-tables-triggers.df": {
+		"scope": "plsql,sql",
+		"prefix": "dbf.tbl.trg.biu",
+		"body": [
+		"-- File: sources/triggers/${TM_FILENAME_BASE}_biu.sql",
+		"create or replace trigger ${TM_FILENAME_BASE}_biu",
+    "  before insert or update on ${TM_FILENAME_BASE} for each row",
+    "begin",
+    "  if :new.${1:column_prefix}_id is null then",
+    "    :new.${1:column_prefix}_id := to_number(sys_guid(), 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');",
+    "  end if;",
+    "  ",
+    "  if inserting then",
+    "    :new.${1:column_prefix}_created_at := current_date;",
+    "    :new.${1:column_prefix}_created_by := nvl(sys_context('APEX\\$SESSION', 'APP_USER'), user);",
+    "  end if;",
+    "  ",
+    "  :new.${1:column_prefix}_modified_at := current_date;",
+    "  :new.${1:column_prefix}_modified_by := nvl(sys_context('APEX\\$SESSION', 'APP_USER'), user);",
+    "end adressen_biud;",
+		"/$0"
+		],
+		"description": "Add a trigger to fill primary key column and audit infos"
 	}
+
+
 }
