@@ -34,6 +34,14 @@ echo
 
 ###
 
+if [[ -f ".gitignore" ]]; then
+  if ! grep -q "tests/results" .gitignore; then
+      echo "tests/results" >> .gitignore
+      echo "'tests/results' add to .gitignore"
+  fi
+fi
+
+
 if [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
   array+=("set feedback off")
   array+=("set linesize 2000")
