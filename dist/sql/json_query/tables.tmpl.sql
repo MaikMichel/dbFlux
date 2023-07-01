@@ -43,16 +43,17 @@
     return l_blob;
   end clob_to_blob;
 
-  function format_json (p_clob in clob) return clob is
-    l_blob blob;
-    l_clob clob;
-  begin
-    l_blob := clob_to_blob(p_clob);
-    select json_serialize(l_blob returning clob PRETTY)
-      into l_clob
-      from dual;
-    return l_clob;
-  end format_json;
+  -- only on 19>
+  -- function format_json (p_clob in clob) return clob is
+  --   l_blob blob;
+  --   l_clob clob;
+  -- begin
+  --   l_blob := clob_to_blob(p_clob);
+  --   select json_serialize(l_blob returning clob PRETTY)
+  --     into l_clob
+  --     from dual;
+  --   return l_clob;
+  -- end format_json;
 
   function get_json(p_table_name in varchar2) return clob is
     cursor c_col is
@@ -192,7 +193,9 @@
 
     l_container.put('constraints', l_constraints);
 
-    l_clob := format_json(l_container.to_clob());
+    -- works only on 19>
+    -- l_clob := format_json(l_container.to_clob());
+    l_clob := l_container.to_clob();
 
     return l_clob;
   end;

@@ -369,6 +369,16 @@ Command                           | Key               | Description
 Open corresponding Spec or Body   | `Ctrl+alt+o`      | when active file has then extension pks, then same file with extension pkb get's opened and the otherway around. This works also with types and type bodies (tps <-> tpb)
 
 
+## Copy "package.method" to clipboard
+
+When you select a method name in a package, you can copy the selection and the package name serperated with a dot to clipboard. This is very handy, if you just want to paste a method call to an APEX Process for example. Just run command: `dbFLux: Write package name.selection to ClipBoard`
+
+### Keybindings
+
+Command                           | Key               | Description
+----------------------------------|-------------------|---------------------------------------
+Write package name.selection to ClipBoard   | `Ctrl+alt+a`      | when active file extension is of: pks, pkb, tps, tpb
+
 
 ## Export APEX Application [#](#export-apex-application 'Export APEX Application')
 
@@ -451,6 +461,7 @@ You can enable this feature within the settings for `Rest APIEnabled`. You can f
 | dbFlux.exportObject           | Export current Object into current File    |
 | dbFlux.exportAPEX             | Export APEX Application                    |
 | dbFlux.exportREST             | Export REST Module                         |
+| dbFlux.exportCurrentTableAsJSONDefinition | Export Table as JSON (current) |
 | &nbsp; |   |
 | dbFlux.addREST                | Add REST Module                            |
 | dbFlux.addAPP                 | Add APEX Application                       |
@@ -460,6 +471,7 @@ You can enable this feature within the settings for `Rest APIEnabled`. You can f
 | dbFlux.addReportFolder        | Add REPORT type                            |
 | &nbsp; |   |
 | dbFlux.openSpecOrBody         | Open corresponding Spec or Body            |
+| dbFlux.copyFunctionWithPackagenameToClipBoard | Write package name.selection to ClipBoard
 | dbFlux.gotoToFolder           | Goto folder                                |
 | dbFlux.wrapLogSelection       | Wrap Selection with Logging Method         |
 | dbFlux.wrapLogSelection.down  | Wrap Selection with Logging Method         |
@@ -467,7 +479,8 @@ You can enable this feature within the settings for `Rest APIEnabled`. You can f
 | &nbsp; |   |
 | dbFlux.enableFlexMode         | Enable FlexMode                            |
 | dbFlux.removeConfiguration    | Remove dbFlux configuration from workspace |
-| dbFlux.initializeProject      | Initialize Project structure               |
+| dbFlux.initializeProject      | Initialize Project structure (dbFlux)               |
+| dbFlux.initialize.dbFlow.Project      | Initialize Project structure (dbFlow) |
 | dbFlux.resetPassword          | Reset password                             |
 
 

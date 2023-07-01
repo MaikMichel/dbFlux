@@ -17,7 +17,8 @@
 	"keywords": [
 		"plsql",
 		"oracle",
-		"apex"
+		"apex",
+		"utplsql"
 	],
 	"preview": false,
 	"author": {
@@ -294,7 +295,7 @@
 			},
 			{
 				"command": "dbFlux.copyFunctionWithPackagenameToClipBoard",
-				"title": "Write package name.selectio to ClipBoard",
+				"title": "Write package name.selection to ClipBoard",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
 			},
