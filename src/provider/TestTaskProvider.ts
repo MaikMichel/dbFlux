@@ -203,20 +203,20 @@ export function registerExecuteTestsTaskCommand(projectInfos: IProjectInfos, con
 }
 
 async function testDashBoard(wsRoot:string, projectInfos: IProjectInfos, schemaName:string):Promise<string>{
-  const fileName = schemaName + "_test_junit.xml";
-  const junitXmlFilePath = path.join(wsRoot, 'tests/results/', fileName);
+  const fileName          = schemaName + "_test_junit.xml";
+  const junitXmlFilePath  = path.join(wsRoot, 'tests/results/', fileName);
   const junitJsonFilePath = path.join(wsRoot, 'tests/results/', fileName.replace(".xml", ".json"));
-  // JUnit XML-Datei lesen
-  const xmlData = readFileSync(junitXmlFilePath);
-  // const parser = new xml2js.Parser({mergeAttrs :true});
-  const result = await parse(xmlData)
-  writeFileSync(junitJsonFilePath, JSON.stringify(result, null, 2));
-  // parser.parseString(xmlData, (err, result) => {
-    // console.log('result', JSON.stringify(result));
+  const htmlFile          = path.join(wsRoot, 'tests/results/', fileName.replace(".xml", ".html"));
 
-    // 2. Handlebars-Vorlagen erstellen
+  if (existsSync(junitXmlFilePath)) {
+
+    const xmlData = readFileSync(junitXmlFilePath);
+    const result = await parse(xmlData);
+
+    writeFileSync(junitJsonFilePath, JSON.stringify(result, null, 2));
+
     const templateSource = readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "junitreporter.tmpl.html").split(path.sep).join('/'), "utf8")
-    // console.log('templateSource', templateSource);
+
     Handlebars.registerHelper('json', function(context) {
         return JSON.stringify(context);
     });
@@ -254,11 +254,8 @@ async function testDashBoard(wsRoot:string, projectInfos: IProjectInfos, schemaN
     });
 
 
-
     const template = Handlebars.compile(templateSource);
-    // console.log('template', template);
-    // const projectInfos = getProjectInfos(context);
-    // 4. Rendern des HTML-Reports
+
     const reportData = {
       unit: result,
       report_title: "dbFlux - Test Results",
@@ -266,37 +263,33 @@ async function testDashBoard(wsRoot:string, projectInfos: IProjectInfos, schemaN
       project_mode: projectInfos.projectMode,
       report_schema: schemaName
     };
-    // console.log('reportData', reportData);
 
     const html = template(reportData);
 
-
-    // 5. HTML-Report speichern
-    const htmlFile = path.join(wsRoot, 'tests/results/', fileName.replace(".xml", ".html"));
     writeFileSync(htmlFile, html);
+  }
 
-    return htmlFile;
-  // });
-
+  return htmlFile;
 }
 
 async function getAnsiHtmlFile(wsRoot:string, projectInfos: IProjectInfos, schemaName:string):Promise<string>{
   const fileName = schemaName + "_test_console.log";
   const logFile = path.join(wsRoot, "tests/results/", fileName);
-
-  const logContent = readFileSync(logFile, "utf8");
-
-  var Convert = require('ansi-to-html');
-  var convert = new Convert({fg: '#FFF',
-                              bg: '#222',
-                              newline: true});
-
-  const htmlContent = convert.toHtml(logContent);
-
   const htmlFile = logFile.replace(".log", ".html");
-  writeFileSync(htmlFile, htmlContent);
 
-   return htmlFile;
+  if (existsSync(logFile)) {
+    const logContent = readFileSync(logFile, "utf8");
+
+    const Convert = require('ansi-to-html');
+    const convert = new Convert({fg: '#FFF',
+                                bg: '#222',
+                                newline: true});
+
+    const htmlContent = convert.toHtml(logContent);
+
+    writeFileSync(htmlFile, htmlContent);
+  }
+  return htmlFile;
 }
 
 export async function openTestResult(context: ExtensionContext){

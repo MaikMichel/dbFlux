@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, WebviewPanel, window, workspace } from "vscode";
+import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, window, workspace } from "vscode";
 
 import { basename, join } from "path";
 import { CompileMode, registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
@@ -20,12 +20,12 @@ import { registerLockCurrentFileCommand, registerregisterRefreshLockedFiles, reg
 import { registerExportCurrentStaticFileCommand, registerExportStaticFilesCommand } from "./provider/ExportStaticFilesProvider";
 import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticFileProvider";
 import { DBLockTreeView } from "./ui/DBLockTreeView";
-// import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
+
 import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
 import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
 import { registerExportCurrentTableDefinitionCommand } from "./provider/ExportTableAsJSONProvider";
-import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
-import { ApplicationItemsCompletitionProvider } from "./provider/ApplicationItemsCompletitionProvider";
+// import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
+// import { ApplicationItemsCompletitionProvider } from "./provider/ApplicationItemsCompletitionProvider";
 
 
 
