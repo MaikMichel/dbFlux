@@ -1,6 +1,6 @@
 # Change Log
 
-## [4.5.0 - 2023-07-01]
+## [4.6.0 - 2023-07-01]
 - New: Add command to export meta data from current table file as JSON (this will make more sense in upcomming releases)
 - New: Add command to copy selected method name with package name and dot to clipboard (Ctrl+Alt+A)
 - New: Add option to enable error logging on DDL (SQL[plus|cl] > set errorlogging on)
@@ -9,6 +9,13 @@
 - Fix: Enablement of commands which depends on current / active file
 - Fix: Consistent wording of command titles
 - Fix: some refactorings
+
+## [4.5.0 - 2023-03-24]
+- New: Command to initialize a dbFlow project
+- New: Export all REST Modules like all Applications
+- Fix: Wrong folder on export
+- Fix: Error when Exporting All Application in Flex Mode
+- Some small improvements
 
 ## [4.4.0 - 2023-03-05]
 - New: Add or define options in settings to call methods based on compiling file, save the output and run that generated file
