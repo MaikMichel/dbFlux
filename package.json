@@ -610,7 +610,7 @@
 							"ANSI Console",
 							"HTML Report"
 						],
-						"description": "Whick output format should be used to report utPLSQL Results",
+						"description": "Which output format should be used to report utPLSQL Results",
 						"scope": "window"
 					}
 				}

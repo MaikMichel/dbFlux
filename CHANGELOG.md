@@ -1,5 +1,15 @@
 # Change Log
 
+## [4.5.0 - 2023-07-01]
+- New: Add command to export meta data from current table file as JSON (this will make more sense in upcomming releases)
+- New: Add command to copy selected method name with package name and dot to clipboard (Ctrl+Alt+A)
+- New: Add option to enable error logging on DDL (SQL[plus|cl] > set errorlogging on)
+- New: Add option to display test results as HTML Report
+- New: Modified test command to execute only selected test method
+- Fix: Enablement of commands which depends on current / active file
+- Fix: Consistent wording of command titles
+- Fix: some refactorings
+
 ## [4.4.0 - 2023-03-05]
 - New: Add or define options in settings to call methods based on compiling file, save the output and run that generated file
 - Fix: Output error or warning messages as one file due to a big in VSCode consering multiline-problem matcher
