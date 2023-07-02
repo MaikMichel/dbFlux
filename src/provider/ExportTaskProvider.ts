@@ -6,6 +6,7 @@ import { ExportTaskStore } from "../stores/ExportTaskStore";
 import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
+import { ConfigurationManager } from "../helper/ConfigurationManager";
 
 const which = require('which');
 
@@ -67,7 +68,8 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
           DBFLOW_DBPASS:    definition.runner.connectionPass,
           DBFLOW_APPID:     appID.length>0?appID:appFolder==="*"?"*":"NULL",
           DBFLOW_APPFOLDER: folder?folder:"NULL",
-          DBFLOW_MODE:      definition.runner.projectInfos.projectMode+""
+          DBFLOW_MODE:      definition.runner.projectInfos.projectMode+"",
+          DBFLOW_EXPORT_OPTION: ConfigurationManager.getAppExportOptions() + ""
         },
       })
 

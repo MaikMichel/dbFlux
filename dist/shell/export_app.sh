@@ -46,10 +46,11 @@ function export_app() {
         CONN_DBFLOW_DBUSER=${DBFLOW_DBUSER/\*/$appschema}
       fi
 
+      echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> apex export -applicationid ${DBFLOW_DIR_APPID} -split -skipExportDate ${NC}${CLR_ORANGE}${DBFLOW_EXPORT_OPTION}${NC}"
       # the export itself
       sql -s -l ${CONN_DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF
         WHENEVER SQLERROR EXIT SQL.SQLCODE
-        apex export -applicationid ${DBFLOW_DIR_APPID} -split -skipExportDate
+        apex export -applicationid ${DBFLOW_DIR_APPID} -split -skipExportDate ${DBFLOW_EXPORT_OPTION}
 EOF
 
       if [[ $? -ne 0 ]]; then

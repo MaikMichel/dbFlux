@@ -468,6 +468,12 @@
 						"description": "Use `set errorlogging on` to log errors during compiliation. Keep in mind, that this will create then table SPERRORLOG in your scheme(s)!",
 						"scope": "window"
 					},
+					"dbFlux.exportApplications.AppendFollowingOptionString": {
+						"type": "string",
+						"default": "",
+						"markdownDescription": "Add addional options and arguments to `apex export` command, send to SQLcl\n\n```apex export -applicationid ${APP_ID} -split -skipExportDate ${YOUR_OPTIONS}``` \n\n For Example: \n- `-debug`\n- `-exptype APPLICTATION_SOURCE,READABLE_YAML",
+						"scope": "window"
+					},
 					"dbFlux.showWarningMessages.FocusProblemPanelWhenExists": {
 						"type": "boolean",
 						"default": true,

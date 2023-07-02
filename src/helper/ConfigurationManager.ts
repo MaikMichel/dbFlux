@@ -89,6 +89,9 @@ export class ConfigurationManager {
     return this.get<string>("test.Output.Format")
   }
 
+  static getAppExportOptions(): string {
+    return this.get<string>("exportApplications.AppendFollowingOptionString")
+  }
 }
 
 export function showConfig(applyFileName:string, buildFileName:string){
