@@ -1,6 +1,6 @@
 import { window } from "vscode";
 import { IProjectInfos } from "../provider/AbstractBashTaskProvider";
-import { CompileMode, CompileTaskProvider } from "../provider/CompileTaskProvider";
+
 
 
 export class CompileTaskStore {
@@ -10,13 +10,22 @@ export class CompileTaskStore {
   private _adminUser: string | undefined;
   private _selectedSchemas: string[] | undefined;
 
-  private _taskMap: Map<CompileMode, CompileTaskProvider> = new Map<CompileMode, CompileTaskProvider>();
+  private _targetApplicationID: number | undefined;
+  private _targetWorkspace: string | undefined;
 
-  public get taskMap(): Map<CompileMode, CompileTaskProvider> {
-    return this._taskMap;
+  public get targetWorkspace(): string | undefined {
+    return this._targetWorkspace;
   }
-  public set taskMap(value: Map<CompileMode, CompileTaskProvider>) {
-    this._taskMap = value;
+  public set targetWorkspace(value: string | undefined) {
+    this._targetWorkspace = value;
+  }
+
+  public get targetApplicationID(): number | undefined {
+    return this._targetApplicationID;
+  }
+
+  public set targetApplicationID(value: number |undefined) {
+    this._targetApplicationID = value;
   }
 
   public get appPwd(): string | undefined {

@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationManager, focusProblemPanel } from "../helper/ConfigurationManager";
-import { getActiveFileUri, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
+import { getActiveFileUri, getApplicationIdFromApexPath, getApplicationIdFromStaticPath, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
 import { AbstractBashTaskProvider, buildConnectionUser, getDBSchemaFolders, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { CompileTaskStore, setAdminPassword, setAdminUserName, setAppPassword } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
@@ -40,31 +40,17 @@ interface ICompileInfos extends IBashInfos {
   trgCallsMethod:     string;
   trgCallsTFile:      string;
   additionalOutput:   string;
-  mode:               CompileMode;
+  onlyTriggerRun:     string;
   useSQLErrorLog:     string;
 }
 
-export enum CompileMode {
-  default,
-  triggerOnly,
-  handleCallsOnly
-
-}
 
 export class CompileTaskProvider extends AbstractBashTaskProvider implements TaskProvider {
-  mode: CompileMode;
-  commandKey: string = "compileFile"
+  onlyTrigger: boolean = false;
 
-  constructor(context: ExtensionContext, mode:CompileMode = CompileMode.default) {
+  constructor(context: ExtensionContext, onlyTrigger: boolean = false) {
     super(context);
-    this.mode = mode;
-
-    if (mode === CompileMode.handleCallsOnly) {
-      this.commandKey = 'runHandlebarJSResultsForCurrentFile';
-    } else if (mode === CompileMode.triggerOnly) {
-      this.commandKey = 'runTriggerForCurrentFile';
-    }
-
+    this.onlyTrigger = onlyTrigger;
   }
 
   provideTasks(): Thenable<Task[]> | undefined {
@@ -81,7 +67,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
     const compileTask: ICompileInfos = await this.prepCompInfos();
 
     if (compileTask.activeFile) {
-      result.push(this.createOraTask(this.createOraTaskDefinition(this.commandKey, compileTask)));
+      result.push(this.createOraTask(this.createOraTaskDefinition("compileFile", compileTask)));
     }
 
     return Promise.resolve(result);
@@ -113,7 +99,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
           DBFLOW_ENABLE_WARNINGS:   definition.runner.enableWarnings,
           DBFLOW_ADDITIONAL_OUTPUT: definition.runner.additionalOutput,
 
-          DBFLOW_TRIGGER_ONLY:      this.mode === CompileMode.triggerOnly ? "YES" : "NO",
+          DBFLOW_TRIGGER_ONLY:      this.onlyTrigger?"YES":"NO",
           DBFLOW_CONN_RUNS:         definition.runner.trgRunsConn,
           DBFLOW_FILE_RUNS:         definition.runner.trgRunsFile,
 
@@ -122,7 +108,10 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
           DBFLOW_METHOD_TFILES:     definition.runner.trgCallsTFile,
 
           DBFLOW_COLOR_ON:          definition.runner.coloredOutput,
-          DBFLOW_USE_SLOG:          definition.runner.useSQLErrorLog
+          DBFLOW_USE_SLOG:          definition.runner.useSQLErrorLog,
+
+          DBFLOW_TARGET_APP_ID:    CompileTaskStore.getInstance().targetApplicationID + "",
+          DBFLOW_TARGET_WORKSP:    CompileTaskStore.getInstance().targetWorkspace + ""
         },
       }),
       ["$dbflux-plsql"]
@@ -269,18 +258,11 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
   });
 }
 
-export function registerCompileFileCommand(projectInfos: IProjectInfos, context: ExtensionContext, mode:CompileMode = CompileMode.default) {
+export function registerCompileFileCommand(projectInfos: IProjectInfos, context: ExtensionContext, commandKey: string = 'dbFlux.compileFile') {
 
-
-  let commandKey = 'dbFlux.compileFile';
-  if (mode === CompileMode.handleCallsOnly) {
-    commandKey = 'dbFlux.runHandlebarJSResultsForCurrentFile';
-  } else if (mode === CompileMode.triggerOnly) {
-    commandKey = 'dbFlux.runTriggerForCurrentFile';
-  }
 
   return commands.registerCommand(commandKey, async () => {
-    console.log('taskMap', CompileTaskStore.getInstance().taskMap);
+    // console.log('taskMap', CompileTaskStore.getInstance().taskMap);
 
     // save file
     let fileUri:Uri|undefined = window.activeTextEditor?.document.uri;
@@ -303,7 +285,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
       const insideDb = !insideSetup && matchRuleShort(relativeFileName, 'db/*');
       const insideStatics = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'static/*/*/f*/src/*' : 'static/f*/src/*');
       const insideReports = matchRuleShort(relativeFileName, 'reports/*');
-      const insideAPEX = matchRuleShort(relativeFileName, 'apex/*');
+      const insideAPEX = matchRuleShort(relativeFileName, 'apex/*') && path.basename(relativeFileName) === "install.sql";
       const insideREST = matchRuleShort(relativeFileName, 'rest/*');
       const fileExtension: string = "" + relativeFileName.split('.').pop();
       const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
@@ -345,13 +327,20 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
           }
 
           if (compilable) {
-            if (!CompileTaskStore.getInstance().taskMap.has(mode)) {
-              CompileTaskStore.getInstance().taskMap.set(mode, new CompileTaskProvider(context, mode));
-            }
-            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", CompileTaskStore.getInstance().taskMap.get(mode)!));
+            context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileTaskProvider(context, commandKey !== 'dbFlux.compileFile')));
 
             if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideSetup || insideDb || insideREST || insideAPEX)) {
-
+              if (insideAPEX) {
+                CompileTaskStore.getInstance().targetApplicationID = await askForTargetAppID(relativeFileName, projectInfos.isFlexMode);
+                if (CompileTaskStore.getInstance().targetApplicationID === undefined) {
+                  return;
+                }
+                CompileTaskStore.getInstance().targetWorkspace = await getTargetWorkspaceName(relativeFileName, projectInfos);
+                if (CompileTaskStore.getInstance().targetWorkspace === undefined) {
+                  await window.showWarningMessage(`Unknown Workspace! Missing item in project configuration?`);
+                  return;
+                }
+              }
               // call the compile Task itself
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
 
@@ -496,4 +485,22 @@ export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, 
       }
     }
   });
+}
+
+async function askForTargetAppID(file:string, isFlexMode:boolean): Promise<number|undefined> {
+  const sourceAppID = getApplicationIdFromApexPath(path.dirname(file), isFlexMode);
+  const value:string | undefined = await window.showInputBox({ prompt: "Target APP ID", placeHolder: "Enter target APP ID", value: sourceAppID });
+  return value ? Number.parseInt(value).valueOf() : undefined;
+}
+
+async function getTargetWorkspaceName(file:string, projectInfos:IProjectInfos): Promise<string|undefined> {
+  // when FlexMode from file
+  if (projectInfos.isFlexMode){
+    // */[static|apex]/scheman_name/workspace_name/f_with_app_id/src/*
+    const wsRoot = getWorkspaceRootPath();
+    const parts = file.replace(wsRoot+"/", "").split("/");
+    return parts[2];
+  } else {
+    return projectInfos.workspace;
+  }
 }

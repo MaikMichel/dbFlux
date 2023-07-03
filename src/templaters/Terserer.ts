@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as Handlebars from "handlebars";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
-import { changeExtension, getApplicationIdFromPath, getTargetPathFromFileName } from "../helper/utilities";
+import { changeExtension, getApplicationIdFromStaticPath, getTargetPathFromFileName } from "../helper/utilities";
 
 export class Terserer {
   private sourceContent: string;
@@ -18,7 +18,7 @@ export class Terserer {
   async genFile():Promise<boolean|undefined> {
 
     const uploadSQLFile = this.sourceFile + '.sql';
-    const inAppID = getApplicationIdFromPath(this.sourceFile, this.isFlexMode);
+    const inAppID = getApplicationIdFromStaticPath(this.sourceFile, this.isFlexMode);
     const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile);
 
     const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));

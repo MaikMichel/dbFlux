@@ -66,8 +66,33 @@ export function rtrim (s:string, c:string) {
 //   return str.replace(rgxtrim, '');
 // }
 
+export function getApplicationIdFromPath(pathType: "static"|"apex", sourceFile: string, isFlexMode: boolean) {
+  if (isFlexMode) {
+    // */[static|apex]/scheman_name/workspace_name/f_with_app_id/src/*
+    const wsRoot = getWorkspaceRootPath();
+    const parts = sourceFile.replace(wsRoot+"/", "").split("/");
+    const appID = parts[3].substring(1);
+    return appID;
+  } else {
+    return sourceFile.split(pathType + '/f')[1].split('/src/')[0];
+  }
+}
 
-export function getApplicationIdFromPath(sourceFile: string, isFlexMode: boolean) {
+export function getApplicationIdFromStaticPath(sourceFile: string, isFlexMode: boolean) {
+  return getApplicationIdFromPath("static", sourceFile, isFlexMode);
+  if (isFlexMode) {
+    // */static/scheman_name/workspace_name/f_with_app_id/src/*
+    const wsRoot = getWorkspaceRootPath();
+    const parts = sourceFile.replace(wsRoot+"/", "").split("/");
+    const appID = parts[3].substring(1);
+    return appID;
+  } else {
+    return sourceFile.split('static/f')[1].split('/src/')[0];
+  }
+}
+
+export function getApplicationIdFromApexPath(sourceFile: string, isFlexMode: boolean) {
+  return getApplicationIdFromPath("apex", sourceFile, isFlexMode);
   if (isFlexMode) {
     // */static/scheman_name/workspace_name/f_with_app_id/src/*
     const wsRoot = getWorkspaceRootPath();
@@ -85,7 +110,7 @@ export function getTargetPathFromFileName(inAppID: string, sourceFile: string) {
 }
 
 export function getStaticReference(sourceFile: string, isFlexMode: boolean) {
-  const inAppID = getApplicationIdFromPath(sourceFile, isFlexMode);
+  const inAppID = getApplicationIdFromStaticPath(sourceFile, isFlexMode);
   const targetPath = getTargetPathFromFileName(inAppID, sourceFile);
 
   return "#APP_FILES#" + targetPath.replace(".js.sql", "#MIN#.js").replace(".css.sql", "#MIN#.css").replace(".sql", "");

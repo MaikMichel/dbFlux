@@ -1,7 +1,7 @@
 import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, window, workspace } from "vscode";
 
 import { basename, join } from "path";
-import { CompileMode, registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
+import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
 import { registerExportAPEXCommand } from "./provider/ExportTaskProvider";
 
 import { registerExportRESTCommand } from "./provider/RestTaskProvider";
@@ -130,8 +130,7 @@ export async function activate(context: ExtensionContext) {
 
     // Compile
     context.subscriptions.push(registerCompileFileCommand(projectInfos, context));
-    context.subscriptions.push(registerCompileFileCommand(projectInfos, context, CompileMode.triggerOnly));
-    context.subscriptions.push(registerCompileFileCommand(projectInfos, context, CompileMode.handleCallsOnly));
+    context.subscriptions.push(registerCompileFileCommand(projectInfos, context, 'dbFlux.runTriggerForCurrentFile'));
 
 
     // Export APEX

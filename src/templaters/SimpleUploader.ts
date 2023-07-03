@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as Handlebars from "handlebars";
-import { getApplicationIdFromPath, getTargetPathFromFileName } from "../helper/utilities";
+import { getApplicationIdFromStaticPath, getTargetPathFromFileName } from "../helper/utilities";
 
 export class SimpleUploader {
   private sourceContent: string;
@@ -14,7 +14,7 @@ export class SimpleUploader {
 
   async genFile() {
     const uploadSQLFile = this.sourceFile + '.sql';
-    const inAppID = getApplicationIdFromPath(this.sourceFile, this.isFlexMode);
+    const inAppID = getApplicationIdFromStaticPath(this.sourceFile, this.isFlexMode);
     const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile);
 
 

@@ -12,6 +12,7 @@ initialize_session;
 ######################################################
 
 basefl=$(basename -- "${DBFLOW_FILE}")
+basepath=$(pwd)
 extension="${basefl##*.}"
 MDATE=`date +%d.%m.%y_%H:%M:%S,%5N`
 
@@ -50,6 +51,7 @@ if [[ ${DBFLOW_DBUSER} == "sys" ]]; then
 fi
 
 use_error_log=()
+install_apex=()
 read_error_log=()
 if [[ ${DBFLOW_USE_SLOG} == "YES" ]]; then
   use_error_log+=( "set errorlogging on" )
@@ -72,6 +74,28 @@ if [[ ${DBFLOW_USE_SLOG} == "YES" ]]; then
   read_error_log+=( "end loop;" )
 fi
 
+if [[ ${DBFLOW_TARGET_APP_ID:-0} -gt 0 ]]; then
+  DBFLOW_FILE_PATH=$(dirname "${DBFLOW_FILE}")
+  DBFLOW_FILE=$(basename "${DBFLOW_FILE}")
+
+  cd "${DBFLOW_FILE_PATH}"
+  ORIGINAL_APP_ID=$(grep -oP 'p_default_application_id=>\K\d+' "application/set_environment.sql")
+
+  echo -e "${CLR_LBLUE}> APP-ID:${NC}    ${WHITE}${DBFLOW_TARGET_APP_ID}${NC}"
+  echo -e "${CLR_LBLUE}> Workspace:${NC} ${WHITE}${DBFLOW_TARGET_WORKSP}${NC}"
+  install_apex+=( "begin" )
+  install_apex+=( " apex_application_install.set_workspace('${DBFLOW_TARGET_WORKSP}');" )
+  install_apex+=( " apex_application_install.set_application_id(${DBFLOW_TARGET_APP_ID});" )
+  install_apex+=( " " );
+  install_apex+=( " if ${DBFLOW_TARGET_APP_ID} != nvl(${ORIGINAL_APP_ID}, 0) then" );
+  install_apex+=( "   apex_application_install.generate_offset;" );
+  install_apex+=( " end if;" );
+  install_apex+=( " " );
+  install_apex+=( " apex_application_install.set_schema(upper(user));" );
+  install_apex+=( " " );
+  install_apex+=( "end;" )
+  install_apex+=( "/" )
+fi
 
 
 if [[ ${DBFLOW_TRIGGER_ONLY} == "NO" ]]; then
@@ -111,6 +135,14 @@ $(
   done
 )
 
+REM initialize APEX Application Install Settings
+$(
+  for element in "${install_apex[@]}"
+  do
+    echo "$element"
+  done
+)
+
 Rem Run the Sublime File
 set feedback on
 @"${DBFLOW_FILE}"
@@ -140,7 +172,8 @@ Begin
                                               'PACKAGE BODY', '.pkb',
                                               'TYPE', '.tps',
                                               'TYPE BODY', '.tpb',
-                                              '.${extension}')) = lower('${basefl}')                              )
+                                              '.${extension}')) = lower('${basefl}')
+                                and nvl(${ORIGINAL_APP_ID}, 0) = 0)
                   select attribute, lpos, name, errtype, errtext, max(length(errtype)) over () mlen, max(length(lpos)) over () mlpos
                     from errms
                order by type, name, lpos)
@@ -179,6 +212,10 @@ then
   echo -e "${CLR_REDBGR}Error when executing ${DBFLOW_FILE} ${NC}"
   echo
 else
+
+  if [[ ${DBFLOW_TARGET_APP_ID:-0} -gt 0 ]]; then
+    cd "${basepath}"
+  fi
 
   if [[ ${DBFLOW_MOVEYN} == "YES" ]]; then
     target=${DBFLOW_FILE/\/src\//\/dist\/}
@@ -231,7 +268,7 @@ else
 
 EOF
 
-      # remove first line wehn empty (happening on sqlcl)
+      # remove first line when empty (happening on sqlcl)
       sed -i~ -e '2,$b' -e '/^$/d;' ${tfiles[$i]}
 
       # run file
