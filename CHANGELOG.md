@@ -1,5 +1,12 @@
 # Change Log
 
+## [4.7.0 - 2023-07-04]
+- New: Install APEX Applications to target APP ID, when comipiling apex/*/f###/install.sql
+- New: Store selection of schemas when compiling all or testing all
+- New: Add option to pass additional arguments to apex export
+- Fix: HTML Output
+- Fix: Run triggers only
+
 ## [4.6.0 - 2023-07-01]
 - New: Add command to export meta data from current table file as JSON (this will make more sense in upcomming releases)
 - New: Add command to copy selected method name with package name and dot to clipboard (Ctrl+Alt+A)
