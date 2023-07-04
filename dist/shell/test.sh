@@ -36,6 +36,7 @@ echo
 
 if [[ -f ".gitignore" ]]; then
   if ! grep -q "tests/results" .gitignore; then
+      echo "" >> .gitignore
       echo "tests/results" >> .gitignore
       echo "'tests/results' add to .gitignore"
   fi

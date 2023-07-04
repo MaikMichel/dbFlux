@@ -135,28 +135,31 @@
                         {{#each  testcase}}
                         <div class="utest utest--{{#if status}}{{status}}{{else}}pass{{/if}}">
                             <div class="utest__header">
-                                <div class="utest__title">
-                                    {{name}}
-                                </div>
+                                <div class="utest__title">{{name}}</div>
                                 <div class="utest__assert">assertions: {{assertions}}</div>
-                                <div class="utest__status">{{#if status}}{{status}}{{else}}passed{{/if}} in {{time}}
-                                </div>
+                                <div class="utest__status">{{#if status}}{{status}}{{else}}passed{{/if}} in {{time}}</div>
                             </div>
+
                             {{#each failure}}
-                            <details>
-                                <summary>Output</summary>
-                                <div class="utest__log">
-                                    {{{split inner}}}
-                                </div>
-                            </details>
+                            <div>
+                                <details style="margin-top: 1rem;">
+                                    <summary>Output</summary>
+                                    <div class="utest__log">
+                                        {{{split inner}}}
+                                    </div>
+                                </details>
+                            </div>
                             {{/each}}
+
                             {{#each error}}
-                            <details>
-                                <summary>Output</summary>
-                                <div class="utest__log">
-                                    {{{split inner}}}
-                                </div>
-                            </details>
+                            <div>
+                                <details style="margin-top: 1rem;">
+                                    <summary>Output</summary>
+                                    <div class="utest__log">
+                                        {{{split inner}}}
+                                    </div>
+                                </details>
+                            </div>
                             {{/each}}
                         </div>
                         {{/each}}
