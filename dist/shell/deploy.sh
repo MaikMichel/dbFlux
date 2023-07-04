@@ -79,7 +79,13 @@ if [[ ${DBFLOW_TARGET_APP_ID:-0} -gt 0 ]]; then
   DBFLOW_FILE=$(basename "${DBFLOW_FILE}")
 
   cd "${DBFLOW_FILE_PATH}"
-  ORIGINAL_APP_ID=$(grep -oP 'p_default_application_id=>\K\d+' "application/set_environment.sql")
+  if [[ -f "application/set_environment.sql" ]]; then
+    ORIGINAL_APP_ID=$(grep -oP 'p_default_application_id=>\K\d+' "application/set_environment.sql")
+    ORIGINAL_APP_ID=${ORIGINAL_APP_ID:-0}
+  else
+    echo -e "${CLR_REDBGR}Error: Not a valid export folder ${DBFLOW_FILE_PATH} ${NC}"
+    exit 1
+  fi
 
   echo -e "${CLR_LBLUE}> APP-ID:${NC}    ${WHITE}${DBFLOW_TARGET_APP_ID}${NC}"
   echo -e "${CLR_LBLUE}> Workspace:${NC} ${WHITE}${DBFLOW_TARGET_WORKSP}${NC}"
