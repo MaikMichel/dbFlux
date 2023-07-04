@@ -220,9 +220,10 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
         const dbSchemaFolders = await getDBSchemaFolders();
         if (dbSchemaFolders.length > 1) {
 
-          // preselect folders/schemas
+          // preselect folders/schemas based on last choice
+          const selectedFolders  = (context.workspaceState.get("dbFlux_last_compiled_folders")!+"").split("|");
           dbSchemaFolders.forEach((v)=>{
-            v.picked = true;
+            v.picked = selectedFolders.includes(v.description!);
           })
 
           const items: QuickPickItem[] | undefined = await window.showQuickPick(dbSchemaFolders, {
@@ -231,6 +232,9 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
 
           schemaSelected = (items !== undefined && items?.length > 0);
           CompileTaskStore.getInstance().selectedSchemas = items?.map(function (element) { return element.description!; });
+
+          // store choice for next use
+          context.workspaceState.update("dbFlux_last_compiled_folders", CompileTaskStore.getInstance().selectedSchemas?.join("|"));
         } else if (dbSchemaFolders.length === 1) {
           schemaSelected = true;
           CompileTaskStore.getInstance().selectedSchemas = dbSchemaFolders?.map(function (element) { return element.description!; });

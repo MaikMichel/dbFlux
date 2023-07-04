@@ -178,11 +178,19 @@ export function registerExecuteTestsTaskCommand(projectInfos: IProjectInfos, con
         const dbSchemaFolders = await getDBSchemaFolders();
         if (dbSchemaFolders.length > 1) {
 
+          // preselect folders/schemas based on last choice
+          const selectedFolders  = (context.workspaceState.get("dbFlux_last_tested_folders")!+"").split("|");
+          dbSchemaFolders.forEach((v)=>{
+            v.picked = selectedFolders.includes(v.description!);
+          })
+
           const items: QuickPickItem[] | undefined = await window.showQuickPick(dbSchemaFolders, {
             canPickMany: true, placeHolder: 'Choose Schema to run your tests'
           });
           schemaSelected = (items !== undefined && items?.length > 0);
           TestTaskStore.getInstance().selectedSchemas = items?.map(function (element) { return element.description!; });
+          // store choice for next use
+          context.workspaceState.update("dbFlux_last_tested_folders", TestTaskStore.getInstance().selectedSchemas?.join("|"));
         } else if (dbSchemaFolders.length === 1) {
           schemaSelected = true;
           TestTaskStore.getInstance().selectedSchemas = dbSchemaFolders?.map(function (element) { return element.description!; });
