@@ -17,6 +17,7 @@ Using this extension enables you to develop Oracle Database and APEX application
 
 - [**Compile**](#compile 'Jump to Compile') your PL/SQL Objects to a folder specific connection
 - Compile all selected schemas
+- [**Install APEX Applications**](#install-apex-application 'Jump to Install APEX Application')
 - [**Export APEX Applications**](#export-apex-application 'Jump to Export APEX Application')
 - [**Export REST Modules**](#export-rest-module 'Jump to Export REST Module')
 - [**Export DB Schema or Object**](#export-db-schema-or-object 'Jump to Export DB Schema or Object')
@@ -380,10 +381,17 @@ Command                           | Key               | Description
 Write package name.selection to ClipBoard   | `Ctrl+alt+a`      | when active file extension is of: pks, pkb, tps, tpb
 
 
+## Install APEX Application [#](#install-apex-application 'Install APEX Application')
+
+With **dbFlux** you can install the exported application right back to database. You just have to call the compile command on the `apex/**/f###/install.sql`. You will be prompted to enter a target ID of the application. The default ID will be the one from the path.
+
+
 ## Export APEX Application [#](#export-apex-application 'Export APEX Application')
 
 With **dbFlux** you can directly export the stored APEX applications. You just have to select an application by using command `dbFLux: Export APEX Application`. In the background APEX will then call SQLcl with the appropriate DB connection and export the application (splitted). In MultiSchema mode this is the APP schema.
 > Only those applications can be exported which have been stored in the directory structure. See command: `dbFLux: Add APEX Application`.
+
+You have the option to pass addional arguments or options to the export command of SQLcl. Just enter them in the settings.
 
 
 ## Export REST Module [#](#export-rest-module 'Export REST Module')
