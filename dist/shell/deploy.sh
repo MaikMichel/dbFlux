@@ -81,7 +81,6 @@ if [[ ${DBFLOW_TARGET_APP_ID:-0} -gt 0 ]]; then
   cd "${DBFLOW_FILE_PATH}"
   if [[ -f "application/set_environment.sql" ]]; then
     ORIGINAL_APP_ID=$(grep -oP 'p_default_application_id=>\K\d+' "application/set_environment.sql")
-    ORIGINAL_APP_ID=${ORIGINAL_APP_ID:-0}
   else
     echo -e "${CLR_REDBGR}Error: Not a valid export folder ${DBFLOW_FILE_PATH} ${NC}"
     exit 1
@@ -103,6 +102,7 @@ if [[ ${DBFLOW_TARGET_APP_ID:-0} -gt 0 ]]; then
   install_apex+=( "/" )
 fi
 
+ORIGINAL_APP_ID=${ORIGINAL_APP_ID:-0}
 
 if [[ ${DBFLOW_TRIGGER_ONLY} == "NO" ]]; then
 
