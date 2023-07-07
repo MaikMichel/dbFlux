@@ -80,7 +80,12 @@ if [[ ${DBFLOW_TARGET_APP_ID:-0} -gt 0 ]]; then
 
   cd "${DBFLOW_FILE_PATH}"
   if [[ -f "application/set_environment.sql" ]]; then
-    ORIGINAL_APP_ID=$(grep -oP 'p_default_application_id=>\K\d+' "application/set_environment.sql")
+    if [[ $(uname) == "Darwin" ]]; then
+      # on macos the -P parameter does not exist for grep, so we use sed instead
+      ORIGINAL_APP_ID=$(grep -oE "p_default_application_id=>([^[:space:]]+)" "application/set_environment.sql" | sed 's/.*>\(.*\)/\1/')
+    else
+      ORIGINAL_APP_ID=$(grep -oP 'p_default_application_id=>\K\d+' "application/set_environment.sql")
+    fi
   else
     echo -e "${CLR_REDBGR}Error: Not a valid export folder ${DBFLOW_FILE_PATH} ${NC}"
     exit 1
