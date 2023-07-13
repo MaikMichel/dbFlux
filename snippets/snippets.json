@@ -295,7 +295,7 @@
     "  ",
     "  :new.${1:column_prefix}_modified_at := current_date;",
     "  :new.${1:column_prefix}_modified_by := nvl(sys_context('APEX\\$SESSION', 'APP_USER'), user);",
-    "end adressen_biud;",
+    "end ${TM_FILENAME_BASE}_biu;",
 		"/$0"
 		],
 		"description": "Add a trigger to fill primary key column and audit infos"
