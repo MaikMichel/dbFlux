@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "4.7.1",
+	"version": "4.7.2",
 	"engines": {
 		"vscode": "^1.60.0"
 	},
@@ -279,7 +279,7 @@
 				"command": "dbFlux.executeTestPackage",
 				"title": "Execute utPLSQL test with current Package",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*[\/|\\\\]db[\/|\\\\].*[\/|\\\\]tests[\/|\\\\]packages$/"
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*[/|\\\\]db[/|\\\\].*[/|\\\\]tests[/|\\\\]packages$/"
 			},
 			{
 				"command": "dbFlux.resetPassword",
