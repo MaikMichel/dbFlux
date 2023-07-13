@@ -16,8 +16,10 @@ initialize_session;
 CONN_ARRY=( "$@" )
 
 basefl=$(basename -- "${DBFLOW_FILE2TEST}")
+dirfl=$(dirname -- "${DBFLOW_FILE2TEST}")
 extension="${basefl##*.}"
-base_package=${basefl/"test_"/}
+
+base_package=${basefl}
 base_package=${base_package/\.$extension/}
 
 echo -e "${CLR_LBLUE}Connection:${NC}   ${WHITE}${DBFLOW_DBTNS}${NC}"
@@ -27,7 +29,7 @@ if [[ "${basefl}" != "" ]]; then
 echo -e "${CLR_LBLUE}File:${NC}         ${WHITE}${basefl}${NC}"
 fi
 if [[ "${base_package}" != "" ]]; then
-  echo -e "${CLR_LBLUE}Package:${NC}      ${WHITE}test_${base_package}${DBFLOW_METHOD2TEST}${NC}"
+  echo -e "${CLR_LBLUE}Package:${NC}      ${WHITE}${base_package}${DBFLOW_METHOD2TEST}${NC}"
 fi
 echo -e "${CLR_LBLUE}Format:${NC}       ${WHITE}${DBFLOW_TESTOUTPUT}${NC}"
 echo
@@ -54,22 +56,14 @@ if [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
   array+=("set serveroutput on")
 
 
-
-
   if [[ -n ${DBFLOW_FILE2TEST} ]]; then
-    array+=("exec dbms_output.put_line(chr(27) || '${BSE_LVIOLETE}Executing Tests on: test_${base_package}${DBFLOW_METHOD2TEST}'||chr(27) || '${BSE_RESET}');")
+    array+=("exec dbms_output.put_line(chr(27) || '${BSE_LVIOLETE}Executing Tests on: ${base_package}${DBFLOW_METHOD2TEST}'||chr(27) || '${BSE_RESET}');")
     array+=("prompt ")
-    array+=("exec ut.run('test_${base_package}${DBFLOW_METHOD2TEST}', a_color_console => true);")
-
-    # array+=("exec ut.run('test_${base_package}${DBFLOW_METHOD2TEST}', ut_junit_reporter(), a_color_console => true);")
-
+    array+=("exec ut.run('${base_package}${DBFLOW_METHOD2TEST}', a_color_console => true);")
   else
     array+=("exec dbms_output.put_line(chr(27) || '${BSE_LVIOLETE}Executing Tests'||chr(27) || '${BSE_RESET}');")
     array+=("prompt ")
     array+=("exec ut.run(a_color_console => true);")
-
-    # array+=("exec ut.run(ut_junit_reporter(), a_color_console => true);")
-
   fi
 
   for arg in "${CONN_ARRY[@]}"; do
@@ -139,7 +133,7 @@ else
     ## FullExport
     PREPSTMT=":contents := to_base64(clob_to_blob(get_junit_full_xml()));"
     if [[ -n ${DBFLOW_FILE2TEST} ]]; then
-      PREPSTMT=":contents := to_base64(clob_to_blob(get_junit_part_xml('test_${base_package}${DBFLOW_METHOD2TEST}')));"
+      PREPSTMT=":contents := to_base64(clob_to_blob(get_junit_part_xml('${base_package}${DBFLOW_METHOD2TEST}')));"
     fi
 
     # the export itself

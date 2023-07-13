@@ -279,7 +279,7 @@
 				"command": "dbFlux.executeTestPackage",
 				"title": "Execute utPLSQL test with current Package",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*tests.*$/"
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*[\/|\\\\]db[\/|\\\\].*[\/|\\\\]tests[\/|\\\\]packages$/"
 			},
 			{
 				"command": "dbFlux.resetPassword",
