@@ -11,7 +11,7 @@ import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig, s
 import { outputLog } from './helper/OutputChannel';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
-import { registerAddApplicationCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerCopyFunctionWithPackagenameToClipBoard, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
+import { registerAddApplicationCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerCopySelectionWithFilenameToClipBoard, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
 import { revealItemWizard } from "./wizards/RevealItemWizard";
 import { registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
@@ -219,7 +219,7 @@ export async function activate(context: ExtensionContext) {
 
     // Open SpecOrBody
     context.subscriptions.push(registerOpenSpecOrBody());
-    context.subscriptions.push(registerCopyFunctionWithPackagenameToClipBoard());
+    context.subscriptions.push(registerCopySelectionWithFilenameToClipBoard());
 
     // Convert current project to dbFlow project
     context.subscriptions.push(registerConvert2dbFLow(projectInfos, "dbFlux.convert.to.dbFlow", context));

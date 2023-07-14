@@ -294,10 +294,10 @@
 				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
 			},
 			{
-				"command": "dbFlux.copyFunctionWithPackagenameToClipBoard",
+				"command": "dbFlux.copySelectionWithFilenameToClipBoard",
 				"title": "Write package name.selection to ClipBoard",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
+				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb|sql]$/"
 			},
 			{
 				"command": "dbFlux.wrapLogSelection",
@@ -387,10 +387,10 @@
 				"when": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
 			},
 			{
-				"command": "dbFlux.copyFunctionWithPackagenameToClipBoard",
+				"command": "dbFlux.copySelectionWithFilenameToClipBoard",
 				"key": "ctrl+alt+a",
 				"mac": "ctrl+alt+a",
-				"when": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
+				"when": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb|sql]$/"
 			},
 			{
 				"command": "dbFlux.compileSchemas",

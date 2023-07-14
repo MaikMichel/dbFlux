@@ -858,27 +858,37 @@ export function registerOpenSpecOrBody() {
 
 
 
-export function registerCopyFunctionWithPackagenameToClipBoard() {
-  return commands.registerCommand("dbFlux.copyFunctionWithPackagenameToClipBoard", async () => {
+export function registerCopySelectionWithFilenameToClipBoard() {
+  return commands.registerCommand("dbFlux.copySelectionWithFilenameToClipBoard", async () => {
     const fileName = window.activeTextEditor?.document.fileName;
+
     if (fileName) {
       const extension = path.extname(fileName);
       if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
         const packageName = path.basename(fileName).split('.')[0].toLowerCase();
 
-        const editor = window.activeTextEditor!;
-        const selection = editor.selection;
-        if (selection && !selection.isEmpty) {
-            const selectionRange = new Range(selection.start.line, selection.start.character, selection.end.line, selection.end.character);
-            const highlighted = editor.document.getText(selectionRange);
+        copyWithSection(packageName);
+      } else {
+        if (extension.toLowerCase() === ".sql" && isTableFile(fileName)) {
+          const tableName = path.basename(fileName).split('.')[0].toLowerCase();
 
-            env.clipboard.writeText(packageName + '.' + highlighted)
-            window.setStatusBarMessage('dbFlux: ' + packageName + '.' + highlighted + ' written to ClipBoard', 2000);
+          copyWithSection(tableName);
         }
-
       }
     }
   });
+}
+
+function copyWithSection(objectName: string) {
+  const editor = window.activeTextEditor!;
+  const selection = editor.selection;
+  if (selection && !selection.isEmpty) {
+    const selectionRange = new Range(selection.start.line, selection.start.character, selection.end.line, selection.end.character);
+    const highlighted = editor.document.getText(selectionRange);
+
+    env.clipboard.writeText(objectName + '.' + highlighted);
+    window.setStatusBarMessage('dbFlux: ' + objectName + '.' + highlighted + ' written to ClipBoard', 2000);
+  }
 }
 
 function addHookFileToPath(folder: string, filename: string) {
@@ -895,4 +905,7 @@ function addHookFileToPath(folder: string, filename: string) {
       window.showTextDocument(doc, {preview: false});
     });
   }
+}
+function isTableFile(filename: string):boolean {
+  return filename.includes(path.sep + 'tables' + path.sep)
 }

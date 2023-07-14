@@ -479,7 +479,7 @@ You can enable this feature within the settings for `Rest APIEnabled`. You can f
 | dbFlux.addReportFolder        | Add REPORT type                            |
 | &nbsp; |   |
 | dbFlux.openSpecOrBody         | Open corresponding Spec or Body            |
-| dbFlux.copyFunctionWithPackagenameToClipBoard | Write package name.selection to ClipBoard
+| dbFlux.copySelectionWithFilenameToClipBoard | Write package name.selection or tablename.columnname to ClipBoard
 | dbFlux.gotoToFolder           | Goto folder                                |
 | dbFlux.wrapLogSelection       | Wrap Selection with Logging Method         |
 | dbFlux.wrapLogSelection.down  | Wrap Selection with Logging Method         |
