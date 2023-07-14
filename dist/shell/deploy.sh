@@ -53,7 +53,7 @@ fi
 use_error_log=()
 install_apex=()
 read_error_log=()
-if [[ ${DBFLOW_USE_SLOG} == "YES" ]]; then
+if [[ ${DBFLOW_USE_SLOG} == "YES" ]] && [[ ${DBFLOW_MOVEYN} != "YES" ]]; then
   use_error_log+=( "set errorlogging on" )
   use_error_log+=( "truncate table sperrorlog;" )
   use_error_log+=( "set errorlogging on" )
