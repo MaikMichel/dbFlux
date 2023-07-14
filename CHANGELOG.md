@@ -1,5 +1,13 @@
 # Change Log
 
+## [4.8.0 - 2023-07-14]
+- New: Add Option to copy column with tablename using Ctrl+Alt+A
+- Fix: issue when compiling apex/**/install.sql on Mac
+- Fix: extract current package name when file does not start with "test_"
+- Fix: Ending triggerline in dbf snippets
+- Fix: Erroroutput when uploading CSS or JS when SQLplus errorlogging is on
+
+
 ## [4.7.0 - 2023-07-04]
 - New: Install APEX Applications to target APP ID, when comipiling apex/*/f###/install.sql
 - New: Store selection of schemas when compiling all or testing all
