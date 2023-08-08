@@ -60,6 +60,7 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
       });
 
       this.updateDecorations();
+
     } catch (e:any) {
       console.error(e);
       await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
@@ -131,6 +132,7 @@ export function registerLockCurrentFileCommand(projectInfos: IProjectInfos, deco
 
           window.showInformationMessage(`${data.message}`)
           decoProvider.refreshCache();
+          await commands.executeCommand('dbflux.dblock.treeview.view_refresh');
         } else {
           // const text = response.text();
           // console.log('text', text);
@@ -170,6 +172,7 @@ export function registerUnLockCurrentFileCommand(projectInfos: IProjectInfos, de
 
           window.showInformationMessage(`${data.message}`)
           decoProvider.refreshCache();
+          await commands.executeCommand('dbflux.dblock.treeview.view_refresh');
         } else {
           outputLog(`Status from ${urlFromSettings} was ${response.status}`);
         }
