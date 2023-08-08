@@ -1,6 +1,8 @@
 import { commands, Event, EventEmitter, ProviderResult, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window, workspace } from 'vscode'
 import { ViewFileDecorationProvider } from '../provider/ViewFileDecorationProvider';
 import { getWorkspaceRootPath } from '../helper/utilities';
+import { homedir } from 'os';
+import { basename } from 'path';
 
 
 class DBLockTreeItem extends TreeItem
@@ -28,7 +30,7 @@ class DBLockTreeItem extends TreeItem
 // tree_view will created in our entry point
 export class DBLockTreeView implements TreeDataProvider<DBLockTreeItem>
 {
-    static osUser:string = process.env.username?process.env.username:"none";
+    static osUser:string = process.env.username?process.env.username:basename(homedir());
 
 
     private m_data : DBLockTreeItem [] = [];

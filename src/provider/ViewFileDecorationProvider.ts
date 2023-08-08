@@ -5,6 +5,8 @@ import { ConfigurationManager } from '../helper/ConfigurationManager';
 import { outputLog } from '../helper/OutputChannel';
 import { rtrim } from '../helper/utilities';
 import { getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
+import { homedir } from 'os';
+import { basename } from 'path';
 
 export class ViewFileDecorationProvider implements FileDecorationProvider, Disposable {
   private _onDidChangeFileDecorations = new EventEmitter<undefined>();
@@ -21,7 +23,7 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
 
   constructor(context: ExtensionContext) {
     this.context = context;
-    this.osUser = process.env.username?process.env.username:"none";
+    this.osUser = process.env.username?process.env.username:basename(homedir());
     this.disposable = Disposable.from(window.registerFileDecorationProvider(this));
   }
 
@@ -114,7 +116,7 @@ export function registerLockCurrentFileCommand(projectInfos: IProjectInfos, deco
         method: 'POST',
         headers: {  Accept: '*/*',
                   'User-Agent': 'VSCode (dbFlux)',
-                  'username': process.env.username?process.env.username:"none",
+                  'username': process.env.USERNAME?process.env.USERNAME:basename(homedir()),
                   'mandant': ConfigurationManager.getDBLockMandantToken()
             }
       };

@@ -14,6 +14,7 @@ import { ReportTemplater } from "../templaters/ReportTemplater";
 import fetch from "node-fetch";
 import { outputLog } from "../helper/OutputChannel";
 import { CompileSchemasProvider } from "./CompileSchemasProvider";
+import { homedir } from "os";
 
 
 const which = require('which');
@@ -315,7 +316,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
           if (dbLockService) {
             try {
               const locked:ILockedFile = await isfileLockedByAnotherUser(projectInfos.projectName!, relativeFileName);
-              const currentUser = process.env.username?process.env.username:"none";
+              const currentUser = process.env.username?process.env.username:path.basename(homedir());
               console.log('currentUser', currentUser);
               if (locked.isLocked && locked.user !== currentUser) {
                 compilable = false;
