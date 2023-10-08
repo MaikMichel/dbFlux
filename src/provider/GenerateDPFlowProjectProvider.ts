@@ -34,6 +34,8 @@ export interface State {
   defaultApps:         string;           // 100,200
   defaulsModules:      string;           // api,test
 
+  logtopath:           string;           // log to path
+
 }
 
 interface GenerateDBFlowTaskDefinition extends TaskDefinition {
@@ -44,9 +46,15 @@ interface GenerateDBFlowTaskDefinition extends TaskDefinition {
 
 export class GenerateDPFlowProjectProvider extends AbstractBashTaskProvider implements TaskProvider {
   static dbFluxType: string = "dbFlux";
+  state: State;
 
-  provideTasks(): Thenable<Task[]> | undefined {
-    return this.getGenerateTask();
+  constructor(context: ExtensionContext, state: State) {
+    super(context);
+    this.state = state;
+  }
+
+  async provideTasks(): Promise<Task[] | undefined> {
+    return await this.getGenerateTask();
   }
 
   resolveTask(task: Task): Task | undefined {
@@ -59,8 +67,8 @@ export class GenerateDPFlowProjectProvider extends AbstractBashTaskProvider impl
 
     const runTask: IBashInfos = this.prepExportInfos();
 
-    const state = await initializeDBFlowProjectWizard(this.context);
-    result.push(this.createCreateTask(this.createCreateDBFlowTaskDefinition("createDBFlow", runTask, state)));
+    // const state = await initializeDBFlowProjectWizard(this.context);
+    result.push(this.createCreateTask(this.createCreateDBFlowTaskDefinition("createDBFlow", runTask, this.state)));
 
     return Promise.resolve(result);
   }
@@ -99,6 +107,7 @@ export class GenerateDPFlowProjectProvider extends AbstractBashTaskProvider impl
           "wiz_with_tools":        definition.state.includeDefaultTools.charAt(0),
           "wiz_apex_ids":          definition.state.defaultApps,
           "wiz_rest_modules":      definition.state.defaulsModules,
+          "wiz_logpath":           definition.state.logtopath,
           "env_only": "NO"
         },
       })
@@ -134,12 +143,11 @@ export class GenerateDPFlowProjectProvider extends AbstractBashTaskProvider impl
 
 export function registerCreateDBFlowProject(command: string, context: ExtensionContext) {
   return commands.registerCommand(command, async () => {
+    // initializeProjectWizard(context)
+    const state = await initializeDBFlowProjectWizard(context);
+     // initialize dbFlow as submodule
+     context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new GenerateDPFlowProjectProvider(context, state)));
 
-    // initialize dbFlow as submodule
-    context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new GenerateDPFlowProjectProvider(context)));
-
-    await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: createDBFlow");
-
-
-  });
+     await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: createDBFlow");
+  })
 }

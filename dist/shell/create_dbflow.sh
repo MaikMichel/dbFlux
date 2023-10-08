@@ -10,7 +10,6 @@ source "${SCRIPT_DIR}/_lib.sh"
 initialize_session;
 
 ######################################################
-echo "Test"
 
 echo -e "${CYAN}Generating project with following options${NC}"
   echo -e "  Project:                          ${BWHITE}${wiz_project_name}${NC}"
@@ -22,6 +21,7 @@ echo -e "${CYAN}Generating project with following options${NC}"
   echo -e "  Admin User:                       ${BWHITE}${wiz_db_admin_user}${NC}"
   echo -e "  Deployment User:                  ${BWHITE}${wiz_db_app_user}${NC}"
   echo -e "  Location depot:                   ${BWHITE}${wiz_depot_path}${NC}"
+  echo -e "  Location logs:                    ${BWHITE}${wiz_logpath}${NC}"
   echo -e "  Branch is mapped to Stage:        ${BWHITE}${wiz_stage}${NC}"
   echo -e "  SQl commandline:                  ${BWHITE}${wiz_sqlcli}${NC}"
   echo -e "  Install default tools:            ${BWHITE}${wiz_with_tools}${NC}"

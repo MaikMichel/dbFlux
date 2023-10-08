@@ -22,8 +22,9 @@ import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticF
 import { DBLockTreeView } from "./ui/DBLockTreeView";
 
 import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
-import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
 import { registerExportCurrentTableDefinitionCommand } from "./provider/ExportTableAsJSONProvider";
+import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
+
 // import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
 // import { ApplicationItemsCompletitionProvider } from "./provider/ApplicationItemsCompletitionProvider";
 

@@ -31,6 +31,8 @@ export async function initializeDBFlowProjectWizard(context: ExtensionContext) :
     state.dbAppUser    = applyEnv.parsed?.DB_APP_USER;
     state.depotPath    = applyEnv.parsed?.DEPOT_PATH;
     state.stageBranch  = applyEnv.parsed?.STAGE;
+    state.logtopath    = applyEnv.parsed?.LOG_PATH;
+
 
     await MultiStepInput.run(input => inputProjectName(input, state));
 
@@ -285,6 +287,19 @@ export async function initializeDBFlowProjectWizard(context: ExtensionContext) :
       shouldResume: shouldResume,
     });
 
+    return (input: MultiStepInput) => inputDefaultLogPaths(input, state);
+  }
+
+  async function inputDefaultLogPaths(input: MultiStepInput, state: Partial<State>) {
+    state.logtopath = await input.showInputBox({
+      title:        state.title!,
+      step:         15,
+      totalSteps:   state.totalSteps!,
+      value:        state.logtopath || '_logs',
+      prompt:       `Enter path to place logfiles into after installation - `,
+      validate:     validateValueIsRequiered,
+      shouldResume: shouldResume,
+    });
   }
 
   function shouldResume() {
@@ -309,73 +324,6 @@ export async function initializeDBFlowProjectWizard(context: ExtensionContext) :
 
   /********************************* */
   const state = await collectInputs();
-  console.log('state', state);
 
-  /*const termName = 'dbFLow';
-
-  const term = window.createTerminal({name:termName,
-    env: {
-      "wiz_project_name":      state.projectName,
-      "wiz_project_mode":      state.projectType.charAt(0),
-      "wiz_build_branch":      state.buildBranch,
-      "wiz_create_changelogs": state.createChangelogs.charAt(0),
-      "wiz_chl_schema":        state.changeLogSchema,
-      "wiz_db_tns":            state.dbConnection,
-      "wiz_db_admin_user":     state.dbAdminUser,
-      "wiz_db_admin_pwd":      state.dbAdminPwd,
-      "wiz_db_app_user":       state.dbAppUser,
-      "wiz_db_app_pwd":        state.dbAppPwd,
-      "wiz_depot_path":        state.depotPath,
-      "wiz_stage":             state.stageBranch,
-      "wiz_sqlcli":            state.sqlcli,
-      "wiz_with_tools":        state.includeDefaultTools.charAt(0),
-      "wiz_apex_ids":          state.defaultApps,
-      "wiz_rest_modules":      state.defaulsModules,
-      "env_only": "NO"
-    }
-  });
-
-
-    window.onDidCloseTerminal(event => {
-      if (term && termName === event.name) {
-        term.dispose();
-      }
-    });
-
-
-    term.show(true);
-    if (!existsSync(path.join(ws, '.git'))) {
-      term.sendText(`# Initializing git`);
-      term.sendText(`git init`);
-    }
-    console.log(".dbFlow", );
-    if (!existsSync(path.join(ws, '.dbFLow'))) {
-
-      term.sendText(`# clone dbFlow as submodule`);
-      term.sendText(`git submodule add --force https://github.com/MaikMichel/dbFlow.git .dbFlow`);
-
-      term.sendText(`# dbFlow initialized`);
-      term.sendText(`# Documentation can be found here: https://maikmichel.github.io/dbFlow`);
-    } else {
-      term.sendText(`# pulling changes from dbFLow submodule`);
-      term.sendText(`cd .dbFlow`);
-      term.sendText(`git pull`);
-      term.sendText(`cd ..`);
-    }
-
-    term.sendText(`.dbFLow/setup.sh -g \"${state.projectName}\" -w`);
-
-    commands.executeCommand("workbench.action.terminal.focus");
-
-    window
-      .showInformationMessage("Workspace will now be initialized. Just wait a moment and hit reload to reload dbFlux settings", "Reload", "Cancel")
-        .then(answer => {
-          if (answer === "Reload") {
-            // Run function
-            commands.executeCommand("dbFlux.reloadExtension");
-          }
-        })
-        */
-    return state;
-
+  return state;
 }
