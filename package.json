@@ -12,7 +12,7 @@
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
 	"version": "4.8.0",
 	"engines": {
-		"vscode": "^1.60.0"
+		"vscode": "^1.80.0"
 	},
 	"keywords": [
 		"plsql",
@@ -20,6 +20,11 @@
 		"apex",
 		"utplsql"
 	],
+	"extensionKind": [
+		"ui",
+		"workspace"
+	],
+
 	"preview": false,
 	"author": {
 		"name": "Maik Michel"
@@ -118,6 +123,18 @@
 				"command": "dbFlux.initialize.dbFlow.Project",
 				"title": "Initialize Project structure (dbFlow)",
 				"category": "dbFlux"
+			},
+			{
+				"command": "dbFlux.addFeatureSet",
+				"title": "Add FeatureSet as SubModule",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.syncFeatureSet",
+				"title": "Sync FeatureSet from SubModule",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
 			},
 			{
 				"command": "dbFlux.splitToFiles",

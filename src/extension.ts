@@ -24,6 +24,8 @@ import { DBLockTreeView } from "./ui/DBLockTreeView";
 import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
 import { registerExportCurrentTableDefinitionCommand } from "./provider/ExportTableAsJSONProvider";
 import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
+import { registerAddFeatureSet, registerSyncFeatureSet } from "./provider/FeatureStoreProvider";
+
 
 // import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
 // import { ApplicationItemsCompletitionProvider } from "./provider/ApplicationItemsCompletitionProvider";
@@ -41,7 +43,7 @@ export async function activate(context: ExtensionContext) {
   if ((installationType.update) && await extensionManager.askShowChangelog()) {
     extensionManager.showChangeLog();
   }
-
+  // StatusBar.initStatusBar(context);
   // get Mode
   const dbFluxMode = getDBFlowMode(context);
 
@@ -143,11 +145,8 @@ export async function activate(context: ExtensionContext) {
     // Export DBObject
     context.subscriptions.push(registerExportDBObjectCommand(projectInfos, context));
 
-
-
     // Export APEX Static Files
     context.subscriptions.push(registerExportStaticFilesCommand(projectInfos, context));
-
 
     // Export one APEX Static File
     context.subscriptions.push(registerExportCurrentStaticFileCommand(projectInfos, context));
@@ -246,6 +245,9 @@ export async function activate(context: ExtensionContext) {
 
     }
 
+
+    context.subscriptions.push(registerAddFeatureSet("dbFlux.addFeatureSet", context));
+    context.subscriptions.push(registerSyncFeatureSet("dbFlux.syncFeatureSet", context));
 
     // context.subscriptions.push(languages.registerCompletionItemProvider('plsql', new PlsqlCompletionItemProvider(), '.'));
     // context.subscriptions.push(languages.registerCompletionItemProvider({language: 'plsql'}, new ApplicationItemsCompletitionProvider(), 'P', 'p'));

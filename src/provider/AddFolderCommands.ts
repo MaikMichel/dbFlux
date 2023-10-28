@@ -809,7 +809,7 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
     }).map((file:string) => "-- File: " + file.replace(/\\/g, '/').replace(dirName+"/", ''));
 
     if (files.length > 0) {
-      appendFileSync(fileName, "\n\n-- dbFux reverse scanned ... \n" + files.join("\n"));
+      appendFileSync(fileName, "\n\n-- dbFlux reverse scanned ... \n" + files.join("\n"));
       window.showInformationMessage("dbFlux: files successfully scanned your files");
     } else {
       window.showWarningMessage("dbFlux: nothing found ... \n Files have to include tablename.");

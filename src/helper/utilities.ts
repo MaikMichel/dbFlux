@@ -2,8 +2,15 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { existsSync, mkdirSync, readdirSync, realpathSync} from "fs";
 import { platform } from "os";
+import { logInfo } from "./OutputChannel";
+import { exec } from "child_process";
 
 const isWindows = platform() === 'win32'
+
+export interface KeyVal {
+  key: string;
+  value: string;
+}
 
 export function matchRuleShort(str:string, rule:string) {
   var escapeRegex = (str:string) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
@@ -251,4 +258,56 @@ export function getObjectNameFromFile(filePath:string):string {
 
   throw new Error("Unknown directory structur (getObjectNameFromFile) first part is not 'db != '" + parts[0]);
 
+}
+
+export function compareVersions(versionA: string, versionB: string): number {
+  const partsA = versionA.split('.').map(Number);
+  const partsB = versionB.split('.').map(Number);
+
+  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+      const numA = partsA[i] || 0;
+      const numB = partsB[i] || 0;
+
+      if (numA < numB) {
+          return -1;
+      } else if (numA > numB) {
+          return 1;
+      }
+  }
+
+  return 0;
+}
+
+export const execShell = (cmd: string, statusText: string, relTargetFolder: string = "") =>
+    new Promise<string>((resolve, reject) => {
+      logInfo(statusText);
+      exec(cmd, { cwd: path.join(getWorkspaceRootPath(), relTargetFolder) }, (err, out) => {
+
+        if (err) {
+          return reject(err);
+        }
+        return resolve(out);
+      });
+
+    });
+
+
+export const isJSON = (content: string): boolean => {
+    try {
+      JSON.parse(content);
+
+      return true;
+    } catch (error) {
+      return false;
+    }
+}
+
+export const replaceKeysWithValues = (inputString: string, keyValues: KeyVal[]): string => {
+  let resultString = inputString;
+
+  keyValues.forEach(({ key, value }) => {
+      resultString = resultString.replace(key, value);
+  });
+
+  return resultString;
 }
