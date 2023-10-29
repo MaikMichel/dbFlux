@@ -31,6 +31,7 @@ Using this extension enables you to develop Oracle Database and APEX application
 - Addionaly Support for dbFlow and XCL projects
 - [**Lock and unlock Files**](#lock-and-unlock-files 'Jump to Lock and unlock Files'), so you can't accidentally delete changes allready made by another person
 - [**Export APEX Static Application Files**](#export-apex-static-application-files 'Jump to Export APEX Static Application Files') to static folder
+- [**Add FeatureSet as SubModule**](#add-featuresets 'Jump to Add FeatureSet as SubModule') to your repo to benefit from other great contributions
 
 
 
@@ -434,6 +435,12 @@ In FlexSchema mode **dbFlux** additionally offers you the command `dbFLux: Add W
 
 In FlexSchema mode, dbFLux also offers you the command `dbFLux: Add Schema`. With this command you can add Schemas inside the different main directories: **`apex, db, rest, static`**. You will be shown a selection of these folders, in which you have to select all or only one, before you enter the actual schema name.
 
+<p align="center">
+  <br/>
+  <img src="images/screen-rec-vscode-add-schema.gif" style="max-width:600px; width:100%"  alt="Demo Add Schema">
+  <br/>
+  <br/>
+</p>
 
 ### Lock and unlock Files [#](#lock-and-unlock-files 'Lock and unlock Files')
 > feature is in preview - things might change
@@ -441,12 +448,53 @@ In FlexSchema mode, dbFLux also offers you the command `dbFLux: Add Schema`. Wit
 You can enable this feature within the settings for `Rest APIEnabled`. You can find the implementation for an ORDS-REST endpoint at (https://github.com/MaikMichel/dbLock). You have to install it accordingly. It is sufficient to execute the installation file in a schema of your choice. At the end of the installation a token will be displayed. This token has to be added in addition to the URL under which this REST service is now accessible in settings as well. (`Rest APIToken`, `Rest APIUrl`)
 
 
-<p align="center">
-  <br/>
-  <img src="images/screen-rec-vscode-add-schema.gif" style="max-width:600px; width:100%"  alt="Demo Add Schema">
-  <br/>
-  <br/>
-</p>
+### Add FeatureSet as SubModule [#](#add-featuresets 'Add FeatureSet as SubModule')
+
+With the command `Add FeatureSet as SubModule` you can add a Git-Repository to your project. This will add files from this repo to your directory. The advantage here is that you make the feature part of your deployment and don't include it as a dependency. It becomes part of your project. However, **dbFlux** remembers the source repository in order to update these changes in your project later, if there has been an update or a new version.
+
+In the background **dbFlux** will add this repo as a Git-SubModule to your project. Each feature is written to its own directory. **dbFlux** puts the directory `.featureSets` in the root directory of your project.
+
+Such a feature set needs a `manifest.json` file in its own root directory, which specifies which files should be copied where, and whether they should always be copied or only initially. **dbFlux** will also check if there is a readme or a changelog file to show you the latest info or instructions for these features. **dbFlux** creates a catalogue file `.featureCatalog` for itself in the main directory. This file contains the features that have been added, their versions and a list of the files that have been copied.
+
+Since the feature you add to your project cannot know the names of your DB schema, there are so-called `replacers` in the `mainfest.json`. These define the marker with which the schema is marked in the source file name, in order to replace it with your respective input after an appropriate technical question.
+
+Structure of `manifest.json`:
+
+```json
+{
+    "feature": "utQualityChecks",
+    "version": "1.0.0",
+    "replacers": [
+        {
+            "title": "Please enter Application Schema",
+            "marker": "{APP_SCHEMA}",
+            "type": "SCHEMA"
+        }
+    ],
+    "instructions": [
+        {
+            "file": "db/qualy_app/tests/packages/ut_app_quality_checks_config.pks",
+            "target": "db/{APP_SCHEMA}/tests/packages/ut_app_quality_checks_config.pks",
+            "initial": true
+        },
+        {
+            "file": "db/qualy_app/tests/packages/ut_app_quality_checks.pks",
+            "target": "db/{APP_SCHEMA}/tests/packages/ut_app_quality_checks.pks"
+        },
+        {
+            "file": "db/qualy_app/tests/packages/ut_app_quality_checks.pkb",
+            "target": "db/{APP_SCHEMA}/tests/packages/ut_app_quality_checks.pkb"
+        }
+    ]
+}
+```
+
+If such a file exists in your feature repo, it can be added to your project as a FeatureSet.
+
+As soon as your project has the file `.featureCatalog`, dbFlux will check at the start of VSCode whether the version of the feature in the directory of the SubModule has increased. If this is the case, you will be informed accordingly and can perform a synchronisation directly. This option is also available manually by executing the command `Sync FeatureSet from SubModule`.
+
+
+
 
 
 ### List of all commands
@@ -490,6 +538,9 @@ You can enable this feature within the settings for `Rest APIEnabled`. You can f
 | dbFlux.initializeProject      | Initialize Project structure (dbFlux)               |
 | dbFlux.initialize.dbFlow.Project      | Initialize Project structure (dbFlow) |
 | dbFlux.resetPassword          | Reset password                             |
+| &nbsp; |   |
+| dbFlux.addFeatureSet          | Add FeatureSet as SubModule                |
+| dbFlux.syncFeatureSet         | Sync FeatureSet from SubModule             |
 
 
 # Contributors or Influencers &#x1F64F;&#x2764;

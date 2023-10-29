@@ -1,5 +1,12 @@
 # Change Log
 
+
+## [4.9.0 - 2023-10-29]
+- New: Add command to Add and Sync FeatureSets as Git SubModule (Customized Repos including instructions how to copy files from)
+- Fix: Promise Error in dbFlow creation wizard
+- Fix: dbLock add missing refresh
+- Fix: geting undefined from process.env in WSL
+
 ## [4.8.0 - 2023-07-14]
 - New: Add Option to copy column with tablename using Ctrl+Alt+A
 - Fix: issue when compiling apex/**/install.sql on Mac
