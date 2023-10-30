@@ -21,9 +21,9 @@
 		"utplsql"
 	],
 	"extensionKind": [
-		"ui",
 		"workspace"
 	],
+
 	"preview": false,
 	"author": {
 		"name": "Maik Michel"
