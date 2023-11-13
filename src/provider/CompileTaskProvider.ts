@@ -345,6 +345,10 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
                   await window.showWarningMessage(`Unknown Workspace! Missing item in project configuration?`);
                   return;
                 }
+              } else {
+                // Reset target props
+                CompileTaskStore.getInstance().targetApplicationID = undefined;
+                CompileTaskStore.getInstance().targetWorkspace = undefined;
               }
               // call the compile Task itself
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");

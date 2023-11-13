@@ -2,7 +2,7 @@ import { QuickPickItem, window, ExtensionContext, Uri, workspace, commands, View
 
 import * as path from "path";
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFile, writeFileSync } from 'fs';
-import { outputLog } from '../helper/OutputChannel';
+import { logInfo, outputLog } from '../helper/OutputChannel';
 import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim } from '../helper/utilities';
 import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
 import { getDBUserFromPath, getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
@@ -825,6 +825,7 @@ export function registerOpenSpecOrBody() {
     if (fileName) {
       const extension = path.extname(fileName);
       if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
+        logInfo('fileName: ' + fileName);
         let extensionNew = "xxx";
         if (extension === ".pks") {
           extensionNew = ".pkb";
