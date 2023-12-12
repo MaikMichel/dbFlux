@@ -475,8 +475,11 @@ export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, 
       if (compTaskStoreInstance.appPwd !== undefined) {
         const userName = buildConnectionUser(projectInfos, "", undefined);
         const termName = cli;
-        const term = window.createTerminal({name:termName,
-          env: { "DBFLUX_TERM_PWD": compTaskStoreInstance.appPwd}});
+
+        // const term = window.createTerminal({name:termName, hideFromUser: true,
+        //   env: { "DBFLUX_TERM_PWD": compTaskStoreInstance.appPwd}});
+        // const term = window.createTerminal(termName, cli, [userName + "/" + compTaskStoreInstance.appPwd + "@" + projectInfos.dbTns]);
+        const term = window.createTerminal(termName, cli, [userName + "@" + projectInfos.dbTns]);
           // term.show(true);
 
           window.onDidCloseTerminal(event => {
@@ -484,11 +487,11 @@ export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, 
               term.dispose();
             }
           });
-
-          term.sendText(cli + " " + userName + "/${DBFLUX_TERM_PWD}@" + projectInfos.dbTns);
-          term.sendText("DBFLUX_TERM_PWD=");
-          term.sendText("exit");
+          // term.show(false);
+          term.sendText(compTaskStoreInstance.appPwd);
           term.show(true);
+
+          // term.sendText("exit");
           commands.executeCommand("workbench.action.terminal.focus");
 
       }
