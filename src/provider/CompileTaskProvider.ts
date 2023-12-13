@@ -479,7 +479,8 @@ export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, 
         // const term = window.createTerminal({name:termName, hideFromUser: true,
         //   env: { "DBFLUX_TERM_PWD": compTaskStoreInstance.appPwd}});
         // const term = window.createTerminal(termName, cli, [userName + "/" + compTaskStoreInstance.appPwd + "@" + projectInfos.dbTns]);
-        const term = window.createTerminal(termName, cli, [userName + "@" + projectInfos.dbTns]);
+        // const term = window.createTerminal(termName, cli, [userName + "@" + projectInfos.dbTns]);
+        const term = window.createTerminal(termName, 'bash', ['-cl', cli + " " + userName + "/" + compTaskStoreInstance.appPwd + "@" + projectInfos.dbTns]);
           // term.show(true);
 
           window.onDidCloseTerminal(event => {
@@ -488,7 +489,7 @@ export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, 
             }
           });
           // term.show(false);
-          term.sendText(compTaskStoreInstance.appPwd);
+          // term.sendText(compTaskStoreInstance.appPwd);
           term.show(true);
 
           // term.sendText("exit");
