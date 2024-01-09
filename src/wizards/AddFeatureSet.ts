@@ -19,8 +19,17 @@ export async function addFeatureSet(context: ExtensionContext) {
     });
   }
 
-  async function validateValueIsRequiered(name: string) {
-    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
+  async function isURL(urlString :string) {
+    try {
+      new URL(urlString);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function validateValueIsRequieredAndURL(name: string) {
+    return (name == undefined || name.length === 0) ? 'Value is required' : await isURL(name) ? undefined:'Value must be an URL';
   }
 
   async function collectInputs() {
@@ -35,9 +44,9 @@ export async function addFeatureSet(context: ExtensionContext) {
       title,
       step: 1,
       totalSteps: 1,
-      value: state.gitUrl || 'https://github.com/MaikMichel/utQualityChecks.git',
+      value: state.gitUrl || '',
       prompt: 'Enter URL to a Git-Repo to use as submodule',
-      validate: validateValueIsRequiered,
+      validate: validateValueIsRequieredAndURL,
       shouldResume: shouldResume
     });
   }

@@ -1,5 +1,9 @@
 # Change Log
 
+## [4.9.3 - 2023-12-13]
+- Fix: Missing colors in ZSH on Mac
+- Fix: Call to SQL+ or SQLcl in Linux/Mac
+- Fix: Validation of URL when adding a FeatureSet
 
 ## [4.9.0 - 2023-10-29]
 - New: Add command to Add and Sync FeatureSets as Git SubModule (Customized Repos including instructions how to copy files from)
