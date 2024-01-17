@@ -165,6 +165,12 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.createObjectTypeSnippet",
+				"title": "Create ObjectType Snippet",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
 				"command": "dbFlux.removeConfiguration",
 				"title": "Remove dbFlux configuration from workspace",
 				"category": "dbFlux",

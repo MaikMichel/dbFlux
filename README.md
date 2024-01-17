@@ -15,6 +15,8 @@
 
 Using this extension enables you to develop Oracle Database and APEX applications in a simpler flow
 
+## Features
+
 - [**Compile**](#compile 'Jump to Compile') your PL/SQL Objects to a folder specific connection
 - Compile all selected schemas
 - [**Install APEX Applications**](#install-apex-application 'Jump to Install APEX Application')
@@ -25,6 +27,7 @@ Using this extension enables you to develop Oracle Database and APEX application
   - Additionaly minify JavaScript and CSS Files
 - Run utPLSQL [**UnitTests**](#unittests 'Jump to Tests') for current TestPackage or on all selected schemas
 - [**Create objects**](#create-objects 'Jumpt to Create Objects')
+- [**Create object-type snippets**](#create-object-type-snippets 'Jumpt to Create Object-type Snippets')
 - Automatic run snippet on new files
 - [**Split or join files**](#split-and-join-files 'Jump to Split and Join Files '), when content is seperated with "-- File: "
 - [**Initialize project**](#initialize-project 'Jump to Initialize project') so you can just work
@@ -57,7 +60,7 @@ The Mode which dbFLux is using, will be display inside the statusbar with a litt
 ![Toolbar show dbFlux-Mode](images/doc_toolbar_dbflux_mode.png)
 
 
-### Project Structure  [#](#project-structure 'Project Structure ')
+### Project Structure  [#](#features 'Jumpt back to Features')
 
 dbFLux knows the following directories mostly at the root level of the project itself
 
@@ -130,7 +133,7 @@ Each schemafolder inside **db** folder except `_setup` is build with the same st
 
 
 ----
-## Initialize project [#](#initialize-project 'Initialize project')
+## Initialize project [#](#features 'Jumpt back to Features')
 
 
 To work with **dbFLux** you must either have an existing **dbFlow** or **xlc** project opened.
@@ -161,7 +164,7 @@ To work with **dbFLux** you must either have an existing **dbFlow** or **xlc** p
 If you have a **dbFlux** project configuration and you have not entered a password during initialization wizard steps, you will always be asked for a password per VSCode session. So you only have to enter it once. If you give an invalid password you have the ability to reset it by using command: `dbFlux: Reset password`. Once executed you will be prompted on next use.
 
 
-## Compile [#](#compile 'Compile')
+## Compile [#](#features 'Jumpt back to Features')
 
 
 The main task of dbFLux is to execute, compile or deploy SQL scripts to the target database.
@@ -222,7 +225,7 @@ dbFlux.customTriggerRuns | See above
 dbFlux.extensionsWhichShouldBeHandeldBySqlCli | File-Extension **dbFlux** can compile by using either SQLPlus or SQLcl. (sql, pks, pkb, tps, tpb, prc, fnc)
 
 
-## Upload to APEX Static Applicatoin Files [#](#upload-to-apex-static-applicatoin-files 'Upload to APEX Static Applicatoin Files')
+## Upload to APEX Static Applicatoin Files [#](#features 'Jumpt back to Features')
 
 **dbFlux** offers the functionality to upload JavaScript and CSS files directly into the APEX StaticFiles of the database. In addition, a minified version of each file is provided. These files can then be referenced on the corresponding page (`#APP_FILES#js/P4711_some_javascript#MIN#.js`). If you upload files from the subfolders `static/\**/src/js` or `static/\**/src/css` they will be minified and uploaded according to their file extension. Furthermore you have the possibility to upload files from other subfolders like `static/\**/src/img`. These will be treated as binary files and will not be processed further.
 
@@ -259,7 +262,7 @@ Compile current File     | `ctrl+alt+b`  | Upload the current or selected file a
 
 
 
-## Using Reports [#](#using-reports 'Using Reports')
+## Using Reports [#](#features 'Jumpt back to Features')
 
 If you want to upload files to a specific table or service, place them inside the reports folder/subfolder ex.: `reports/aop`. Here you have to put a template file with the name template.sql in. This template is merged into an upload file. When calling the command `dbFLux: Compile current file` you are prompted for a filename and a target directory to place the resulting file in.
 By using command `dbFlux: Add REPORT Type` you are asked to give a name. Then a respective subfolder is created underneath reports mainfolder with a template.sql file inside. You have to modify this file to place the resulting blob to a row of your target table.
@@ -281,7 +284,7 @@ Command                  | Key           | Description
 Compile current File     | `ctrl+alt+b`  | Creates the merged uploadfile and place it into specified target folder
 
 
-## UnitTests [#](#unittests 'UnitTests')
+## UnitTests [#](#features 'Jumpt back to Features')
 
 **dbFlux** supports the execution of unit tests with utPLSQL. There are two commands for this. With the command `Execute utPLSQL test with current Package` the currently opened package from the directory db/*/tests/packages can be explicitly tested. With the command `dbFLux: Execute utPLSQL tests` all tests of the selected schemas can be executed. Depending on the configuration (SingleSchema, MultiSchema or FlexSchema), the system connects to the relevant schema and executes the tests using utPLSQL.
 
@@ -305,7 +308,7 @@ Execute utPLSQL tests                     | `ctrl+alt+t ctrl+alt+t`  | Calls `ex
 
 
 
-## Create Objects [#](#create-objects 'Create Objects')
+## Create Objects [#](#features 'Jumpt back to Features')
 
 **dbFlux** also helps you to create database objects / files. With the command: `dbFLux: Create Object` *(`Ctrl+alt+c`)* you can specify in which directory you want to create an object, and what it should be called. Afterwards this file, for packages one per specification and body, will be created. You can use VSCode's built-in fuzzy search. This allows you to enter only parts of the query. For example, to create a package in the Logic schema, you only need to enter logpack.
 Furthermore **dbFlux** will try, if you have a snippet stored, to execute it directly when creating new files. It doesn't matter if the file was created with the command `dbFLux: Create Object` or by hand. If there is a snippet with the name of the respective subfolder starting from the schema folder (e.g. tables.sql or sources-packages.pks) separated by a hyphen and the corresponding extension, this will be executed. If there is no snippet stored by you, **dbFlux** will use its own snippet, if available.
@@ -319,6 +322,12 @@ Furthermore **dbFlux** will try, if you have a snippet stored, to execute it dir
   <br/>
 </p>
 
+
+## Create object-type snippets [#](#features 'Jumpt back to Features')
+
+With dbFlux you can now create a new object type snippet from the currently selected text or from a snippet that dbFlux already provides for the respective object type. These are automatically executed by dbFlux when a new object is created (see [**Create objects**](#create-objects 'Jumpt to Create Objects')).
+
+
 ### Keybindings
 
 Command       | Key               | Description
@@ -328,7 +337,7 @@ Create Object | `Ctrl+alt+c`      | Choose a folder by using fuzzy-search and na
 
 
 - Split und Join
-## Split and Join Files [#](#split-and-join-files 'Split and Join Files')
+## Split and Join Files [#](#features 'Jumpt back to Features')
 
 **dbFlux** focuses on the approach of the deployment framework **dbFLow**. The idea is to store all database objects in a directory separated by type. This concept becomes relevant later on when creating the deployment / the actual build. This is because in the database world, the correct order is important when deploying.
 During development this can sometimes become quite a pain. Especially when you want to create a table with different indexes, primary and foreign keys and check constraints. With **dbFlux** you can write these scripts first into one file. After successful execution these components / objects can be splitted with the command `dbFLux: Split File` *`(Ctrl+alt+s`)* into the appropriate files and then checked in for example into the version management. If you want to execute all objects as a single script at a later time, you can combine them into one file with the command `dbFLux: Join Files` *`(Ctrl+alt+j)`*.
@@ -382,12 +391,12 @@ Command                           | Key               | Description
 Write package name.selection to ClipBoard   | `Ctrl+alt+a`      | when active file extension is of: pks, pkb, tps, tpb
 
 
-## Install APEX Application [#](#install-apex-application 'Install APEX Application')
+## Install APEX Application [#](#features 'Jumpt back to Features')
 
 With **dbFlux** you can install the exported application right back to database. You just have to call the compile command on the `apex/**/f###/install.sql`. You will be prompted to enter a target ID of the application. The default ID will be the one from the path.
 
 
-## Export APEX Application [#](#export-apex-application 'Export APEX Application')
+## Export APEX Application [#](#features 'Jumpt back to Features')
 
 With **dbFlux** you can directly export the stored APEX applications. You just have to select an application by using command `dbFLux: Export APEX Application`. In the background APEX will then call SQLcl with the appropriate DB connection and export the application (splitted). In MultiSchema mode this is the APP schema.
 > Only those applications can be exported which have been stored in the directory structure. See command: `dbFLux: Add APEX Application`.
@@ -395,17 +404,17 @@ With **dbFlux** you can directly export the stored APEX applications. You just h
 You have the option to pass addional arguments or options to the export command of SQLcl. Just enter them in the settings.
 
 
-## Export REST Module [#](#export-rest-module 'Export REST Module')
+## Export REST Module [#](#features 'Jumpt back to Features')
 
 With **dbFlux** you can directly export the stored REST modules. All you have to do is to select a module by command `dbFLux: Export REST Module`. In the background APEX will then call SQLcl with the appropriate DB connection and export the module. In MultiSchema mode this is the APP schema.
 > Only those modules can be exported which have been stored in the directory structure. See command: `dbFLux: Add REST Module`.
 
-## Export DB Schema or Object [#](#export-db-schema-or-object 'Export DB Schema or Object')
+## Export DB Schema or Object [#](#features 'Jumpt back to Features')
 
 **dbFlux** can export an entire schema or just a specific object. To export a schema simply call the command: ``dbFlux: Export DB Schema into Folder`` and select the schema you want to export. **dbFlux** will show you the corresponding schema folders here. Select one. Additionally you can set the destination directory. By default this is set to the schema you want to export.
 If you want to export an object, you must have already created a file for it and have it currently open. If you then want to export the object with the command: ``dbFlux: Export current Object into current File`` , the object matching the file will be exported. For tables, the indexes and contraints are additionally exported.
 
-## Export APEX Static Application Files [#](#export-apex-static-application-files 'Export APEX Static Application Files')
+## Export APEX Static Application Files [#](#features 'Jumpt back to Features')
 
 With **dbFLux** you can now export static application files of the configured applications to the static folder. You can either use the command: `Export Static Application Files` to export all files of an application or you can call the command: `Export Static Application File (current)` if you already have a static file open. In this case exactly this file will be downloaded from the Static Application Files. This makes it easy to start working with VSCode and dbFLux especially for existing projects.
 
@@ -442,13 +451,13 @@ In FlexSchema mode, dbFLux also offers you the command `dbFLux: Add Schema`. Wit
   <br/>
 </p>
 
-### Lock and unlock Files [#](#lock-and-unlock-files 'Lock and unlock Files')
+### Lock and unlock Files [#](#features 'Jumpt back to Features')
 > feature is in preview - things might change
 
 You can enable this feature within the settings for `Rest APIEnabled`. You can find the implementation for an ORDS-REST endpoint at (https://github.com/MaikMichel/dbLock). You have to install it accordingly. It is sufficient to execute the installation file in a schema of your choice. At the end of the installation a token will be displayed. This token has to be added in addition to the URL under which this REST service is now accessible in settings as well. (`Rest APIToken`, `Rest APIUrl`)
 
 
-### Add FeatureSet as SubModule [#](#add-featuresets 'Add FeatureSet as SubModule')
+### Add FeatureSet as SubModule [#](#features 'Jumpt back to Features')
 
 With the command `Add FeatureSet as SubModule` you can add a Git-Repository to your project. This will add files from this repo to your directory. The advantage here is that you make the feature part of your deployment and don't include it as a dependency. It becomes part of your project. However, **dbFlux** remembers the source repository in order to update these changes in your project later, if there has been an update or a new version.
 
@@ -499,48 +508,49 @@ As soon as your project has the file `.featureCatalog`, dbFlux will check at the
 
 ### List of all commands
 
-| command                       | Title                                      |
-| ----------------------------- | ------------------------------------------ |
-| dbFlux.splitToFiles           | Split File                                 |
-| dbFlux.joinFiles              | Join Files                                 |
-| dbFlux.reverseBuildFromFiles  | Scan for dependent files                   |
-| &nbsp; |   |
-| dbFlux.createObjectWizard     | Create Object                              |
-| dbFlux.createTableDDL         | Create TableDDL File                       |
-| &nbsp; |   |
-| dbFlux.compileFile            | Compile current File                       |
-| dbFlux.compileSchemas         | Compile selected Schemas                   |
-| dbFlux.executeTests           | Execute utPLSQL tests                      |
-| dbFlux.executeTestPackage     | Execute utPLSQL test with current Package  |
-| &nbsp; |   |
-| dbFlux.exportSchema           | Export a Schema from DB into Folder        |
-| dbFlux.exportObject           | Export current Object into current File    |
-| dbFlux.exportAPEX             | Export APEX Application                    |
-| dbFlux.exportREST             | Export REST Module                         |
-| dbFlux.exportCurrentTableAsJSONDefinition | Export Table as JSON (current) |
-| &nbsp; |   |
-| dbFlux.addREST                | Add REST Module                            |
-| dbFlux.addAPP                 | Add APEX Application                       |
-| dbFlux.addWorkspace           | Add Workspace                              |
-| dbFlux.addSchema              | Add Schema                                 |
-| dbFlux.addStaticFolder        | Add APEX static folder                     |
-| dbFlux.addReportFolder        | Add REPORT type                            |
-| &nbsp; |   |
-| dbFlux.openSpecOrBody         | Open corresponding Spec or Body            |
-| dbFlux.copySelectionWithFilenameToClipBoard | Write package name.selection or tablename.columnname to ClipBoard
-| dbFlux.gotoToFolder           | Goto folder                                |
-| dbFlux.wrapLogSelection       | Wrap Selection with Logging Method         |
-| dbFlux.wrapLogSelection.down  | Wrap Selection with Logging Method         |
-| dbFlux.wrapLogSelection.up    | Wrap Selection with Logging Method         |
-| &nbsp; |   |
-| dbFlux.enableFlexMode         | Enable FlexMode                            |
-| dbFlux.removeConfiguration    | Remove dbFlux configuration from workspace |
-| dbFlux.initializeProject      | Initialize Project structure (dbFlux)               |
-| dbFlux.initialize.dbFlow.Project      | Initialize Project structure (dbFlow) |
-| dbFlux.resetPassword          | Reset password                             |
-| &nbsp; |   |
-| dbFlux.addFeatureSet          | Add FeatureSet as SubModule                |
-| dbFlux.syncFeatureSet         | Sync FeatureSet from SubModule             |
+| command                                     | Title                                                             |
+| -----------------------------               | ------------------------------------------                        |
+| dbFlux.splitToFiles                         | Split File                                                        |
+| dbFlux.joinFiles                            | Join Files                                                        |
+| dbFlux.reverseBuildFromFiles                | Scan for dependent files                                          |
+| &nbsp;                                      |                                                                   |
+| dbFlux.createObjectWizard                   | Create Object                                                     |
+| dbFlux.createTableDDL                       | Create TableDDL File                                              |
+| dbFlux.createObjectTypeSnippet              | Create ObjectType Snippet                                         |
+| &nbsp;                                      |                                                                   |
+| dbFlux.compileFile                          | Compile current File                                              |
+| dbFlux.compileSchemas                       | Compile selected Schemas                                          |
+| dbFlux.executeTests                         | Execute utPLSQL tests                                             |
+| dbFlux.executeTestPackage                   | Execute utPLSQL test with current Package                         |
+| &nbsp;                                      |                                                                   |
+| dbFlux.exportSchema                         | Export a Schema from DB into Folder                               |
+| dbFlux.exportObject                         | Export current Object into current File                           |
+| dbFlux.exportAPEX                           | Export APEX Application                                           |
+| dbFlux.exportREST                           | Export REST Module                                                |
+| dbFlux.exportCurrentTableAsJSONDefinition   | Export Table as JSON (current)                                    |
+| &nbsp;                                      |                                                                   |
+| dbFlux.addREST                              | Add REST Module                                                   |
+| dbFlux.addAPP                               | Add APEX Application                                              |
+| dbFlux.addWorkspace                         | Add Workspace                                                     |
+| dbFlux.addSchema                            | Add Schema                                                        |
+| dbFlux.addStaticFolder                      | Add APEX static folder                                            |
+| dbFlux.addReportFolder                      | Add REPORT type                                                   |
+| &nbsp;                                      |                                                                   |
+| dbFlux.openSpecOrBody                       | Open corresponding Spec or Body                                   |
+| dbFlux.copySelectionWithFilenameToClipBoard | Write package name.selection or tablename.columnname to ClipBoard |
+| dbFlux.gotoToFolder                         | Goto folder                                                       |
+| dbFlux.wrapLogSelection                     | Wrap Selection with Logging Method                                |
+| dbFlux.wrapLogSelection.down                | Wrap Selection with Logging Method                                |
+| dbFlux.wrapLogSelection.up                  | Wrap Selection with Logging Method                                |
+| &nbsp;                                      |                                                                   |
+| dbFlux.enableFlexMode                       | Enable FlexMode                                                   |
+| dbFlux.removeConfiguration                  | Remove dbFlux configuration from workspace                        |
+| dbFlux.initializeProject                    | Initialize Project structure (dbFlux)                             |
+| dbFlux.initialize.dbFlow.Project            | Initialize Project structure (dbFlow)                             |
+| dbFlux.resetPassword                        | Reset password                                                    |
+| &nbsp;                                      |                                                                   |
+| dbFlux.addFeatureSet                        | Add FeatureSet as SubModule                                       |
+| dbFlux.syncFeatureSet                       | Sync FeatureSet from SubModule                                    |
 
 
 # Contributors or Influencers &#x1F64F;&#x2764;

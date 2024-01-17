@@ -5,7 +5,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { QuickPickItem, window,ExtensionContext, Uri, workspace, commands, TextDocument } from 'vscode';
-import { matchRuleShort } from '../helper/utilities';
+import { matchRuleShort, toFlatPropertyMap } from '../helper/utilities';
 import * as path from "path";
 import { outputLog } from '../helper/OutputChannel';
 import { existsSync, mkdirSync, PathLike, readdirSync, writeFileSync } from 'fs';
@@ -427,20 +427,7 @@ function *walkSync(dir:string):any {
   }
 }
 
-function toFlatPropertyMap(obj: object, keySeparator = '/') {
-  const flattenRecursive = (obj: object, parentProperty?: string, propertyMap: Record<string, unknown> = {}) => {
-    for(const [key, value] of Object.entries(obj)){
-      const property = parentProperty ? `${parentProperty}${keySeparator}${key}` : key;
-      if(value && typeof value === 'object'){
-        flattenRecursive(value, property, propertyMap);
-      } else {
-        propertyMap[property] = value;
-      }
-    }
-    return propertyMap;
-  };
-  return flattenRecursive(obj);
-}
+
 
 function subDirExists(dir: string):boolean {
   const files = readdirSync(dir, { withFileTypes: true });

@@ -25,6 +25,7 @@ import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
 import { registerExportCurrentTableDefinitionCommand } from "./provider/ExportTableAsJSONProvider";
 import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
 import { registerAddFeatureSet, registerSyncFeatureSet } from "./provider/FeatureStoreProvider";
+import { createObjectTypeSnippetWizard } from "./wizards/CreateObjectTypeSnippetWizzard";
 
 
 // import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
@@ -123,6 +124,9 @@ export async function activate(context: ExtensionContext) {
 
     // Add Command: Create an Object by Wizard => Choose a folder and name your file
     context.subscriptions.push(commands.registerCommand('dbFlux.createObjectWizard', async () => createObjectWizard(context)));
+
+    // Add Command: Create a Snippet for Specific Object Type
+    context.subscriptions.push(commands.registerCommand('dbFlux.createObjectTypeSnippet', async () => createObjectTypeSnippetWizard(context)));
 
     // Add Command: Create a table DDL File => Choose Table from table folder
     context.subscriptions.push(commands.registerCommand('dbFlux.createTableDDL', async () => createTableDDL(context)));
