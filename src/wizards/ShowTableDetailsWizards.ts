@@ -4,15 +4,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import * as path from "path";
-import { ExtensionContext, QuickPickItem, Selection, Uri, window, workspace } from 'vscode';
+import { ExtensionContext, QuickPickItem, window, workspace } from 'vscode';
+import { toFlatPropertyMap } from '../helper/utilities';
+import { getAllTableFiles, getQuickPickFromCurrentFile, getQuickPickFromCurrentSelection } from './CreateObjectWizard';
 import { dbFolderDef } from './InitializeProjectWizard';
 import { MultiStepInput } from './InputFlowAction';
-import { toFlatPropertyMap } from '../helper/utilities';
-import { getDBSchemaFolders } from '../provider/AbstractBashTaskProvider';
-import { getAllTableFiles, getQuickPickFromCurrentFile, getQuickPickFromCurrentSelection } from './CreateObjectWizard';
-import { DBFluxTableDetails } from '../ui/DBFluxTableDetails';
+import { DBFluxTableDetails } from '../ui/DingsFluxTableDetails';
+
 
 
 
