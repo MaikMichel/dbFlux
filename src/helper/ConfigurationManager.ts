@@ -1,5 +1,6 @@
 import { commands, ExtensionContext, languages, Uri, ViewColumn, window, workspace } from "vscode";
-import { outputLog } from "./OutputChannel";
+import { LoggingService } from "./LoggingService";
+
 
 interface ICustomTriggerRuns {
   triggeringExpression: string,
@@ -40,6 +41,7 @@ export class ConfigurationManager {
     const cli = this.get<string>("cliToUseForCompilation");
     return (cli === "SQL*Plus" ? "sqlplus" : "sql");
   }
+
 
   static getShowWarningMessages():boolean {
     return this.get<boolean>("showWarningMessages.AfterCompilation");
@@ -89,6 +91,10 @@ export class ConfigurationManager {
     return this.get<string>("test.Output.Format")
   }
 
+  static getDragSelectionWith(): string {
+    return this.get<string>("showTableDetails.DragSelectionWith")
+  }
+
   static getAppExportOptions(): string {
     return this.get<string>("exportApplications.AppendFollowingOptionString")
   }
@@ -106,24 +112,24 @@ export function showConfig(applyFileName:string, buildFileName:string){
 
 export function showDBFluxConfig(context:ExtensionContext){
 
-  outputLog("Outputting Configuration", true);
+  LoggingService.logInfo("Outputting Configuration", true);
 
-  outputLog("DB_TNS: " + context.workspaceState.get("dbFlux_DB_TNS"));
-  outputLog("DB_APP_USER: " + context.workspaceState.get("dbFlux_DB_APP_USER"));
-  outputLog("DB_APP_PWD: " + context.workspaceState.get("dbFlux_DB_APP_PWD"));
-  outputLog("DB_ADMIN_USER: " + context.workspaceState.get("dbFlux_DB_ADMIN_USER"));
+  LoggingService.logInfo("DB_TNS: " + context.workspaceState.get("dbFlux_DB_TNS"));
+  LoggingService.logInfo("DB_APP_USER: " + context.workspaceState.get("dbFlux_DB_APP_USER"));
+  LoggingService.logInfo("DB_APP_PWD: " + context.workspaceState.get("dbFlux_DB_APP_PWD"));
+  LoggingService.logInfo("DB_ADMIN_USER: " + context.workspaceState.get("dbFlux_DB_ADMIN_USER"));
 
-  outputLog("PROJECT: " + context.workspaceState.get("dbFlux_PROJECT"));
-  outputLog("PROJECT_MODE: " + context.workspaceState.get("dbFlux_PROJECT_MODE"));
+  LoggingService.logInfo("PROJECT: " + context.workspaceState.get("dbFlux_PROJECT"));
+  LoggingService.logInfo("PROJECT_MODE: " + context.workspaceState.get("dbFlux_PROJECT_MODE"));
   if (context.workspaceState.get("dbFlux_PROJECT_MODE") === "MULTI") {
-    outputLog("DATA_SCHEMA: " + context.workspaceState.get("dbFlux_DATA_SCHEMA"));
-    outputLog("LOGIC_SCHEMA: " + context.workspaceState.get("dbFlux_LOGIC_SCHEMA"));
-    outputLog("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
+    LoggingService.logInfo("DATA_SCHEMA: " + context.workspaceState.get("dbFlux_DATA_SCHEMA"));
+    LoggingService.logInfo("LOGIC_SCHEMA: " + context.workspaceState.get("dbFlux_LOGIC_SCHEMA"));
+    LoggingService.logInfo("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
   } else if (context.workspaceState.get("dbFlux_PROJECT_MODE") === "SINGLE") {
-    outputLog("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
+    LoggingService.logInfo("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
   }
 
-  outputLog("WORKSPACE: " + context.workspaceState.get("dbFlux_WORKSPACE"));
+  LoggingService.logInfo("WORKSPACE: " + context.workspaceState.get("dbFlux_WORKSPACE"));
 
 }
 
@@ -143,7 +149,7 @@ export function removeDBFluxConfig(context:ExtensionContext){
 
 export async function rmDBFluxConfig(context:ExtensionContext) {
   // Run function
-  outputLog("Removing Configuration", true);
+  LoggingService.logInfo("Removing Configuration", true);
 
   context.workspaceState.update("dbFlux_mode", undefined);
   context.workspaceState.update("dbFlux_DB_TNS", undefined);

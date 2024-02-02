@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as vscode from "vscode";
-import { existsSync, mkdirSync, readdirSync, realpathSync} from "fs";
+import { existsSync, mkdirSync, readdirSync} from "fs";
 import { platform } from "os";
-import { logInfo } from "./OutputChannel";
 import { exec } from "child_process";
+import { LoggingService } from "./LoggingService";
 
 const isWindows = platform() === 'win32'
 
@@ -280,7 +280,7 @@ export function compareVersions(versionA: string, versionB: string): number {
 
 export const execShell = (cmd: string, statusText: string, relTargetFolder: string = "") =>
     new Promise<string>((resolve, reject) => {
-      logInfo(statusText);
+      LoggingService.logInfo(statusText);
       exec(cmd, { cwd: path.join(getWorkspaceRootPath(), relTargetFolder) }, (err, out) => {
 
         if (err) {

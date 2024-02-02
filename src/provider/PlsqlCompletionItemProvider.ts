@@ -1,8 +1,7 @@
-import * as path from 'path';
 import * as fs from 'fs';
-import { serialize } from 'v8';
-import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, ProviderResult, SnippetString, TextDocument, TextLine, Uri } from 'vscode';
-import { outputLog } from '../helper/OutputChannel';
+import * as path from 'path';
+import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, SnippetString, TextDocument } from 'vscode';
+
 
 interface ApiDetails {
   packageName: string,

@@ -12,9 +12,10 @@ import { Uglifyer } from "../templaters/Uglifyer";
 import { SimpleUploader } from "../templaters/SimpleUploader";
 import { ReportTemplater } from "../templaters/ReportTemplater";
 import fetch from "node-fetch";
-import { outputLog } from "../helper/OutputChannel";
+
 import { CompileSchemasProvider } from "./CompileSchemasProvider";
 import { homedir } from "os";
+import { LoggingService } from "../helper/LoggingService";
 
 
 const which = require('which');
@@ -267,24 +268,25 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
 
 
   return commands.registerCommand(commandKey, async () => {
-    // console.log('taskMap', CompileTaskStore.getInstance().taskMap);
+    LoggingService.logDebug(`Enter commandKey`);
 
-    // save file
     let fileUri:Uri|undefined = window.activeTextEditor?.document.uri;
     if (fileUri !== undefined) {
+      LoggingService.logInfo(`saving file`);
       await window.activeTextEditor?.document.save();
     }
 
-    // get current config
+    LoggingService.logDebug(`Reading Configuration`);
     const compTaskStoreInstance = CompileTaskStore.getInstance();
     const dbLockService = ConfigurationManager.isDBLockEnabled();
 
     if (projectInfos.isValid) {
-
+      LoggingService.logDebug(`Configuration is valid.`);
       // check what file has to build
       let fileName = await getWorkingFile();
       const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
 
+      LoggingService.logDebug(`File to compile is: ${relativeFileName}`);
 
       const insideSetup = (matchRuleShort(relativeFileName, 'db/_setup/*') || matchRuleShort(relativeFileName, 'db/.setup/*'));
       const insideDb = !insideSetup && matchRuleShort(relativeFileName, 'db/*');
@@ -297,9 +299,11 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
 
       // Set password and userinfo to taskStore
       if (insideSetup) {
+        LoggingService.logDebug(`inside setup, check admin pass`);
         await setAdminUserName(projectInfos);
         await setAdminPassword(projectInfos);
       } else {
+        LoggingService.logDebug(`outside setup, check application pass`);
         await setAppPassword(projectInfos);
       }
 
@@ -314,28 +318,43 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
 
           let compilable = true;
           if (dbLockService) {
+            LoggingService.logDebug(`dbLockService is activated, validating locked state`);
             try {
               const locked:ILockedFile = await isfileLockedByAnotherUser(projectInfos.projectName!, relativeFileName);
               const currentUser = process.env.username?process.env.username:path.basename(homedir());
-              console.log('currentUser', currentUser);
+
               if (locked.isLocked && locked.user !== currentUser) {
+                LoggingService.logInfo(`File is locked by User ${locked.user}. You have to unlock the file first!`);
+
                 compilable = false;
                 await window.showWarningMessage(`File is locked by User ${locked.user}. You have to unlock the file first!`);
-                // await window.showInformationMessage(`File is locked by User ${locked.user}. Compile anyway?`, "Yes", "No").then(answer => {
-                //    compilable = (answer === "Yes");
-                // });
               }
             } catch (e:any) {
-                console.error(e);
-                await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
+              LoggingService.logError(`Error occured`, e);
+              await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
             }
           }
 
           if (compilable) {
+            LoggingService.logDebug(`File is not locked, try to check if we can compile`);
+
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileTaskProvider(context, commandKey !== 'dbFlux.compileFile')));
+
+
+            LoggingService.logDebug(`Evaluate`, {
+                "extensionAllowed": extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()),
+                "insideSetup"     : insideSetup,
+                "insideDb"        : insideDb,
+                "insideREST"      : insideREST,
+                "insideAPEX"      : insideAPEX
+              }
+            );
+
 
             if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideSetup || insideDb || insideREST || insideAPEX)) {
               if (insideAPEX) {
+                LoggingService.logDebug(`We are inside apex and running an install.sql file`);
+
                 CompileTaskStore.getInstance().targetApplicationID = await askForTargetAppID(relativeFileName, projectInfos.isFlexMode);
                 if (CompileTaskStore.getInstance().targetApplicationID === undefined) {
                   return;
@@ -350,36 +369,56 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
                 CompileTaskStore.getInstance().targetApplicationID = undefined;
                 CompileTaskStore.getInstance().targetWorkspace = undefined;
               }
-              // call the compile Task itself
+
+
+              LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile"`);
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
 
               // when configured, the problem panel will be focused
               focusProblemPanel();
 
             } else if (insideStatics && ['js'].includes(fileExtension.toLowerCase())) {
+              LoggingService.logDebug(`We are inside statics an there inside "js", so just call Terserer to minify JavaScript`);
+
               // Minify and create JS-Maps when needed
               const tersered = new Terserer(fileName, projectInfos.isFlexMode);
               const success = await tersered.genFile();
               if (success) {
+                LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run generated files`);
                 commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
               } else {
+                LoggingService.logError("dbFlux/terser: " + tersered.getLastErrorMessage());
                 window.showErrorMessage("dbFlux/terser: " + tersered.getLastErrorMessage());
               }
             } else if (insideStatics && ['css'].includes(fileExtension.toLowerCase())) {
+              LoggingService.logDebug(`We are inside statics an there inside "css", so just call Uglifyer to minify JavaScript`);
+
               // Minify CSS
               const uglifyer = new Uglifyer(fileName, projectInfos.isFlexMode);
               uglifyer.genFile();
+
+              LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run generated files`);
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
             } else if (insideStatics) {
+              LoggingService.logDebug(`We are inside statics an there not in inside "css,js"`);
+
               // Otherwise (not JS or CSS) simple upload the file
               const simpleUploader = new SimpleUploader(fileName, projectInfos.isFlexMode);
               simpleUploader.genFile();
+
+              LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run generated files`);
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
             } else if (insideReports && !extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
+              LoggingService.logDebug(`We are inside reports, let's try to search for a template`);
+
               const reportTemplater = new ReportTemplater(fileName);
               reportTemplater.genFile();
             } else if (insideReports || !(insideDb || insideREST || insideAPEX || insideSetup || insideStatics) && extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
+              LoggingService.logDebug(`We are inside reports or elsewhere but not inside DB, REST, APEX, Static. Let's try to run that file anyway`);
+
               const dbSchemaFolders = await getDBSchemaFolders();
+              LoggingService.logDebug(`Schemafolder: `, dbSchemaFolders);
+
               // check if folder contains dbSchemaFolder
               const folderParts = relativeFileName.split("/");
               let scheme:string|undefined = undefined;
@@ -394,20 +433,24 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
               // scheme, when schema include as file name, otherwise selected on
               let schemaSelected: boolean = scheme || await selectSchema(dbSchemaFolders);
               if (schemaSelected) {
+                LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run selected file`);
                 commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
               }
             } else {
+              LoggingService.logWarning(`Current filetype or location is not supported by dbFlux ...`);
               window.showWarningMessage('Current filetype or location is not supported by dbFlux ...');
             }
           }
         }).catch((e: any) => {
           console.error(e);
+          LoggingService.logError(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`, e);
           window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
         });
 
 
 
       } else {
+        LoggingService.logError(`incomplete credentials provided ... nothing to do ...`);
         window.showWarningMessage('incomplete credentials provided ... nothing to do ...');
       }
     }
@@ -450,12 +493,12 @@ async function isfileLockedByAnotherUser(projectName: string, relativeFileName: 
       element.isLocked = true;
       element.user = data.items[0].lfs_user?data.items[0].lfs_user:"unknown";
       // console.log('element', element);
-      outputLog(`File is locked by ${element.user}`);
+      LoggingService.logError(`File is locked by ${element.user}`);
     } else {
-      outputLog(`File is not locked`);
+      LoggingService.logError(`File is not locked`);
     }
   } else {
-    outputLog(`Response status from ${urlFromSettings} was ${response.status}`);
+    LoggingService.logError(`Response status from ${urlFromSettings} was ${response.status}`);
   }
 
   return element;

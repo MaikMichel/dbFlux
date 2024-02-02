@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, window, workspace } from "vscode";
+import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, TreeView, window, workspace } from "vscode";
 
 import { basename, join } from "path";
 import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
@@ -8,7 +8,7 @@ import { registerExportRESTCommand } from "./provider/RestTaskProvider";
 import { applyFileExists, getDBFlowMode, getProjectInfos} from "./provider/AbstractBashTaskProvider";
 import { openTestResult, registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand } from "./provider/TestTaskProvider";
 import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
-import { outputLog } from './helper/OutputChannel';
+import { LoggingService } from './helper/LoggingService';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
 import { registerAddApplicationCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerCopySelectionWithFilenameToClipBoard, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
@@ -26,29 +26,29 @@ import { registerExportCurrentTableDefinitionCommand } from "./provider/ExportTa
 import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
 import { registerAddFeatureSet, registerSyncFeatureSet } from "./provider/FeatureStoreProvider";
 import { createObjectTypeSnippetWizard } from "./wizards/CreateObjectTypeSnippetWizzard";
+import { showTableDetailsWizard } from "./wizards/ShowTableDetailsWizards";
+import { DBFluxTableDetails } from "./ui/DBFluxTableDetails";
+
 
 
 // import { PlsqlCompletionItemProvider } from "./provider/PlsqlCompletionItemProvider";
 // import { ApplicationItemsCompletitionProvider } from "./provider/ApplicationItemsCompletitionProvider";
 
 
-
-
-
-
 export async function activate(context: ExtensionContext) {
-  await extensionManager.init();
+  LoggingService.logDebug('Initialize Extension Manager');
 
+  await extensionManager.init();
   const installationType = extensionManager.getInstallationType();
 
   if ((installationType.update) && await extensionManager.askShowChangelog()) {
     extensionManager.showChangeLog();
   }
-  // StatusBar.initStatusBar(context);
-  // get Mode
-  const dbFluxMode = getDBFlowMode(context);
 
-  // Add Command reloadExtension > which reloads the extendion itself
+
+  LoggingService.logDebug('Register global Commands');
+  context.subscriptions.push(commands.registerCommand('dbFlux.initializeProject', async () =>  initializeProjectWizard(context)));
+  context.subscriptions.push(registerCreateDBFlowProject("dbFlux.initialize.dbFlow.Project", context));
   context.subscriptions.push(commands.registerCommand("dbFlux.reloadExtension", async () => {
     deactivate();
     for (const sub of context.subscriptions) {
@@ -61,17 +61,9 @@ export async function activate(context: ExtensionContext) {
     activate(context);
   }));
 
-  // Add Command wizard > create Initial Project Structure and DB Scripts
-  context.subscriptions.push(commands.registerCommand('dbFlux.initializeProject', async () =>  initializeProjectWizard(context)));
 
-  // Add Command wizard > create Initial Project Structure and DB Scripts as dbFlow Project
-  context.subscriptions.push(registerCreateDBFlowProject("dbFlux.initialize.dbFlow.Project", context));
-
-  // Wrap Selection for Logging
-  context.subscriptions.push(registerWrapLogSelection());
-  context.subscriptions.push(registerWrapLogSelectionDown());
-  context.subscriptions.push(registerWrapLogSelectionUp());
-
+  LoggingService.logDebug('Determining Mode');
+  const dbFluxMode = getDBFlowMode(context);
 
   // Following makes only sense, when project is allready configured
   if (   workspace.workspaceFolders
@@ -82,38 +74,35 @@ export async function activate(context: ExtensionContext) {
 
 
     const projectInfos = getProjectInfos(context);
+    LoggingService.logInfo(`dbFlux-Mode is ${dbFluxMode} and FlexMode is ${projectInfos.isFlexMode}`);
 
-    // statusbaritem to indicate we can use dbFlux
+
+    LoggingService.logDebug('Setting Context Infos');
+    commands.executeCommand("setContext", "inDbFlowProject", true);
+    commands.executeCommand("setContext", "dbLockEnabled", ConfigurationManager.isDBLockEnabled());
+    commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
+    commands.executeCommand("setContext", "isDBFluxMode", (dbFluxMode === "dbFlux"));
+
+
+    LoggingService.logDebug('Generate StatusBar and Item');
     const myStatusBarItem: StatusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 100);
     myStatusBarItem.command = 'dbFlux.showConfig';
     myStatusBarItem.text = `$(database) ${dbFluxMode}`;
 
+    if (dbFluxMode === "dbFlux") {
+      myStatusBarItem.tooltip = `dbFlux: configuration found in workspaceState`;
 
-    outputLog(`dbFlux-Mode is ${dbFluxMode} and FlexMode is ${projectInfos.isFlexMode}`);
-    commands.executeCommand("setContext", "inDbFlowProject", true);
-    commands.executeCommand("setContext", "dbLockEnabled", ConfigurationManager.isDBLockEnabled());
-    commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
-    commands.executeCommand("setContext", "existsAppSchemas", );
-    commands.executeCommand("setContext", "isDBFluxMode", (dbFluxMode === "dbFlux"));
-
-
-    if (["dbFlow", "xcl"].includes(dbFluxMode) && workspace.workspaceFolders) {
+      // Commands to view and remove dbFlux - Config
+      context.subscriptions.push(commands.registerCommand('dbFlux.showConfig', () => showDBFluxConfig(context)));
+      context.subscriptions.push(commands.registerCommand('dbFlux.removeConfiguration', () => removeDBFluxConfig(context)));
+    } else {
       const applyFileName = join(workspace.workspaceFolders[0].uri.fsPath, dbFluxMode === "dbFlow"?"apply.env":".xcl/env.yml");
       const buildFileName = join(workspace.workspaceFolders[0].uri.fsPath, dbFluxMode === "dbFlow"?"build.env":"xcl.yml");
+
       myStatusBarItem.tooltip = `dbFlux: configuration found (${basename(buildFileName)}/${basename(applyFileName)})`;
 
       // Command to open build and applyFiles
       context.subscriptions.push(commands.registerCommand('dbFlux.showConfig', () => showConfig(applyFileName, buildFileName)));
-
-    } else {
-      myStatusBarItem.tooltip = `dbFlux: configuration found in workspaceState`;
-
-      // Command to view dbFlux - Config
-      context.subscriptions.push(commands.registerCommand('dbFlux.showConfig', () => showDBFluxConfig(context)));
-
-      // Command to remove dbFlux - Config
-      context.subscriptions.push(commands.registerCommand('dbFlux.removeConfiguration', () => removeDBFluxConfig(context)));
-
     }
 
     // just show the item
@@ -121,6 +110,14 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(myStatusBarItem);
 
     // ============= COMMANDS =============
+
+
+    LoggingService.logDebug('Registering many Commands ...');
+
+    // Wrap Selection for Logging
+    context.subscriptions.push(registerWrapLogSelection());
+    context.subscriptions.push(registerWrapLogSelectionDown());
+    context.subscriptions.push(registerWrapLogSelectionUp());
 
     // Add Command: Create an Object by Wizard => Choose a folder and name your file
     context.subscriptions.push(commands.registerCommand('dbFlux.createObjectWizard', async () => createObjectWizard(context)));
@@ -138,7 +135,6 @@ export async function activate(context: ExtensionContext) {
     // Compile
     context.subscriptions.push(registerCompileFileCommand(projectInfos, context));
     context.subscriptions.push(registerCompileFileCommand(projectInfos, context, 'dbFlux.runTriggerForCurrentFile'));
-
 
     // Export APEX
     context.subscriptions.push(registerExportAPEXCommand(projectInfos, context));
@@ -229,6 +225,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(registerConvert2dbFLow(projectInfos, "dbFlux.convert.to.dbFlow", context));
 
     if (ConfigurationManager.isDBLockEnabled()) {
+      LoggingService.logInfo('DBLock is enabled');
 
       // dbLock FileDecodations
       const decoProvider = new ViewFileDecorationProvider(context)
@@ -239,6 +236,7 @@ export async function activate(context: ExtensionContext) {
 
       context.subscriptions.push(decoProvider);
       setTimeout(() => {
+        LoggingService.logDebug('fetching data ...');
         tree.refresh();
         // decoProvider.refreshCache();
       }, 100);
@@ -256,6 +254,14 @@ export async function activate(context: ExtensionContext) {
     // context.subscriptions.push(languages.registerCompletionItemProvider('plsql', new PlsqlCompletionItemProvider(), '.'));
     // context.subscriptions.push(languages.registerCompletionItemProvider({language: 'plsql'}, new ApplicationItemsCompletitionProvider(), 'P', 'p'));
 
+    LoggingService.logDebug('Building Structure Viewer');
+
+    //create a local tree view and register it in vscode
+    const tree = new DBFluxTableDetails(context);
+
+    context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.add_item', async () => showTableDetailsWizard(context, tree, false)));
+    context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.add_item_context', async () => showTableDetailsWizard(context, tree, true)));
+
 
 
     // Execute Something when task endet
@@ -264,7 +270,7 @@ export async function activate(context: ExtensionContext) {
 
       if (task.definition.type === "dbFlux"){
 
-        outputLog(task.name + " done");
+        LoggingService.logInfo(`Task: ${task.name} is done`);
         switch (task.name) {
           case "executeTests" : {
             openTestResult(context);
@@ -298,8 +304,10 @@ export async function activate(context: ExtensionContext) {
 
     }, undefined, context.subscriptions);
 
+
+    LoggingService.logInfo('dbFLux initialized');
   } else {
-    outputLog("no dbFlux configured");
+    LoggingService.logInfo("dbFlux not configured. Context inDbFlowProject set to false");
 
     commands.executeCommand("setContext", "inDbFlowProject", false);
     return;

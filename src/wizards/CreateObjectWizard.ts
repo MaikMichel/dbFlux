@@ -7,11 +7,11 @@
 import { QuickPickItem, window,ExtensionContext, Uri, workspace, commands, TextDocument } from 'vscode';
 import { matchRuleShort, toFlatPropertyMap } from '../helper/utilities';
 import * as path from "path";
-import { outputLog } from '../helper/OutputChannel';
 import { existsSync, mkdirSync, PathLike, readdirSync, writeFileSync } from 'fs';
 import { MultiStepInput } from './InputFlowAction';
 import { dbFolderDef } from './InitializeProjectWizard';
 import { execSync } from 'child_process';
+import { LoggingService } from '../helper/LoggingService';
 
 
 
@@ -217,7 +217,7 @@ export function callSnippet(wsPath:string, document:TextDocument, prefix:string|
 
       const snippetName = (prefix?prefix+'-':'') + restComponents.join('-') + path.parse(file).ext;
 
-      outputLog(`snippetName to look for: ${snippetName}`);
+      LoggingService.logInfo(`snippetName to look for: ${snippetName}`);
 
       commands.executeCommand('editor.action.selectAll').then( function () {
         commands.executeCommand('editor.action.insertSnippet',
@@ -268,19 +268,7 @@ export async function createTableDDL(context: ExtensionContext) {
 
   const title = 'dbFLux: Create TableDDL File';
 
-  async function getQuickPickFromCurrentFile(quickPicks:QuickPickItem[]):Promise<QuickPickItem> {
-    let item:QuickPickItem = quickPicks[0];
-    if (window.activeTextEditor != undefined) {
-      const relativeFile = workspace.asRelativePath(window.activeTextEditor.document.uri);
-      const pathBlocks = relativeFile.split(path.posix.sep);
-      if (pathBlocks[pathBlocks.length-2] === 'tables') {
-        const tempItem = quickPicks.find(quickPick => (relativeFile.includes(quickPick.label)))
-        item = tempItem?tempItem:item;
-      }
-    }
 
-    return item;
- }
 
   async function pickObjectType(input: MultiStepInput, state: Partial<State>) {
     const objectTypes = await getAllTableFiles();
@@ -320,41 +308,7 @@ export async function createTableDDL(context: ExtensionContext) {
 
 
 
-  async function getAllTableFiles(): Promise<QuickPickItem[]> {
-    if (workspace.workspaceFolders){
-      let folders:string[] = [];
 
-      const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-      const sourceDB = path.join(wsRoot, "db");
-
-      const getSchemaFolders = (source: PathLike) =>
-          readdirSync(source, { withFileTypes: true })
-          .filter((dirent) => {
-            return dirent.isDirectory() && !["_setup", ".setup", "dist", ".hooks"].includes(dirent.name);
-          })
-          .map((dirent) => path.join(source.toString(), dirent.name));
-
-      for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
-        // real file path
-        const folderPath = path.join(schemaPath, 'tables');
-        if (existsSync(folderPath)) {
-          const files = readdirSync(folderPath, { withFileTypes: true }).filter((dirent) => !dirent.isDirectory());
-
-          for (let folderItem of files) {
-            folders.push(path.join(folderPath, folderItem.name).replace(sourceDB + path.sep, '').replace(/\\/g, '/'));
-          }
-        }
-      }
-
-
-      const uniqueFolders = [...new Set(folders)];
-      const folderNames = uniqueFolders.map(function(element){return {"label":element, "description": path.parse(element).name, "alwaysShow": false};});
-
-      return folderNames;
-    }
-
-    return [{label: ""}];
-  }
 
 
   //
@@ -437,4 +391,70 @@ function subDirExists(dir: string):boolean {
     }
   }
   return false;
+}
+
+export async function getAllTableFiles(): Promise<QuickPickItem[]> {
+  if (workspace.workspaceFolders){
+    let folders:string[] = [];
+
+    const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
+    const sourceDB = path.join(wsRoot, "db");
+
+    const getSchemaFolders = (source: PathLike) =>
+        readdirSync(source, { withFileTypes: true })
+        .filter((dirent) => {
+          return dirent.isDirectory() && !["_setup", ".setup", "dist", ".hooks"].includes(dirent.name);
+        })
+        .map((dirent) => path.join(source.toString(), dirent.name));
+
+    for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
+      // real file path
+      const folderPath = path.join(schemaPath, 'tables');
+      if (existsSync(folderPath)) {
+        const files = readdirSync(folderPath, { withFileTypes: true }).filter((dirent) => !dirent.isDirectory());
+
+        for (let folderItem of files) {
+          folders.push(path.join(folderPath, folderItem.name).replace(sourceDB + path.sep, '').replace(/\\/g, '/'));
+        }
+      }
+    }
+
+
+    const uniqueFolders = [...new Set(folders)];
+    const folderNames = uniqueFolders.map(function(element){return {"label":element, "description": path.parse(element).name, "alwaysShow": false};});
+
+    return folderNames;
+  }
+
+  return [{label: ""}];
+}
+
+export async function getQuickPickFromCurrentFile(quickPicks:QuickPickItem[]):Promise<QuickPickItem | undefined> {
+  let item:QuickPickItem|undefined = undefined;
+  if (window.activeTextEditor != undefined) {
+    const relativeFile = workspace.asRelativePath(window.activeTextEditor.document.uri);
+    const pathBlocks = relativeFile.split(path.posix.sep);
+    if (pathBlocks[pathBlocks.length-2] === 'tables') {
+      const tempItem = quickPicks.find(quickPick => (relativeFile.includes(quickPick.label)))
+      item = tempItem?tempItem:item;
+    }
+  }
+
+  return item;
+}
+
+export async function getQuickPickFromCurrentSelection(quickPicks:QuickPickItem[]):Promise<QuickPickItem|undefined> {
+  let item:QuickPickItem|undefined = undefined;
+
+  if (window.activeTextEditor != undefined) {
+    const editor = window.activeTextEditor;
+    const text = editor?.document.getText(editor.selection);
+
+    if (text) {
+      const tempItem = quickPicks.find(quickPick => text.includes(quickPick.description!))
+      item = tempItem?tempItem:item;
+    }
+  }
+
+  return item;
 }

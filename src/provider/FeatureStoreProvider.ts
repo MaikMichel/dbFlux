@@ -2,7 +2,7 @@ import { ExtensionContext, ProgressLocation, QuickPickItem, Uri, commands, windo
 import { addFeatureSet } from "../wizards/AddFeatureSet";
 
 import { KeyVal, compareVersions, execShell, getWorkspaceRootPath, isJSON, replaceKeysWithValues, rtrim } from "../helper/utilities";
-import { logError, logInfo, logWithProgressInfo } from "../helper/OutputChannel";
+
 
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "fs";
 import * as path from "path";
@@ -10,6 +10,7 @@ import { getDBSchemaFolders } from "./AbstractBashTaskProvider";
 import { ensureDirSync } from "fs-extra";
 import { dirname } from "path";
 import { syncFeatureSet } from "../wizards/SyncFeatureSet";
+import { LoggingService } from "../helper/LoggingService";
 
 const featureCatalogFile = path.join(getWorkspaceRootPath(), ".featureCatalog")
 const dbFlowModuleFolder = "./.featureSets"
@@ -49,7 +50,7 @@ const parseToFeatureSet = (content: string): FeatureSet | undefined => {
   try {
     return JSON.parse(content)
   } catch (error) {
-    logError("Error parsing content of manifest.json");
+    LoggingService.logError("Error parsing content of manifest.json");
   }
 }
 
@@ -57,7 +58,7 @@ const parseToCatalog = (content: string): Catalog | undefined => {
   try {
     return JSON.parse(content)
   } catch (error) {
-    logError("Error parsing content of .featureCatalog");
+  LoggingService.logError("Error parsing content of .featureCatalog");
   }
 }
 
@@ -66,19 +67,19 @@ const writeCatalog = async (FeatureSet: FeatureSet, targetFolder: string, gitURL
   FeatureSet.folder = targetFolder;
   FeatureSet.url = gitURL;
   if (existingIndex !== -1) {
-    logInfo("Replacing FeatureSet");
+    LoggingService.logInfo("Replacing FeatureSet");
     Catalog!.features[existingIndex]! = FeatureSet;
   } else {
-    logInfo("Adding FeatureSet");
+    LoggingService.logInfo("Adding FeatureSet");
     Catalog?.features.push(FeatureSet);
   }
 
-  logInfo("Writing Catalog");
+  LoggingService.logInfo("Writing Catalog");
   writeFileSync(featureCatalogFile, Buffer.from(JSON.stringify(Catalog, null, 2)));
 }
 
 const updateCatalog = async (FeatureSet: FeatureSet, Catalog: Catalog | undefined, existingIndex: number) => {
-  logInfo("Replacing FeatureSet");
+  LoggingService.logInfo("Replacing FeatureSet");
   FeatureSet.state = "INSYNC";
   FeatureSet.folder = Catalog!.features[existingIndex]!.folder;
   FeatureSet.url = Catalog!.features[existingIndex]!.url;
@@ -91,7 +92,7 @@ const updateCatalog = async (FeatureSet: FeatureSet, Catalog: Catalog | undefine
     }
   }
 
-  logInfo("Writing Catalog");
+  LoggingService.logInfo("Writing Catalog");
   Catalog!.features[existingIndex]! = FeatureSet;
   writeFileSync(featureCatalogFile, Buffer.from(JSON.stringify(Catalog, null, 2)));
 }
@@ -111,12 +112,12 @@ const informWhenNewVersionExists = () => {
           const FeatureSet = parseToFeatureSet(manifestContent);
           if (FeatureSet != undefined) {
             if (compareVersions(FeatureSet.version, feature.version!) === 1) {
-              logInfo(`FeatureSet: ${FeatureSet.feature} is here with a new version ${FeatureSet.version}`);
+              LoggingService.logInfo(`FeatureSet: ${FeatureSet.feature} is here with a new version ${FeatureSet.version}`);
               const commandString = "Sync FeatureSet"
               window.showInformationMessage(`dbFlux: FeatureSet: ${FeatureSet.feature} is here with a new version ${FeatureSet.version}`,
                 commandString).then(selection => {
                   if (selection === commandString) {
-                    logInfo(`Running Command to Sync Feature`);
+                    LoggingService.logInfo(`Running Command to Sync Feature`);
                     commands.executeCommand('dbFlux.syncFeatureSet', feature.folder);
                   }
                 })
@@ -149,7 +150,7 @@ const executeInstructions = async (catalog: Catalog, featureName: string) => {
       }
     }
 
-    logInfo("Replacers parsed");
+    LoggingService.logInfo("Replacers parsed");
   }
 
 
@@ -160,7 +161,7 @@ const executeInstructions = async (catalog: Catalog, featureName: string) => {
     ensureDirSync(dirname(targetFile));
     // copy when file not exists, initial is false or not set, force is true
     if (!existsSync(targetFile) || !instruction.initial || instruction.force) {
-      logInfo(`Copy File ${srcFile} to ${targetFile}`);
+      LoggingService.logInfo(`Copy File ${srcFile} to ${targetFile}`);
       copyFileSync(srcFile, targetFile);
     }
     instruction.written = replaceKeysWithValues(instruction.target, replaceWith);
@@ -169,7 +170,7 @@ const executeInstructions = async (catalog: Catalog, featureName: string) => {
 
   // Write Back to Catalog
   FeatureSet.state = "APPLIED";
-  logInfo("Writing Catalog");
+  LoggingService.logInfo("Writing Catalog");
   writeFileSync(featureCatalogFile, Buffer.from(JSON.stringify(catalog, null, 2)));
 }
 
@@ -220,7 +221,7 @@ export function registerAddFeatureSet(command: string, context: ExtensionContext
         try {
           await execShell(myCommand, `Adding SubModule: ${state.gitUrl}`);
         } catch (e: any) {
-          logError(e, true);
+          LoggingService.logError(e, e);
           window.showErrorMessage("There was an error when trying to add your input as Git-SubModule!");
           return
         }
@@ -230,47 +231,47 @@ export function registerAddFeatureSet(command: string, context: ExtensionContext
         progress.report({ message: "Update SubModule" });
         await execShell(myCommand, `Updating SubModule: ${state.gitUrl}`, `${dbFlowModuleFolder}/${targetFolder}`);
 
-        logWithProgressInfo("Validate manifest", progress);
+        LoggingService.logInfo("Validate manifest", null, progress);
         const manifestFile = path.join(getWorkspaceRootPath(), dbFlowModuleFolder, targetFolder, "manifest.json");
         if (!existsSync(manifestFile)) {
-          logError("Repository has no manifest.json defined!");
+          LoggingService.logError("Repository has no manifest.json defined!");
           window.showWarningMessage("Repository has no manifest.json defined!");
           return;
         }
 
         const manifestContent = readFileSync(manifestFile, { encoding: 'utf8' });
         if (!isJSON(manifestContent)) {
-          logError("manifest.json is not of JSON format");
+          LoggingService.logError("manifest.json is not of JSON format");
           window.showErrorMessage("manifest.json is not of JSON format");
           return;
         }
 
-        logWithProgressInfo("Parsing FeatureSet", progress);
+        LoggingService.logInfo("Parsing FeatureSet", null, progress);
         const FeatureSet = parseToFeatureSet(manifestContent);
         if (!FeatureSet) {
-          logError(`Unknown structure in ${manifestFile}`);
+          LoggingService.logError(`Unknown structure in ${manifestFile}`);
           window.showWarningMessage(`Unknown structure in ${manifestFile}`);
           return;
         }
 
 
-        logWithProgressInfo("Reading Catalog", progress);
+        LoggingService.logInfo("Reading Catalog", null, progress);
         const Catalog = parseToCatalog(existsSync(featureCatalogFile) ? readFileSync(featureCatalogFile, "utf8")
           : `{
                                                                     "features": [
                                                                     ]
                                                                   }`);
 
-        logWithProgressInfo("Searching FeatureSet in catalog", progress);
+        LoggingService.logInfo("Searching FeatureSet in catalog", null, progress);
         const existingIndex = Catalog?.features.findIndex(item => item.feature === FeatureSet.feature) || 0;
 
-        logWithProgressInfo("Writing catalog", progress);
+        LoggingService.logInfo("Writing catalog", null, progress);
         await writeCatalog(FeatureSet, targetFolder, gitURL, existingIndex, Catalog);
 
-        logWithProgressInfo("Executing instructions", progress);
+        LoggingService.logInfo("Executing instructions", null, progress);
         await executeInstructions(Catalog!, FeatureSet.feature);
 
-        logWithProgressInfo("Done", progress);
+        LoggingService.logInfo("Done", null, progress);
         await showFinishMessage(FeatureSet);
       });
   })
@@ -294,7 +295,7 @@ export function registerSyncFeatureSet(command: string, context: ExtensionContex
         if (!folderName) return;
 
         // read or create Catalog
-        logWithProgressInfo("Reading Catalog", progress);
+        LoggingService.logInfo("Reading Catalog", null, progress);
         const Catalog = parseToCatalog(existsSync(featureCatalogFile) ? readFileSync(featureCatalogFile, "utf8")
           : `{
                                                                     "features": [
@@ -302,44 +303,44 @@ export function registerSyncFeatureSet(command: string, context: ExtensionContex
                                                                   }`);
 
 
-        logWithProgressInfo("Validate manifest", progress);
+        LoggingService.logInfo("Validate manifest", null, progress);
         const manifestFile = path.join(getWorkspaceRootPath(), folderName, "manifest.json");
         if (!existsSync(manifestFile)) {
-          logError("Repository has no manifest.json defined!");
+          LoggingService.logError("Repository has no manifest.json defined!");
           window.showWarningMessage("Repository has no manifest.json defined!");
           return;
         }
 
         const manifestContent = readFileSync(manifestFile, { encoding: 'utf8' });
         if (!isJSON(manifestContent)) {
-          logError("manifest.json is not of JSON format");
+          LoggingService.logError("manifest.json is not of JSON format");
           window.showErrorMessage("manifest.json is not of JSON format");
           return;
         }
 
-        logWithProgressInfo("Parsing FeatureSet", progress);
+        LoggingService.logInfo("Parsing FeatureSet", null, progress);
         const FeatureSet = parseToFeatureSet(manifestContent);
         if (!FeatureSet) {
-          logError(`Unknown structure in ${manifestFile}`);
+          LoggingService.logError(`Unknown structure in ${manifestFile}`);
           window.showWarningMessage(`Unknown structure in ${manifestFile}`);
           return;
         }
 
-        logWithProgressInfo("Searching FeatureSet in catalog", progress);
+        LoggingService.logInfo("Searching FeatureSet in catalog", null, progress);
         const existingIndex = Catalog?.features.findIndex(item => item.feature === FeatureSet.feature) || 0;
         if (existingIndex === -1) {
-          logError("FeatureSet not in catalog");
+          LoggingService.logError("FeatureSet not in catalog");
           window.showErrorMessage("FeatureSet not in catalog");
           return;
         }
 
-        logWithProgressInfo("Update catalog", progress);
+        LoggingService.logInfo("Update catalog", null, progress);
         await updateCatalog(FeatureSet, Catalog, existingIndex);
 
-        logWithProgressInfo("Executing instructions", progress);
+        LoggingService.logInfo("Executing instructions", null, progress);
         await executeInstructions(Catalog!, FeatureSet.feature);
 
-        logWithProgressInfo("Done", progress);
+        LoggingService.logInfo("Done", null, progress);
         await showFinishMessage(FeatureSet);
       });
 

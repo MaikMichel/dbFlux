@@ -4,6 +4,7 @@ import { commands, extensions, Uri, window, workspace } from "vscode";
 const DBFLUX_EXT_ID = "MaikMichel.dbFlow"
 const USER_CONFIG_FILE_NAME = 'user.dbFlux.config.json';
 
+
 type VersionConfig = {
   changelog?: { lastversion?: string };
 };
@@ -26,11 +27,11 @@ export interface IUpdateInfoProvider {
 class UpdateInfoProvider implements IUpdateInfoProvider {
   installationType: InstallationType = {firstInstall:false, update:false};
   private readonly userConfigFileUri: Uri;
-  // private configJSON: VersionConfig = {};
+
 
   constructor() {
     const extensionFolderUri = Uri.file(extensions.getExtension(DBFLUX_EXT_ID)!.extensionPath);
-    // this.configFileUri = extensionFolderUri.with({path: posix.join(extensionFolderUri.path, CONFIG_FILE_NAME)});
+
     this.userConfigFileUri = extensionFolderUri.with({path: posix.join(extensionFolderUri.path, USER_CONFIG_FILE_NAME)});
   }
 
@@ -95,7 +96,6 @@ class UpdateInfoProvider implements IUpdateInfoProvider {
   showChangeLog():void {
     let uri = Uri.file(join(__dirname, '..', '..', 'CHANGELOG.md'))
     commands.executeCommand('markdown.showPreview', uri)
-    // commands.executeCommand('extension.open', DBFLUX_EXT_ID)
   }
 }
 

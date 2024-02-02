@@ -10,9 +10,9 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "4.9.3",
+	"version": "4.10.0-alpha-1",
 	"engines": {
-		"vscode": "^1.80.0"
+		"vscode": "^1.82.0"
 	},
 	"keywords": [
 		"plsql",
@@ -91,14 +91,82 @@
 					"command": "dbflux.dblock.treeview.view_refresh",
 					"when": "view == dbflux.dblock.treeview",
 					"group": "navigation@0"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.refresh_items",
+					"when": "view == dbflux.showTableDetails.treeview",
+					"group": "navigation@2"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.clear_items",
+					"when": "view == dbflux.showTableDetails.treeview",
+					"group": "navigation@1"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_comma",
+					"when": "view == dbflux.showTableDetails.treeview"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_semicomma",
+					"when": "view == dbflux.showTableDetails.treeview"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_colon",
+					"when": "view == dbflux.showTableDetails.treeview"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_colonequal",
+					"when": "view == dbflux.showTableDetails.treeview"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.add_item",
+					"when": "view == dbflux.showTableDetails.treeview",
+					"group": "navigation@0"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "dbflux.showTableDetails.treeview.clear_item",
+					"when": "view == dbflux.showTableDetails.treeview && viewItem == table",
+					"group": "inline"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_comma",
+					"when": "view == dbflux.showTableDetails.treeview",
+					"group": "first"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_semicomma",
+					"when": "view == dbflux.showTableDetails.treeview",
+					"group": "first"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_colon",
+					"when": "view == dbflux.showTableDetails.treeview",
+					"group": "first"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_colonequal",
+					"when": "view == dbflux.showTableDetails.treeview",
+					"group": "first"
 				}
 			]
 		},
+		"viewsWelcome": [
+			{
+				"view": "dbflux.showTableDetails.treeview",
+				"contents": "No tables have been added yet. [learn more](https://github.com/MaikMichel/dbFlux?tab=readme-ov-file#demo---compile-plsql).\n[Add Table](command:dbflux.showTableDetails.treeview.add_item)"
+			}
+		],
 		"views": {
 			"explorer": [
 				{
 					"id": "dbflux.dblock.treeview",
 					"name": "DBLock - locked files by user"
+				},
+				{
+					"id": "dbflux.showTableDetails.treeview",
+					"name": "dbFlux - Structure-Viewer"
 				}
 			]
 		},
@@ -110,6 +178,59 @@
 			{
 				"command": "dbflux.dblock.treeview.view_refresh",
 				"title": "refresh",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "dbflux.showTableDetails.treeview.add_item",
+				"title": "Add Table to Structure-Viewer",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject",
+				"icon": "$(add)"
+			},
+			{
+				"command": "dbflux.showTableDetails.treeview.add_item_context",
+				"title": "Add Table to Structure-Viewer",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject",
+				"icon": "$(add)"
+			},
+			{
+				"command": "dbflux.showTableDetails.treeview.copy_selection_with_comma",
+				"title": "Copy using ','",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbflux.showTableDetails.treeview.copy_selection_with_semicomma",
+				"title": "Copy using ';'",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbflux.showTableDetails.treeview.copy_selection_with_colon",
+				"title": "Copy using ':'",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbflux.showTableDetails.treeview.copy_selection_with_colonequal",
+				"title": "Copy using ':='",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbflux.showTableDetails.treeview.clear_items",
+				"title": "Remove all tables from view",
+				"icon": "$(clear-all)"
+			},
+			{
+				"command": "dbflux.showTableDetails.treeview.clear_item",
+				"title": "Remove selected table from view",
+				"icon": "$(close)"
+			},
+			{
+				"command": "dbflux.showTableDetails.treeview.refresh_items",
+				"title": "Refresh all tables",
 				"icon": "$(refresh)"
 			},
 			{
@@ -383,6 +504,11 @@
 		],
 		"keybindings": [
 			{
+				"command": "dbflux.showTableDetails.treeview.add_item_context",
+				"when": "inDbFlowProject",
+				"key": "ctrl+shift+t"
+			},
+			{
 				"command": "dbFlux.gotoToFolder",
 				"key": "ctrl+alt+g"
 			},
@@ -473,6 +599,19 @@
 				"type": "object",
 				"title": "dbFlux",
 				"properties": {
+					"dbFlux.loggingMode": {
+						"type": "string",
+						"default": "INFO",
+						"enum": [
+							"DEBUG",
+							"INFO",
+							"WARN",
+							"ERROR",
+							"NONE"
+						],
+						"description": "Select Logging Level. Open Output Panel and select dbFlux to view the output",
+						"scope": "window"
+					},
 					"dbFlux.cliToUseForCompilation": {
 						"type": "string",
 						"default": "SQL*Plus",
@@ -639,6 +778,18 @@
 							"HTML Report"
 						],
 						"description": "Which output format should be used to report utPLSQL Results",
+						"scope": "window"
+					},
+					"dbFlux.showTableDetails.DragSelectionWith": {
+						"type": "string",
+						"default": ", ",
+						"enum": [
+							", ",
+							";\n",
+							":",
+							" := \n"
+						],
+						"markdownDescription": "Choose which String to use as when dragging table or columns into editor per default? <br/> You can alway choose to copy by context menu on the items",
 						"scope": "window"
 					}
 				}

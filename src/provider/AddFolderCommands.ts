@@ -1,15 +1,15 @@
-import { QuickPickItem, window, ExtensionContext, Uri, workspace, commands, ViewColumn, Range, env } from 'vscode';
+import { commands, env, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, window, workspace } from 'vscode';
 
+import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import * as path from "path";
-import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFile, writeFileSync } from 'fs';
-import { logInfo, outputLog } from '../helper/OutputChannel';
-import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim } from '../helper/utilities';
-import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
-import { getDBUserFromPath, getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
-import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { ConfigurationManager } from '../helper/ConfigurationManager';
-import { MultiStepInput } from '../wizards/InputFlowAction';
+import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim } from '../helper/utilities';
+import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { getAvailableObjectTypes } from '../wizards/CreateObjectWizard';
+import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
+import { MultiStepInput } from '../wizards/InputFlowAction';
+import { getDBUserFromPath, getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
+import { LoggingService } from '../helper/LoggingService';
 
 export async function addAPEXApp(context: ExtensionContext, folder:string) {
   interface State {
@@ -85,7 +85,7 @@ export async function addAPEXApp(context: ExtensionContext, folder:string) {
         addStaticFolder(state.appID, state.workSpace.description!);
       }
     } else {
-      outputLog('Canceled');
+      LoggingService.logWarning('Canceled');
     }
   } else {
     window.showWarningMessage(`dbFlux: You have to add at least one Workspace inside an ${folder} Schema-Folder. Just use command dbFlux: Add Workspace`);
@@ -161,7 +161,7 @@ export async function addHookFile(context: ExtensionContext) {
     if (state.name) {
       addHookFileToPath(state.folder.label, state.name);
     } else {
-      outputLog('Canceled');
+      LoggingService.logWarning('Canceled');
     }
   }
 }
@@ -319,7 +319,7 @@ export async function addRESTModule(context: ExtensionContext) {
     if (state.module) {
       addRestModul(state.module, state.schema.description!);
     } else {
-      outputLog('Canceled');
+      LoggingService.logWarning('Canceled');
     }
   } else {
     window.showWarningMessage("dbFlux: You have to add at least one Schema-folder inside rest folder. Juse user Command dbFLux: Add Schema");
@@ -434,7 +434,7 @@ export async function addWorkspace(context: ExtensionContext) {
     if (state.workspace) {
       addWorkspaceFolder(state.workspace, state.schema.label);
     } else {
-      outputLog('Canceled');
+      LoggingService.logWarning('Canceled');
     }
   } else {
     window.showWarningMessage('dbFlux: You have to add at least one Schema inside apex-folder. Just use Command dbFlux: Add Schema');
@@ -540,7 +540,7 @@ export async function addSchema(context: ExtensionContext) {
   if (state.schema) {
     addMainFolders(state.schema, state.folders, getProjectInfos(context));
   } else {
-    outputLog('Canceled');
+    LoggingService.logWarning('Canceled');
   }
 }
 
@@ -825,7 +825,7 @@ export function registerOpenSpecOrBody() {
     if (fileName) {
       const extension = path.extname(fileName);
       if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
-        logInfo('fileName: ' + fileName);
+        LoggingService.logInfo('fileName: ' + fileName);
         let extensionNew = "xxx";
         if (extension === ".pks") {
           extensionNew = ".pkb";

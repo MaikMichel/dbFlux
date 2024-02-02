@@ -2,11 +2,12 @@ import fetch from 'node-fetch';
 import { CancellationToken, commands, ExtensionContext, FileDecoration, FileDecorationProvider, Uri, workspace } from 'vscode';
 import { Disposable, EventEmitter, ThemeColor, window } from 'vscode';
 import { ConfigurationManager } from '../helper/ConfigurationManager';
-import { outputLog } from '../helper/OutputChannel';
+
 import { rtrim } from '../helper/utilities';
 import { getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
 import { homedir } from 'os';
 import { basename } from 'path';
+import { LoggingService } from '../helper/LoggingService';
 
 export class ViewFileDecorationProvider implements FileDecorationProvider, Disposable {
   private _onDidChangeFileDecorations = new EventEmitter<undefined>();
@@ -137,7 +138,7 @@ export function registerLockCurrentFileCommand(projectInfos: IProjectInfos, deco
           // const text = response.text();
           // console.log('text', text);
 
-          outputLog(`Status from ${urlFromSettings} was ${response.status}`);
+          LoggingService.logInfo(`Status from ${urlFromSettings} was ${response.status}`);
         }
       } catch (e:any) {
         console.error(e);
@@ -174,7 +175,7 @@ export function registerUnLockCurrentFileCommand(projectInfos: IProjectInfos, de
           decoProvider.refreshCache();
           await commands.executeCommand('dbflux.dblock.treeview.view_refresh');
         } else {
-          outputLog(`Status from ${urlFromSettings} was ${response.status}`);
+          LoggingService.logInfo(`Status from ${urlFromSettings} was ${response.status}`);
         }
       } catch (e:any) {
         console.error(e);

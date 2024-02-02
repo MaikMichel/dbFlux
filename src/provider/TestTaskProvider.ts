@@ -8,10 +8,10 @@ import { AbstractBashTaskProvider, getDBSchemaFolders, getDBUserFromPath, getPro
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { TestTaskStore } from "../stores/TestTaskStore";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
-import { outputLog } from "../helper/OutputChannel";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 
 import { parse } from "junit2json";
+import { LoggingService } from "../helper/LoggingService";
 
 
 const which = require('which');
@@ -201,7 +201,7 @@ export function registerExecuteTestsTaskCommand(projectInfos: IProjectInfos, con
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTests")));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTests");
           }).catch((error: any) => {
-            outputLog(error);
+            LoggingService.logError(error, error);
             window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
           });
         }

@@ -4,9 +4,9 @@ import { chmodSync, existsSync, PathLike, readdirSync, readFileSync } from "fs";
 import { getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import * as yaml from 'yaml';
 import { CompileTaskStore } from "../stores/CompileTaskStore";
-import { outputLog } from "../helper/OutputChannel";
 import { commands, ExtensionContext, QuickPickItem, Uri, window, workspace } from "vscode";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
+import { LoggingService } from "../helper/LoggingService";
 
 export interface IBashInfos {
   runFile:        string;
@@ -64,11 +64,13 @@ export abstract class AbstractBashTaskProvider {
         file = path.join(filePath, filename);
       }
     } else {
+      LoggingService.logError(`not workspacefolder opened`);
       throw new Error("not workspacefolder opened");
     }
 
     if (!existsSync(file)) {
-      throw new Error(filename + " not found");
+      LoggingService.logError(`${filename} not found`);
+      throw new Error(`${filename} not found`);
     }
 
     return file;
@@ -263,7 +265,7 @@ function getProjectInfosFromXCL():IProjectInfos {
         projectInfos.dbAppPwd  = applyYml.password;
       }
     } else {
-      outputLog('.xcl/env.yml not found');
+      LoggingService.logWarning('.xcl/env.yml not found');
     }
   }
 
@@ -330,8 +332,8 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
   }
 
   if ((dbConnMsg.length + schemaMsg.length) > 0) {
-    outputLog(dbConnMsg);
-    outputLog(schemaMsg);
+    LoggingService.logInfo(dbConnMsg);
+    LoggingService.logInfo(schemaMsg);
     // throw new Error("Project configuration is invalid");
     projectInfos.isValid = false;
   } else {
