@@ -27,7 +27,7 @@ import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectPro
 import { registerAddFeatureSet, registerSyncFeatureSet } from "./provider/FeatureStoreProvider";
 import { createObjectTypeSnippetWizard } from "./wizards/CreateObjectTypeSnippetWizzard";
 import { showTableDetailsWizard } from "./wizards/ShowTableDetailsWizards";
-import { DBFluxTableDetails } from "./ui/DingsFluxTableDetails";
+import { DBFluxTableDetails } from "./ui/DBFluxTableDetails";
 
 
 

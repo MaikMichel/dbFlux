@@ -11,7 +11,7 @@ import { toFlatPropertyMap } from '../helper/utilities';
 import { getAllTableFiles, getQuickPickFromCurrentFile, getQuickPickFromCurrentSelection } from './CreateObjectWizard';
 import { dbFolderDef } from './InitializeProjectWizard';
 import { MultiStepInput } from './InputFlowAction';
-import { DBFluxTableDetails } from '../ui/DingsFluxTableDetails';
+import { DBFluxTableDetails } from '../ui/DBFluxTableDetails';
 
 
 
