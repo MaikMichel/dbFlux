@@ -30,3 +30,21 @@ PROMPT * VERSION    <^VERSION>
 PROMPT * MODE       <^MODE>
 PROMPT * ALL_TABLES <^ALL_TABLES>
 PROMPT ********************************************************************
+
+<Place your code here>
+
+PROMPT ********************************************************************
+PROMPT ********************************************************************
+Rem undefine all
+
+undefine 1;
+undefine 2;
+undefine 3;
+
+undefine _parameter_01;
+undefine _parameter_02;
+undefine _parameter_03;
+
+undefine VERSION;
+undefine MODE;
+undefine ALL_TABLES;
