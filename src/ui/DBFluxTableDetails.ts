@@ -6,7 +6,7 @@ import { LoggingService } from '../helper/LoggingService';
 
 
 const uriListMime = 'text/uri-list';
-const globalStateKey = 'DBFLUX_TABLE_TREE';
+const workspaceStateKey = 'DBFLUX_TABLE_TREE';
 /**
  * Hold information about the columns
  */
@@ -115,27 +115,31 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
     loadLastTables(){
       if (workspace.workspaceFolders) {
         // get state
-        const oldFString:any = this.treeContext.globalState.get(globalStateKey) as string;
+        const oldFString:any = this.treeContext.workspaceState.get(workspaceStateKey) as string;
 
+        let oldFiles:any[];
         // sometimes it's an array, but then its first item is undefined
         if (!Array.isArray(oldFString)) {
-          const oldFiles = oldFString?.split('|');
-
-          if (oldFiles) {
-            // clear the full state
-            this.treeContext.globalState.update(globalStateKey, undefined);
-
-            LoggingService.logInfo(`Loading last added TableFiles`);
-            // which is stored by default in addTable itself
-            oldFiles.forEach((file:any) => {
-              const tableFile = path.join(workspace.workspaceFolders![0].uri.fsPath, 'db', file);
-              if (existsSync(tableFile)) {
-                LoggingService.logDebug(`loading: ${file}`);
-                this.addTable(file);
-              }
-            });
-          }
+          oldFiles = oldFString?.split('|');
+        } else {
+          oldFiles = oldFString;
         }
+
+        if (oldFiles) {
+          // clear the full state
+          this.treeContext.workspaceState.update(workspaceStateKey, undefined);
+
+          LoggingService.logInfo(`Loading last added TableFiles`);
+          // which is stored by default in addTable itself
+          oldFiles.forEach((file:any) => {
+            const tableFile = path.join(workspace.workspaceFolders![0].uri.fsPath, 'db', file);
+            if (existsSync(tableFile)) {
+              LoggingService.logDebug(`loading: ${file}`);
+              this.addTable(file);
+            }
+          });
+        }
+
       }
     }
 
@@ -254,7 +258,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
     private clear() {
       this.treedata = [];
 
-      this.treeContext.globalState.update(globalStateKey, undefined);
+      this.treeContext.workspaceState.update(workspaceStateKey, undefined);
 
       // call to let VSCode refresh the tree
       this.m_onDidChangeTreeData.fire(undefined);
@@ -265,9 +269,28 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
      * @param selectedItem table
      */
     private clear_item(selectedItem:TableColumnItem) {
+      LoggingService.logInfo(`removing table ${selectedItem.label} from view`)
+
+      // assign new filteres treeitems (without the selected one)
       this.treedata = this.treedata.filter(treeItem => (selectedItem?.description !== treeItem.description));
-      const subset = (this.treeContext.globalState.get(globalStateKey) as string).split('|').filter((str) => (str !== selectedItem.description));
-      this.treeContext.globalState.update(globalStateKey, subset);
+
+      // remove that file from persisted global state
+      const oldFString:any = this.treeContext.workspaceState.get(workspaceStateKey) as string;
+
+      let oldFiles:any[];
+
+      // sometimes it's an array, but then its first item is undefined
+      if (!Array.isArray(oldFString)) {
+        oldFiles = oldFString?.split('|');
+      } else {
+        oldFiles = oldFString;
+      }
+
+      const subset = oldFiles.filter((str: string | boolean | undefined) => (str !== selectedItem.description));
+
+      if (subset) {
+        this.treeContext.workspaceState.update(workspaceStateKey, subset);
+      }
 
       // call to let VSCode refresh the tree
       this.m_onDidChangeTreeData.fire(undefined);
@@ -290,14 +313,14 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
 
     private async refresh() {
       if (workspace.workspaceFolders){
-        this.treeContext.globalState.update(globalStateKey, undefined);
+        this.treeContext.workspaceState.update(workspaceStateKey, undefined);
 
         for (let tableItem of this.treedata) {
           const tableFile = path.join(workspace.workspaceFolders[0].uri.fsPath, 'db', ""+tableItem.description!);
 
           if (existsSync(tableFile)) {
             this.buildAndParsChildColumns(tableFile, tableItem);
-            this.treeContext.globalState.update(globalStateKey, this.treeContext.globalState.get(globalStateKey) + '|' + tableItem.description!)
+            this.treeContext.workspaceState.update(workspaceStateKey, this.treeContext.workspaceState.get(workspaceStateKey) + '|' + tableItem.description!)
           } else {
             this.clear_item(tableItem);
           }
@@ -322,7 +345,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
           this.buildAndParsChildColumns(tableFile, tableItem);
 
           if (saveState) {
-            this.treeContext.globalState.update(globalStateKey, this.treeContext.globalState.get(globalStateKey) + '|' + fileName)
+            this.treeContext.workspaceState.update(workspaceStateKey, this.treeContext.workspaceState.get(workspaceStateKey) + '|' + fileName)
           }
         }
 
