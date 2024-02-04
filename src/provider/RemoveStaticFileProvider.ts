@@ -56,7 +56,6 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
   }
 
   createExpTask(definition: RemoveTaskDefinition): Task {
-    console.log('definition', definition);
     let _task = new Task(
       definition,
       TaskScope.Workspace,

@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "4.10.0-alpha-5",
+	"version": "5.0.0",
 	"engines": {
 		"vscode": "^1.82.0"
 	},
@@ -155,18 +155,23 @@
 		"viewsWelcome": [
 			{
 				"view": "dbflux.showTableDetails.treeview",
-				"contents": "No tables have been added yet. [learn more](https://github.com/MaikMichel/dbFlux?tab=readme-ov-file#demo---compile-plsql).\n[Add Table](command:dbflux.showTableDetails.treeview.add_item)"
+				"contents": "No tables have been added yet. [learn more](https://github.com/MaikMichel/dbFlux#dbstruct-columns-viewer).\n[Add Table](command:dbflux.showTableDetails.treeview.add_item)"
+			},
+			{
+				"view": "dbflux.dblock.treeview",
+				"contents": "No locked files have been found. [learn more](https://github.com/MaikMichel/dbFlux#dblock-file-tree).\n[Lock current file](command:dbFlux.lockCurrentFile)"
 			}
 		],
 		"views": {
 			"explorer": [
 				{
 					"id": "dbflux.dblock.treeview",
-					"name": "DBLock - locked files by user"
+					"name": "dbLock - locked files by user",
+					"when": "dbLockEnabled"
 				},
 				{
 					"id": "dbflux.showTableDetails.treeview",
-					"name": "dbFlux - Structure-Viewer"
+					"name": "dbStruct - column viewer"
 				}
 			]
 		},
@@ -215,6 +220,12 @@
 			{
 				"command": "dbflux.showTableDetails.treeview.copy_selection_with_colonequal",
 				"title": "Copy using ':='",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbflux.showTableDetails.addColumnSnippet",
+				"title": "Add Column-Snippet",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},

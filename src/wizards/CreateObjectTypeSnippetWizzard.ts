@@ -96,7 +96,7 @@ export async function createObjectTypeSnippetWizard(context: ExtensionContext) {
     // target snippet to write to
     const snippetFile = path.join(workspace.workspaceFolders[0].uri.fsPath, ".vscode", "dbflux.code-snippets");
 
-    // ObjectRepresentation of dbFlus - snippets
+    // ObjectRepresentation of dbFlux - snippets
     let targetSnippetContent:any = {};
     if (existsSync(snippetFile)) {
       targetSnippetContent = JSON.parse(readFileSync(snippetFile).toString());

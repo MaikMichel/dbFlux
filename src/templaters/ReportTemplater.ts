@@ -11,7 +11,7 @@ export class ReportTemplater {
   constructor(private sourceFile: string){
 
     if (!existsSync(path.resolve(path.dirname(this.sourceFile), "template.sql"))) {
-      vscode.window.showErrorMessage(`No template found in folder ${path.dirname(this.sourceFile)}`);
+      vscode.window.showErrorMessage(`dbFlux: No template found in folder ${path.dirname(this.sourceFile)}`);
       throw new Error("No template found");
     }
 
@@ -26,7 +26,7 @@ export class ReportTemplater {
       let sourceFileName = await vscode.window.showInputBox({value: path.basename(this.sourceFile)+`_${new Date().toISOString().slice(0, 10)}.sql`, prompt:"Enter new filename"});
 
       if (sourceFileName === undefined) {
-        vscode.window.showErrorMessage('Action canceled');
+        vscode.window.showErrorMessage('dbFlux: Action canceled');
       } else {
 
 
@@ -46,7 +46,7 @@ export class ReportTemplater {
         const currentWorkSpace = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(this.sourceFile));
 
         if (!currentWorkSpace) {
-          vscode.window.showErrorMessage('There is no workspacefolder open.');
+          vscode.window.showErrorMessage('dbFlux: There is no workspacefolder open.');
           throw new Error("There is no workspacefolder open.");
         }
 

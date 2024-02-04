@@ -85,7 +85,6 @@ export async function showTableDetailsWizard(context: ExtensionContext, tree: DB
   }
 
   const state = await collectInputs();
-  console.log('state', state);
 
 
   tree.addTable(state.objectType.label);

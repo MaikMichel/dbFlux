@@ -41,30 +41,35 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
   }
 
   async refreshCache() {
-    try {
-      const urlToFetch = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/") + "/dblock/v1/files/" + getProjectInfos(this.context).projectName?.toLowerCase();
-      const options = {
-        method: 'GET',
-        headers: {  Accept: '*/*',
-                  'User-Agent': 'VSCode (dbFlux)',
-                  'mandant': ConfigurationManager.getDBLockMandantToken()
-            }
-          };
+    if (ConfigurationManager.getDBLockRESTUrl()) {
+      try {
+        const urlToFetch = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/") + "/dblock/v1/files/" + getProjectInfos(this.context).projectName?.toLowerCase();
+        const options = {
+          method: 'GET',
+          headers: {  Accept: '*/*',
+                    'User-Agent': 'VSCode (dbFlux)',
+                    'mandant': ConfigurationManager.getDBLockMandantToken()
+              }
+            };
 
-      const response = await fetch(urlToFetch, options);
-      const data = await response.json();
-      this.cachedFiles = data.items.map(function (elem:any) {
-        return elem.lfs_name
-      });
-      this.cachedUsers = data.items.map(function (elem:any) {
-        return elem.lfs_user
-      });
+        const response = await fetch(urlToFetch, options);
+        const data = await response.json();
+        this.cachedFiles = data.items.map(function (elem:any) {
+          return elem.lfs_name
+        });
+        this.cachedUsers = data.items.map(function (elem:any) {
+          return elem.lfs_user
+        });
 
-      this.updateDecorations();
+        this.updateDecorations();
 
-    } catch (e:any) {
-      console.error(e);
-      await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
+      } catch (e:any) {
+        LoggingService.logError(`Error while trying to fetch`, e);
+        await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
+      }
+    } else {
+      LoggingService.logError(`No REST-URL provided. Please adjust your settings!`);
+      await window.showErrorMessage(`dbFlux: No REST-URL provided. Please adjust your settings!`);
     }
   }
 
@@ -104,45 +109,47 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
 export function registerLockCurrentFileCommand(projectInfos: IProjectInfos, decoProvider: ViewFileDecorationProvider) {
   return commands.registerCommand("dbFlux.lockCurrentFile", async () => {
 
-    console.log('window.activeTextEditor', window.activeTextEditor);
+
     if (window.activeTextEditor != undefined) {
 
       const relativeFile = workspace.asRelativePath(window.activeTextEditor.document.uri);
-      console.log('relativeFile', relativeFile);
+      LoggingService.logInfo(`locking file ${relativeFile}`);
       const urlEncodedFile = encodeURIComponent(relativeFile!);
       const urlFromSettings = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/");
 
-      const url = `${urlFromSettings}/dblock/v1/file/${projectInfos.projectName?.toLowerCase()}?filename=${urlEncodedFile}`;
+      if (ConfigurationManager.getDBLockRESTUrl()) {
 
-      const options = {
-        method: 'POST',
-        headers: {  Accept: '*/*',
-                  'User-Agent': 'VSCode (dbFlux)',
-                  'username': process.env.USERNAME?process.env.USERNAME:basename(homedir()),
-                  'mandant': ConfigurationManager.getDBLockMandantToken()
-            }
-      };
 
-      // console.log('url', url, options);
-      try {
-        const response = await fetch(url, options);
-        // console.log('response', response, response.body);
+        const url = `${urlFromSettings}/dblock/v1/file/${projectInfos.projectName?.toLowerCase()}?filename=${urlEncodedFile}`;
+        LoggingService.logDebug(`send request ${url}`);
+        const options = {
+          method: 'POST',
+          headers: {  Accept: '*/*',
+                    'User-Agent': 'VSCode (dbFlux)',
+                    'username': process.env.USERNAME?process.env.USERNAME:basename(homedir()),
+                    'mandant': ConfigurationManager.getDBLockMandantToken()
+              }
+        };
 
-        if (response.ok) {
-          const data = await response.json();
+        try {
+          const response = await fetch(url, options);
 
-          window.showInformationMessage(`${data.message}`)
-          decoProvider.refreshCache();
-          await commands.executeCommand('dbflux.dblock.treeview.view_refresh');
-        } else {
-          // const text = response.text();
-          // console.log('text', text);
+          if (response.ok) {
+            const data = await response.json();
 
-          LoggingService.logInfo(`Status from ${urlFromSettings} was ${response.status}`);
+            window.showInformationMessage(`${data.message}`)
+            decoProvider.refreshCache();
+            await commands.executeCommand('dbflux.dblock.treeview.view_refresh');
+          } else {
+            LoggingService.logInfo(`Status from ${urlFromSettings} was ${response.status}`);
+          }
+        } catch (e:any) {
+          LoggingService.logError(`dbFlux (dbLock): ${e}!`, e);
+          await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
         }
-      } catch (e:any) {
-        console.error(e);
-        await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
+      } else {
+        LoggingService.logError(`No REST-URL provided. Please adjust your settings!`);
+        await window.showErrorMessage(`dbFlux: No REST-URL provided. Please adjust your settings!`);
       }
     }
   }
@@ -154,32 +161,38 @@ export function registerUnLockCurrentFileCommand(projectInfos: IProjectInfos, de
     if (window.activeTextEditor) {
       const relativeFile = workspace.asRelativePath(window.activeTextEditor.document.uri);
       const urlEncodedFile = encodeURIComponent(relativeFile!);
-      const urlFromSettings = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/");
 
-      const url = `${urlFromSettings}/dblock/v1/file/${projectInfos.projectName?.toLowerCase()}?filename=${urlEncodedFile}`;
+      if (ConfigurationManager.getDBLockRESTUrl()) {
+        const urlFromSettings = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/");
 
-      const options = {
-        method: 'DELETE',
-        headers: {  Accept: '*/*',
-                   'User-Agent': 'VSCode (dbFlux)',
-                   'mandant': ConfigurationManager.getDBLockMandantToken()
-            }
-          };
+        const url = `${urlFromSettings}/dblock/v1/file/${projectInfos.projectName?.toLowerCase()}?filename=${urlEncodedFile}`;
 
-      try {
-        const response = await fetch(url, options);
-        if (response.ok) {
-          const data = await response.json();
+        const options = {
+          method: 'DELETE',
+          headers: {  Accept: '*/*',
+                    'User-Agent': 'VSCode (dbFlux)',
+                    'mandant': ConfigurationManager.getDBLockMandantToken()
+              }
+            };
 
-          window.showInformationMessage(`${data.message}`)
-          decoProvider.refreshCache();
-          await commands.executeCommand('dbflux.dblock.treeview.view_refresh');
-        } else {
-          LoggingService.logInfo(`Status from ${urlFromSettings} was ${response.status}`);
+        try {
+          const response = await fetch(url, options);
+          if (response.ok) {
+            const data = await response.json();
+
+            window.showInformationMessage(`${data.message}`)
+            decoProvider.refreshCache();
+            await commands.executeCommand('dbflux.dblock.treeview.view_refresh');
+          } else {
+            LoggingService.logInfo(`Status from ${urlFromSettings} was ${response.status}`);
+          }
+        } catch (e:any) {
+          console.error(e);
+          await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
         }
-      } catch (e:any) {
-        console.error(e);
-        await window.showErrorMessage(`dbFlux (dbLock): ${e}!`);
+      } else {
+        LoggingService.logError(`No REST-URL provided. Please adjust your settings!`);
+        await window.showErrorMessage(`dbFlux: No REST-URL provided. Please adjust your settings!`);
       }
     }
   });

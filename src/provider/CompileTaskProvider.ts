@@ -350,6 +350,9 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
               }
             );
 
+            // Reset target props
+            CompileTaskStore.getInstance().targetApplicationID = undefined;
+            CompileTaskStore.getInstance().targetWorkspace = undefined;
 
             if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideSetup || insideDb || insideREST || insideAPEX)) {
               if (insideAPEX) {
@@ -364,10 +367,6 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
                   await window.showWarningMessage(`Unknown Workspace! Missing item in project configuration?`);
                   return;
                 }
-              } else {
-                // Reset target props
-                CompileTaskStore.getInstance().targetApplicationID = undefined;
-                CompileTaskStore.getInstance().targetWorkspace = undefined;
               }
 
 
@@ -422,16 +421,19 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
               // check if folder contains dbSchemaFolder
               const folderParts = relativeFileName.split("/");
               let scheme:string|undefined = undefined;
-              folderParts.forEach((part) => {
+              for (let part of folderParts) {
                 if (scheme === undefined) {
-                  dbSchemaFolders.forEach((schema) => {
+
+                  for(let schema of dbSchemaFolders) {
                     scheme = part.includes(schema.label)?schema.label:scheme;
                     CompileTaskStore.getInstance().selectedSchemas = [schema?.description!];
-                  });
+                  };
+
                 }
-              });
+              };
+
               // scheme, when schema include as file name, otherwise selected on
-              let schemaSelected: boolean = scheme || await selectSchema(dbSchemaFolders);
+              let schemaSelected: boolean = (scheme !== undefined) || await selectSchema(dbSchemaFolders);
               if (schemaSelected) {
                 LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run selected file`);
                 commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
@@ -492,7 +494,7 @@ async function isfileLockedByAnotherUser(projectName: string, relativeFileName: 
     if (data.items.length > 0) {
       element.isLocked = true;
       element.user = data.items[0].lfs_user?data.items[0].lfs_user:"unknown";
-      // console.log('element', element);
+
       LoggingService.logError(`File is locked by ${element.user}`);
     } else {
       LoggingService.logError(`File is not locked`);

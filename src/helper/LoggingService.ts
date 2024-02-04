@@ -65,7 +65,7 @@ export abstract class LoggingService {
     ) {
       return;
     }
-    console.log('(new Error()).stack?.split(\"\n\")', (new Error()).stack?.split("\n"));
+
     const myCaller = (new Error()).stack?.split("\n")[2].trim().split(" ")[1]
     const arr = myCaller?.split(path.sep);
     if (arr?.length && arr.length-1 ) {

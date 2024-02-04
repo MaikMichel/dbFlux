@@ -192,7 +192,6 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
       const connectionUri = await getActiveFileUri();
       runner.executableCli          = ConfigurationManager.getCliToUseForCompilation();
       const activeFilePath          = connectionUri?.path;
-      // console.log('activeFilePath', activeFilePath);
 
 
       if (activeFilePath && fileExists(activeFilePath)) {

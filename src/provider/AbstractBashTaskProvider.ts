@@ -282,7 +282,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
       (projectInfos.dbAppUser === undefined || !projectInfos.dbAppUser || projectInfos.dbAppUser.length === 0) ||
       (projectInfos.dbTns === undefined || !projectInfos.dbTns || projectInfos.dbTns?.length === 0)
   ) {
-    dbConnMsg = `Connection configuration incomplete! Please check your configuration!
+    dbConnMsg = `dbFlux: Connection configuration incomplete! Please check your configuration!
     (User: ${projectInfos.dbAppUser},
     Connection: ${projectInfos.dbTns})
     `;
@@ -305,14 +305,14 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
           (projectInfos.logicSchema === undefined || !projectInfos.logicSchema || projectInfos.logicSchema.length === 0) ||
           (projectInfos.dataSchema === undefined || !projectInfos.dataSchema || projectInfos.dataSchema.length === 0)
         )) {
-          schemaMsg = `Schema configuration incomplete! Please check your configuration!
+          schemaMsg = `dbFlux: Schema configuration incomplete! Please check your configuration!
           (DATA: ${projectInfos.dataSchema},
           LOGIC: ${projectInfos.logicSchema},
           APP: ${projectInfos.appSchema})`;
     } else if ((projectInfos.projectMode == "SINGLE") && (
       (projectInfos.appSchema === undefined || !projectInfos.appSchema || projectInfos.appSchema.length === 0)
     )) {
-      schemaMsg = `Schema configuration incomplete! Please check your configuration!
+      schemaMsg = `dbFlux: Schema configuration incomplete! Please check your configuration!
       (APP: ${projectInfos.appSchema})`;
     }
 
@@ -353,7 +353,13 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
   const lowerPathName = (pathName+"/").toLowerCase().replace(wsRoot, "");
   const lowerPathParts = lowerPathName.split(path.posix.sep);
 
-  if (currentFilePath !== undefined && (lowerPathParts[0] === ".hooks" || (lowerPathParts[0] === "db" && lowerPathParts[1] === ".hooks"))) {
+  LoggingService.logDebug(`get DB User from Path`, {
+    "lowerPathName": lowerPathName,
+    "lowerPathParts": lowerPathParts,
+    "currentFilePath": currentFilePath
+  });
+
+  if (currentFilePath !== undefined &&(lowerPathParts[0] === ".hooks" || (lowerPathParts[0] === "db" && lowerPathParts[1] === ".hooks"))) {
     const lastElement = currentFilePath.split("/").pop();
     // check if any db schema folder is inside this file
     getSchemaFolders(path.join(wsRoot, "db")).forEach((val)=>{
@@ -363,11 +369,18 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
     });
 
     // when not matched exit with error
-    if (returnDBUser.length === 0) {
-      const errorMessage = "dbFLux: Unknown schema, please use *_schema_name_*.sql to execute a hook file";
-      window.showErrorMessage(errorMessage);
-      throw new Error('errorMessage');
+    if (returnDBUser.length === 0 ) {
+      if (CompileTaskStore.getInstance().selectedSchemas) {
+        returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
+        window.showWarningMessage("You are compiling a hook-file. Keep in mind that the target schema-name must be a part of the filename. Otherwise dbFlow won't run this file!");
+      } else {
+        const errorMessage = "dbFLux: Unknown schema, please use *_schema_name_*.sql to execute a hook file";
+        LoggingService.logError(errorMessage);
+        window.showErrorMessage(errorMessage);
+      }
+
     }
+
   } else if (lowerPathParts[0] === "db" && (lowerPathParts[1] === "_setup" || lowerPathParts[1] === ".setup")) {
     returnDBUser = projectInfos.dbAdminUser!;
   } else if (lowerPathParts[0] === "db") {
@@ -392,6 +405,7 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
     returnDBUser = isNumeric(returnDBUser.split("_")[0])?returnDBUser.split("_").slice(1).join("_"):returnDBUser;
   }
 
+  LoggingService.logDebug(`returning returnDBUser: ${returnDBUser}`);
   return returnDBUser;
 }
 

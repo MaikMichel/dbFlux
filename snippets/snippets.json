@@ -299,7 +299,14 @@
 		"/$0"
 		],
 		"description": "Add a trigger to fill primary key column and audit infos"
+	},
+  "dbflux-column-output": {
+		"scope": "plsql,sql",
+		"body": [
+		"-- This is just a demo. You can add snipptets by using command dbFlux: Add Column-Snippet",
+		"dbms_output.put_line('${1:prompt} > Table: §{DBFLUX_TABLE} --- Column: §{DBFLUX_COLUMN}: ' || l_§{dbflux_table}.§{dbflux_column});$0"
+		],
+		"description": "Demo to show Column Snippet Processing. You can use:  §{DBFLUX_TABLE}, §{dbflux_table}, §{DBFLUX_COLUMN}, §{dbflux_column}"
 	}
-
 
 }

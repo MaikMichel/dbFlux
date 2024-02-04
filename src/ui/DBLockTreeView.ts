@@ -1,4 +1,4 @@
-import { commands, Event, EventEmitter, ProviderResult, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window, workspace } from 'vscode'
+import { commands, Event, EventEmitter, ProviderResult, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, window, workspace } from 'vscode'
 import { ViewFileDecorationProvider } from '../provider/ViewFileDecorationProvider';
 import { getWorkspaceRootPath } from '../helper/utilities';
 import { homedir } from 'os';
@@ -31,7 +31,7 @@ class DBLockTreeItem extends TreeItem
 export class DBLockTreeView implements TreeDataProvider<DBLockTreeItem>
 {
     static osUser:string = process.env.username?process.env.username:basename(homedir());
-
+    private treeView : TreeView<DBLockTreeItem>;
 
     private m_data : DBLockTreeItem [] = [];
 
@@ -45,6 +45,13 @@ export class DBLockTreeView implements TreeDataProvider<DBLockTreeItem>
     private m_deco_provider:ViewFileDecorationProvider;
 
     public constructor(decoProvider: ViewFileDecorationProvider)  {
+
+      this.treeView = window.createTreeView("dbflux.dblock.treeview", {treeDataProvider:this, canSelectMany: false, showCollapseAll:true});
+      this.treeView.description = `Locked Files by User`;
+      this.treeView.title = "dbLock";
+
+      decoProvider.context.subscriptions.push(this.treeView );
+
       this.m_deco_provider = decoProvider;
       commands.registerCommand('dbflux.dblock.treeview.item_clicked', r => this.item_clicked(r));
       commands.registerCommand('dbflux.dblock.treeview.view_refresh', () => this.refresh());

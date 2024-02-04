@@ -222,7 +222,7 @@ export function registerAddFeatureSet(command: string, context: ExtensionContext
           await execShell(myCommand, `Adding SubModule: ${state.gitUrl}`);
         } catch (e: any) {
           LoggingService.logError(e, e);
-          window.showErrorMessage("There was an error when trying to add your input as Git-SubModule!");
+          window.showErrorMessage("dbFlux: There was an error when trying to add your input as Git-SubModule!");
           return
         }
 
@@ -242,7 +242,7 @@ export function registerAddFeatureSet(command: string, context: ExtensionContext
         const manifestContent = readFileSync(manifestFile, { encoding: 'utf8' });
         if (!isJSON(manifestContent)) {
           LoggingService.logError("manifest.json is not of JSON format");
-          window.showErrorMessage("manifest.json is not of JSON format");
+          window.showErrorMessage("dbFlux: manifest.json is not of JSON format");
           return;
         }
 
@@ -250,7 +250,7 @@ export function registerAddFeatureSet(command: string, context: ExtensionContext
         const FeatureSet = parseToFeatureSet(manifestContent);
         if (!FeatureSet) {
           LoggingService.logError(`Unknown structure in ${manifestFile}`);
-          window.showWarningMessage(`Unknown structure in ${manifestFile}`);
+          window.showWarningMessage(`dbFlux: Unknown structure in ${manifestFile}`);
           return;
         }
 
@@ -314,7 +314,7 @@ export function registerSyncFeatureSet(command: string, context: ExtensionContex
         const manifestContent = readFileSync(manifestFile, { encoding: 'utf8' });
         if (!isJSON(manifestContent)) {
           LoggingService.logError("manifest.json is not of JSON format");
-          window.showErrorMessage("manifest.json is not of JSON format");
+          window.showErrorMessage("dbFlux: manifest.json is not of JSON format");
           return;
         }
 
@@ -322,7 +322,7 @@ export function registerSyncFeatureSet(command: string, context: ExtensionContex
         const FeatureSet = parseToFeatureSet(manifestContent);
         if (!FeatureSet) {
           LoggingService.logError(`Unknown structure in ${manifestFile}`);
-          window.showWarningMessage(`Unknown structure in ${manifestFile}`);
+          window.showWarningMessage(`dbFlux: Unknown structure in ${manifestFile}`);
           return;
         }
 
@@ -330,7 +330,7 @@ export function registerSyncFeatureSet(command: string, context: ExtensionContex
         const existingIndex = Catalog?.features.findIndex(item => item.feature === FeatureSet.feature) || 0;
         if (existingIndex === -1) {
           LoggingService.logError("FeatureSet not in catalog");
-          window.showErrorMessage("FeatureSet not in catalog");
+          window.showErrorMessage("dbFlux: FeatureSet not in catalog");
           return;
         }
 

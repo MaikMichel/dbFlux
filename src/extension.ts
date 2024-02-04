@@ -28,6 +28,7 @@ import { registerAddFeatureSet, registerSyncFeatureSet } from "./provider/Featur
 import { createObjectTypeSnippetWizard } from "./wizards/CreateObjectTypeSnippetWizzard";
 import { showTableDetailsWizard } from "./wizards/ShowTableDetailsWizards";
 import { DBFluxTableDetails } from "./ui/DBFluxTableDetails";
+import { addColumnSnippet } from "./wizards/AddColumnSnippet";
 
 
 
@@ -62,6 +63,10 @@ export async function activate(context: ExtensionContext) {
     activate(context);
   }));
 
+  // Wrap Selection for Logging
+  context.subscriptions.push(registerWrapLogSelection());
+  context.subscriptions.push(registerWrapLogSelectionDown());
+  context.subscriptions.push(registerWrapLogSelectionUp());
 
   LoggingService.logDebug('Determining Mode');
   const dbFluxMode = getDBFlowMode(context);
@@ -115,10 +120,6 @@ export async function activate(context: ExtensionContext) {
 
     LoggingService.logDebug('Registering many Commands ...');
 
-    // Wrap Selection for Logging
-    context.subscriptions.push(registerWrapLogSelection());
-    context.subscriptions.push(registerWrapLogSelectionDown());
-    context.subscriptions.push(registerWrapLogSelectionUp());
 
     // Add Command: Create an Object by Wizard => Choose a folder and name your file
     context.subscriptions.push(commands.registerCommand('dbFlux.createObjectWizard', async () => createObjectWizard(context)));
@@ -262,6 +263,8 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.add_item', async () => showTableDetailsWizard(context, tree, false)));
     context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.add_item_context', async () => showTableDetailsWizard(context, tree, true)));
+
+    context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.addColumnSnippet', async () => addColumnSnippet(context)));
 
 
 

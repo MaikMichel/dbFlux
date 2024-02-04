@@ -252,10 +252,8 @@ export function getObjectNameFromFile(filePath:string):string {
 
   if (parts[0] === "db") {
     return path.basename(filePath);
-  } else {
-    console.log('parts[0]', parts[0]);
   }
-
+  LoggingService.logError("Unknown directory structur (getObjectNameFromFile) first part is not 'db != '" + parts[0]);
   throw new Error("Unknown directory structur (getObjectNameFromFile) first part is not 'db != '" + parts[0]);
 
 }

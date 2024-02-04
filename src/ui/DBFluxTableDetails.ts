@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'fs';
 import * as path from "path";
 import { CancellationToken, commands, DataTransfer, DataTransferItem, DocumentDropEdit, DocumentDropEditProvider, env, Event, EventEmitter, ExtensionContext, languages, Position, ProviderResult, SnippetString, TextDocument, ThemeIcon, TreeDataProvider, TreeDragAndDropController, TreeItem, TreeItemCollapsibleState, TreeView, window, workspace } from 'vscode';
 import { chooseSnippetWizard, getAvailableSnippetKeys, getSnippedBody } from '../wizards/ChooseSnippetWizzard';
+import { LoggingService } from '../helper/LoggingService';
 
 
 const uriListMime = 'text/uri-list';
@@ -25,6 +26,8 @@ interface ColumnProps {
 class TableColumnItem extends TreeItem {
 
   public children: TableColumnItem[] = [];
+  public parentTableItem: string | undefined = undefined;
+
 
   /**
    * Multiple Constructors are not allowed so, I deal with this way
@@ -58,7 +61,9 @@ class TableColumnItem extends TreeItem {
 
   public add_child (child : TableColumnItem) {
       this.collapsibleState = TreeItemCollapsibleState.Expanded;
+      child.parentTableItem = ""+this.label?.toString();
       this.children.push(child);
+
   }
 
   public remove_childs(){
@@ -87,9 +92,11 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
     constructor(context:ExtensionContext){
       this.treeView = window.createTreeView("dbflux.showTableDetails.treeview", {treeDataProvider:this, canSelectMany: true, showCollapseAll:true, dragAndDropController: this});
       this.treeContext = context;
+      this.treeView.description = `Column Viewer`;
+      this.treeView.title = "dbStruct";
       context.subscriptions.push(this.treeView );
 
-      const selector = [{ language: "plsql", scheme: "file" }]
+      const selector = [{ language: "plsql", scheme: "file" }, { language: "sql", scheme: "file" }];
 
       context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.clear_items',  () => this.clear()));
       context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.refresh_items',  () => this.refresh()));
@@ -118,10 +125,12 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
             // clear the full state
             this.treeContext.globalState.update(globalStateKey, undefined);
 
+            LoggingService.logInfo(`Loading last added TableFiles`);
             // which is stored by default in addTable itself
             oldFiles.forEach((file:any) => {
               const tableFile = path.join(workspace.workspaceFolders![0].uri.fsPath, 'db', file);
               if (existsSync(tableFile)) {
+                LoggingService.logDebug(`loading: ${file}`);
                 this.addTable(file);
               }
             });
@@ -140,12 +149,11 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
         return undefined;
       }
 
-      const objectTypes = await getAvailableSnippetKeys();
-      if (objectTypes.length ===0) {
+      const treeItems: TableColumnItem[] = JSON.parse(await dataTransferItem.value);
+      const definedSnippets = await getAvailableSnippetKeys();
 
+      if (definedSnippets.length ===0) {
         const sepToDragWith:string = workspace.getConfiguration("dbFlux.showTableDetails").get("DragSelectionWith") || ", ";
-        const treeItems: TableColumnItem[] = JSON.parse(await dataTransferItem.value);
-
         const labels = treeItems.map((item)=>{
           return item.children.length > 0 ? item.children.map((child) => item.label + "." + child.label).join(sepToDragWith): item.label;
         });
@@ -153,7 +161,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
 
         return new DocumentDropEdit(labels.join(sepToDragWith) + (sepToDragWith.includes("\n") ? sepToDragWith : ""));
       } else {
-        const snippet = await this.getDragSelectionWithSnippet();
+        const snippet = await this.getDragSelectionWithSnippet(treeItems);
         return new DocumentDropEdit(snippet);
       }
     }
@@ -163,17 +171,15 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
      * @param sep string to seperate the selection
      */
     private copySelectionToClipboard(sep:string) {
-      console.log('copySelectionToClipboard', sep);
       const labels = this.treeView.selection.map((item)=>{
         return item.children.length > 0 ? item.children.map((child) => item.label + "." + child.label).join(sep): item.label;
       });
 
-      console.log('labels', labels);
       env.clipboard.writeText(labels.join(sep) + ([";\n", " := \n"].includes(sep)?sep:""));
       window.setStatusBarMessage('dbFlux: Selection written to ClipBoard', 2000);
     }
 
-    private async getDragSelectionWithSnippet() : Promise<SnippetString> {
+    private async getDragSelectionWithSnippet(treeItems:TableColumnItem[]) : Promise<SnippetString> {
       // show Wizard
       const pickedSnipped = await chooseSnippetWizard();
 
@@ -181,15 +187,20 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
       if (pickedSnipped?.pickedSnipped) {
         //
         const bodyLines:string[] = await getSnippedBody(pickedSnipped?.pickedSnipped.label);
-        const labels:string[] = [];
+        const labels:{table:string, column:string}[] = [];
 
-        this.treeView.selection.forEach(element => {
+        treeItems.forEach(element => {
           if(element.children.length > 0) {
             element.children.forEach(childElement => {
-              labels.push(element.label?.toString()! + "." + childElement.label?.toString()!);
+              labels.push({
+                table:  "" + childElement.label?.toString(),
+                column: "" + childElement.label?.toString()});
             })
           } else {
-            labels.push(element.label?.toString()!);
+            labels.push({
+              table:  "" + element.parentTableItem,
+              column: "" + element.label?.toString()
+            });
           }
         });
 
@@ -198,7 +209,14 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
         for (let i=0; i < labels.length; i++) {
           const item = labels[i];
 
-          touchedBodyLines.push(bodyLines.join("\n").replaceAll("$DBFLUX_COLUMN", item!.toString().toUpperCase()).replaceAll("$dbflux_column", item!.toString().toLowerCase()));
+          const variablen = {
+            "DBFLUX_TABLE": item.table.toUpperCase(),
+            "dbflux_table": item.table.toLowerCase(),
+            "DBFLUX_COLUMN": item.column.toUpperCase(),
+            "dbflux_column": item.column.toLowerCase(),
+          };
+
+          touchedBodyLines.push(this.replaceVars(bodyLines.join("\n"), variablen));
         }
 
         // build your snippet with the SnippetString methods
@@ -209,6 +227,16 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
 
     }
 
+    // Funktion zum Ersetzen von Platzhaltern im String
+    replaceVars(inputString: string, vars: { [key: string]: string }): string {
+      for (const key in vars) {
+          if (vars.hasOwnProperty(key)) {
+              const marker = new RegExp(`§{${key}}`, 'g');
+              inputString = inputString.replace(marker, vars[key]);
+          }
+      }
+      return inputString;
+    }
 
     handleDrag(source: readonly TableColumnItem[], dataTransfer: DataTransfer, token: CancellationToken): void | Thenable<void> {
       dataTransfer.set(uriListMime, new DataTransferItem(source));

@@ -4,10 +4,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import * as path from "path";
 import { QuickPickItem, workspace } from 'vscode';
 import { MultiStepInput } from './InputFlowAction';
+import { LoggingService } from '../helper/LoggingService';
 
 
 
@@ -102,12 +103,20 @@ async function getSnippetContent() {
   let targetSnippetContent: any = {};
 
   if (workspace.workspaceFolders) {
+
     const snippetFile = path.join(workspace.workspaceFolders[0].uri.fsPath, ".vscode", "dbflux.code-snippets");
 
 
+    LoggingService.logDebug(`check existence of .vscode/dbflux.code-snippets`);
     if (existsSync(snippetFile)) {
+      LoggingService.logDebug(`reading dbflux.code-snippets`);
       targetSnippetContent = JSON.parse(readFileSync(snippetFile).toString());
     } else {
+      LoggingService.logDebug(`creating .vscode/dbflux.code-snippets`);
+      const targetFolder = path.join(workspace.workspaceFolders[0].uri.fsPath, ".vscode");
+      if (!existsSync(targetFolder)) {
+        mkdirSync(targetFolder);
+      }
       writeFileSync(snippetFile, "{}");
     }
   }
@@ -117,7 +126,6 @@ async function getSnippetContent() {
 export async function getSnippedBody(snippetKey:string):Promise<string[]> {
   const targetSnippetContent: any = await getSnippetContent();
 
-  console.log('snippetKey', targetSnippetContent, snippetKey);
   return targetSnippetContent[snippetKey]?.body;
 
 }
