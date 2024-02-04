@@ -34,7 +34,11 @@ Using this extension enables you to develop Oracle Database and APEX application
 - Addionaly Support for dbFlow and XCL projects
 - [**Lock and unlock Files**](#lock-and-unlock-files 'Jump to Lock and unlock Files'), so you can't accidentally delete changes allready made by another person
 - [**Export APEX Static Application Files**](#export-apex-static-application-files 'Jump to Export APEX Static Application Files') to static folder
-- [**Add FeatureSet as SubModule**](#add-featuresets 'Jump to Add FeatureSet as SubModule') to your repo to benefit from other great contributions
+- [**Add FeatureSet as SubModule**](#add-featureset-as-submodule 'Jump to Add FeatureSet as SubModule') to your repo to benefit from other great contributions
+
+- [**TreeView, that will show columns infos based on tables**](#dbstruct---view-table-structure 'Jump to dbStruct - View table structure') you added. With some nice features
+- [**Configure Logging output**](#view-and-configure-logging-output 'Jump to View and configure logging output')
+
 
 
 
@@ -451,13 +455,13 @@ In FlexSchema mode, dbFLux also offers you the command `dbFLux: Add Schema`. Wit
   <br/>
 </p>
 
-### Lock and unlock Files [#](#features 'Jumpt back to Features')
+## Lock and unlock Files [#](#features 'Jumpt back to Features')
 > feature is in preview - things might change
 
 You can enable this feature within the settings for `Rest APIEnabled`. You can find the implementation for an ORDS-REST endpoint at (https://github.com/MaikMichel/dbLock). You have to install it accordingly. It is sufficient to execute the installation file in a schema of your choice. At the end of the installation a token will be displayed. This token has to be added in addition to the URL under which this REST service is now accessible in settings as well. (`Rest APIToken`, `Rest APIUrl`)
 
 
-### Add FeatureSet as SubModule [#](#features 'Jumpt back to Features')
+## Add FeatureSet as SubModule [#](#features 'Jumpt back to Features')
 
 With the command `Add FeatureSet as SubModule` you can add a Git-Repository to your project. This will add files from this repo to your directory. The advantage here is that you make the feature part of your deployment and don't include it as a dependency. It becomes part of your project. However, **dbFlux** remembers the source repository in order to update these changes in your project later, if there has been an update or a new version.
 
@@ -504,9 +508,22 @@ As soon as your project has the file `.featureCatalog`, dbFlux will check at the
 
 
 
+## dbStruct - View table structure [#](#features 'Jumpt back to Features')
+
+With the command: `dbFlux: Add Table to Column-Viewer` you can add a table, either the current one (file in the tables folder) or the current text selection, if available as a table, or a table file to be selected, to the *dbStruct* view. *dbFLux* will parse the file and determine all column definitions from the first pair of brackets. Using the context menu from a column or the table itself, you then have 4 options available to write the respective columns to the clipboard with the selected separator. You can also drag and drop the columns to the current file. If no *column snippets* have been stored, the predefined separator is used as the separator. You can adjust this accordingly in the settings.
+
+### Column Snippets
+
+As soon as you have stored *column snippets*, you can select them accordingly when dropping. You can store a column snippet with the command: `dbFlux: Add Column-Snippet`. These column snippets are basically normal VSCode snippets. In addition, dbFlux will replace the variables (§{DBFLUX_TABLE}, §{dbflux_table}, §{DBFLUX_COLUMN}, §{dbflux_column}) according to the selection. This means that upper and lower case are available for the table and column names.
 
 
-### List of all commands
+## View and configure logging output [#](#features 'Jumpt back to Features')
+
+When gathering additional infos about running dbFlux, you alway have the option to view the output-channel of dbFLux. Here you see the output dbFlux creates when running. You can adjust the level of ouput by changing the settings `dbFlux.loggingMode` to one of the following: DEBUG, INFO, WARN, ERROR, NONE
+
+
+
+## List of all commands
 
 | command                                     | Title                                                             |
 | -----------------------------               | ------------------------------------------                        |

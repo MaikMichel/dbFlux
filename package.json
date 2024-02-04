@@ -155,11 +155,11 @@
 		"viewsWelcome": [
 			{
 				"view": "dbflux.showTableDetails.treeview",
-				"contents": "No tables have been added yet. [learn more](https://github.com/MaikMichel/dbFlux#dbstruct-columns-viewer).\n[Add Table](command:dbflux.showTableDetails.treeview.add_item)"
+				"contents": "No tables have been added yet. [learn more](https://github.com/MaikMichel/dbFlux#dbstruct---view-table-structure).\n[Add Table](command:dbflux.showTableDetails.treeview.add_item)"
 			},
 			{
 				"view": "dbflux.dblock.treeview",
-				"contents": "No locked files have been found. [learn more](https://github.com/MaikMichel/dbFlux#dblock-file-tree).\n[Lock current file](command:dbFlux.lockCurrentFile)"
+				"contents": "No locked files have been found. [learn more](https://github.com/MaikMichel/dbFlux#lock-and-unlock-files).\n[Lock current file](command:dbFlux.lockCurrentFile)"
 			}
 		],
 		"views": {
@@ -187,14 +187,14 @@
 			},
 			{
 				"command": "dbflux.showTableDetails.treeview.add_item",
-				"title": "Add Table to Structure-Viewer",
+				"title": "Add Table to Column-Viewer",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject",
 				"icon": "$(add)"
 			},
 			{
 				"command": "dbflux.showTableDetails.treeview.add_item_context",
-				"title": "Add Table to Structure-Viewer",
+				"title": "Add Table to Column-Viewer",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject",
 				"icon": "$(add)"

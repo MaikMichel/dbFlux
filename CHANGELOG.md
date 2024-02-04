@@ -1,5 +1,23 @@
 # Change Log
 
+## [5.0.0 - 2024-02-04]
+- New: Add command to create Snippets based on ObjectType / Folder. So that they will appear, when you will create a new file
+- New: Add Feature *dbStruct* - Add TreeView, that will show columns infos based on tables you added
+- New: Add command to add tables to dbStruct
+- New: Add Context-Menus to selected table or column to write columns to clipboard.
+- New: Add DropProvider on dbStruct. You can drop selected columns into editor. Here you have the option to set a columns list or choose your own snippet, that will be executed for each selected column.
+- New: Add command to create Snippets for dragging columns into the editor.
+- New: Added many debug and info messages so that users can provide output from dbFlux - channel
+- New: Setting to select logging level (Default = INFO)
+- Add: dbLock treeview shows a welcome message
+- Fix: dbLock treeview will only show when feature is enabled
+- Fix: dbLock will show a Error, when enabled but no REST-Url is defined
+- Fix: Bug on compiling an APEX - file, when previousliy runned the install.sql in an APEX - folder
+- Fix: Running global hook-files, withou schema name.
+
+
+
+
 ## [4.9.3 - 2023-12-13]
 - Fix: Missing colors in ZSH on Mac
 - Fix: Call to SQL+ or SQLcl in Linux/Mac
