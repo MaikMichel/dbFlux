@@ -1,5 +1,13 @@
 # Change Log
 
+
+## [5.1.0 - 2024-02-08]
+- Add: Use different hook templae for global hooks
+- Add: Small information messages will close themselves
+- Add: Use SecureStore-API to persist secret in dbFlux-Mode
+- Fix: Hide View commands in palette
+- Fix: Cancel promise wizard, when canceling selection of dragged snippet
+
 ## [5.0.0 - 2024-02-04]
 - New: Add command to create Snippets based on ObjectType / Folder. So that they will appear, when you will create a new file
 - New: Add Feature *dbStruct* - Add TreeView, that will show columns infos based on tables you added
