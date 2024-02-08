@@ -86,6 +86,39 @@
 			}
 		],
 		"menus": {
+			"commandPalette":[
+        {
+            "command":"dbflux.showTableDetails.treeview.add_item_context",
+            "when":"false"
+        },
+				{
+					"command":"dbflux.showTableDetails.treeview.copy_selection_with_comma",
+					"when":"false"
+				},
+				{
+					"command":"dbflux.showTableDetails.treeview.copy_selection_with_semicomma",
+					"when":"false"
+				},
+				{
+					"command":"dbflux.showTableDetails.treeview.copy_selection_with_colon",
+					"when":"false"
+				},
+				{
+					"command":"dbflux.showTableDetails.treeview.copy_selection_with_colonequal",
+					"when":"false"
+				},
+				{
+					"command":"dbflux.showTableDetails.treeview.refresh_items",
+					"when":"false"
+				},{
+					"command":"dbflux.showTableDetails.treeview.clear_items",
+					"when":"false"
+				},
+				{
+					"command":"dbflux.showTableDetails.treeview.clear_item",
+					"when":"false"
+				}
+    	],
 			"view/title": [
 				{
 					"command": "dbflux.dblock.treeview.view_refresh",
