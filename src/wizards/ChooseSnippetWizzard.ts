@@ -60,6 +60,7 @@ export async function chooseSnippetWizard() {
     // Could show a notification with the option to resume.
     return new Promise<boolean>((resolve, reject) => {
       // noop
+      reject();
     });
   }
 
@@ -75,7 +76,7 @@ export async function chooseSnippetWizard() {
 
 
 
-  return await collectInputs();
+  return collectInputs();
 
 }
 
