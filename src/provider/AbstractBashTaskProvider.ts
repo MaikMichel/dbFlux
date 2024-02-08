@@ -88,8 +88,8 @@ export abstract class AbstractBashTaskProvider {
   }
 
 
-   setInitialCompileInfo(execFileName:string, fileUri: Uri, runnerInfo:IBashInfos):void {
-    let projectInfos: IProjectInfos = getProjectInfos(this.context);
+   async setInitialCompileInfo(execFileName:string, fileUri: Uri, runnerInfo:IBashInfos):Promise<void> {
+    let projectInfos: IProjectInfos = await getProjectInfos(this.context);
     const activeFile = fileUri.fsPath.split(path.sep).join(path.posix.sep);
 
     runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", "shell", execFileName).split(path.sep).join(path.posix.sep);
@@ -129,10 +129,10 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
   }
 }
 
-export function getProjectInfos(context: ExtensionContext) {
+export async function getProjectInfos(context: ExtensionContext) {
   let projectInfos: IProjectInfos = {} as IProjectInfos;
   if (getDBFlowMode(context) === "dbFlux") {
-    projectInfos = getProjectInfosFromDBFlux(context);
+    projectInfos = await getProjectInfosFromDBFlux(context);
   } else if (getDBFlowMode(context) === "dbFlow") {
     projectInfos = getProjectInfosFromDBFlow();
   } else if (getDBFlowMode(context) === "xcl") {
@@ -213,12 +213,12 @@ function getProjectInfosFromDBFlow():IProjectInfos {
   return projectInfos;
 }
 
-function getProjectInfosFromDBFlux(context: ExtensionContext):IProjectInfos {
+async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IProjectInfos> {
   const projectInfos: IProjectInfos = {} as IProjectInfos;
   if (workspace.workspaceFolders !== undefined) {
 
       projectInfos.dbAppUser   = context.workspaceState.get("dbFlux_DB_APP_USER")!;
-      projectInfos.dbAppPwd    = context.workspaceState.get("dbFlux_DB_APP_PWD");
+      projectInfos.dbAppPwd    = await context.secrets.get(getWorkspaceRootPath()+"|dbFlux_DB_APP_PWD")+"";
       projectInfos.dbAdminUser = context.workspaceState.get("dbFlux_DB_ADMIN_USER");
       projectInfos.dbAdminPwd  = context.workspaceState.get("dbFlux_DB_ADMIN_PWD");
       projectInfos.dbTns       = context.workspaceState.get("dbFlux_DB_TNS")!;

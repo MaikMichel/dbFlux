@@ -35,7 +35,7 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
     const result: Task[] = [];
 
     if (ExportTaskStore.getInstance().expID) {
-      const runTask: ISQLExportInfos = this.prepExportInfos(ExportTaskStore.getInstance().expID);
+      const runTask: ISQLExportInfos = await this.prepExportInfos(ExportTaskStore.getInstance().expID);
       result.push(this.createExpTask(this.createExpTaskDefinition("exportAPEX", runTask)));
     }
 
@@ -80,7 +80,7 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
     return _task;
   }
 
-  prepExportInfos(appFolder:string|undefined): ISQLExportInfos {
+  async prepExportInfos(appFolder:string|undefined): Promise<ISQLExportInfos> {
     let runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders) {
@@ -90,7 +90,7 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
       runner.appID = appFolder;
 
       if (apexUri !== undefined) {
-        this.setInitialCompileInfo("export_app.sh", apexUri, runner);
+        await this.setInitialCompileInfo("export_app.sh", apexUri, runner);
       }
     }
 

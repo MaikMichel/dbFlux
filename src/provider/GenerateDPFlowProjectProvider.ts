@@ -65,7 +65,7 @@ export class GenerateDPFlowProjectProvider extends AbstractBashTaskProvider impl
   async getGenerateTask(): Promise<Task[]> {
     const result: Task[] = [];
 
-    const runTask: IBashInfos = this.prepExportInfos();
+    const runTask: IBashInfos = await this.prepExportInfos();
 
     // const state = await initializeDBFlowProjectWizard(this.context);
     result.push(this.createCreateTask(this.createCreateDBFlowTaskDefinition("createDBFlow", runTask, this.state)));
@@ -119,12 +119,10 @@ export class GenerateDPFlowProjectProvider extends AbstractBashTaskProvider impl
     return _task;
   }
 
-  prepExportInfos(): IBashInfos {
+  async prepExportInfos(): Promise<IBashInfos> {
     let runnerInfo: IBashInfos = {} as IBashInfos;
 
-    // this.setInitialCompileInfo("export_app.sh", apexUri, runner);
-    // taken from setInitialCompileInfo
-    let projectInfos: IProjectInfos = getProjectInfos(this.context);
+    let projectInfos: IProjectInfos = await getProjectInfos(this.context);
 
     runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", "shell", "create_dbflow.sh").split(path.sep).join(path.posix.sep);
     if (existsSync(runnerInfo.runFile)) {

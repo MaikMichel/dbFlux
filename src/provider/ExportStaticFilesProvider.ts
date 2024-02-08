@@ -39,7 +39,7 @@ export class ExportStaticFilesProvider extends AbstractBashTaskProvider implemen
     const result: Task[] = [];
 
     if (ExportTaskStore.getInstance().expID) {
-      const runTask: ISQLExportInfos = this.prepExportInfos(ExportTaskStore.getInstance().expID);
+      const runTask: ISQLExportInfos = await this.prepExportInfos(ExportTaskStore.getInstance().expID);
       result.push(this.createExpTask(this.createExpTaskDefinition("exportStaticFiles", runTask)));
     }
 
@@ -78,7 +78,7 @@ export class ExportStaticFilesProvider extends AbstractBashTaskProvider implemen
     return _task;
   }
 
-  prepExportInfos(appFolder:string|undefined): ISQLExportInfos {
+  async prepExportInfos(appFolder:string|undefined): Promise<ISQLExportInfos> {
     let runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders && appFolder) {
@@ -90,7 +90,7 @@ export class ExportStaticFilesProvider extends AbstractBashTaskProvider implemen
       runner.executableCli  = ConfigurationManager.getCliToUseForCompilation();
 
       if (apexUri !== undefined) {
-        this.setInitialCompileInfo("export_static_files.sh", apexUri, runner);
+        await this.setInitialCompileInfo("export_static_files.sh", apexUri, runner);
       }
     } else {
       throw "Error workspace.workspaceFolders or schemaName undefined"
@@ -207,7 +207,7 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
           runner.exportAppID    = runner.exportAppPath.replace("/src", "").split("/").pop()?.replace("f", "");
 
         }
-        this.setInitialCompileInfo("export_static_files.sh", connectionUri!, runner);
+        await this.setInitialCompileInfo("export_static_files.sh", connectionUri!, runner);
 
       }
 

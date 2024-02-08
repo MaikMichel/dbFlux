@@ -41,8 +41,8 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
     const result: Task[] = [];
 
     if (ExportDBSchemaStore.getInstance().schemaName) {
-      const runTask: ISQLExportInfos = this.prepExportInfos(ExportDBSchemaStore.getInstance().schemaName,
-                                                            ExportDBSchemaStore.getInstance().schemaNameNew);
+      const runTask: ISQLExportInfos = await this.prepExportInfos(ExportDBSchemaStore.getInstance().schemaName,
+                                                                  ExportDBSchemaStore.getInstance().schemaNameNew);
       result.push(this.createExpTask(this.createExpTaskDefinition("exportSchema", runTask)));
     }
 
@@ -80,7 +80,7 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
     return _task;
   }
 
-  prepExportInfos(schemaName:string|undefined, schemaNameNew:string|undefined): ISQLExportInfos {
+  async prepExportInfos(schemaName:string|undefined, schemaNameNew:string|undefined): Promise<ISQLExportInfos> {
     let runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders && schemaName !== undefined) {
@@ -91,7 +91,7 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
 
       // if (schemaName !== undefined) {
         CompileTaskStore.getInstance().selectedSchemas = [schemaName];
-        this.setInitialCompileInfo("export_schema.sh", connectionUri, runner);
+        await this.setInitialCompileInfo("export_schema.sh", connectionUri, runner);
       // }
     } else {
       throw "Error workspace.workspaceFolders or schemaName undefined"
@@ -207,7 +207,7 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
         }
       }
 
-      this.setInitialCompileInfo("export_schema.sh", connectionUri!, runner);
+      await this.setInitialCompileInfo("export_schema.sh", connectionUri!, runner);
 
     } else {
       throw "Error workspace.workspaceFolders or schemaName undefined"

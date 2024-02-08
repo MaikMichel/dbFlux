@@ -29,6 +29,7 @@ import { createObjectTypeSnippetWizard } from "./wizards/CreateObjectTypeSnippet
 import { showTableDetailsWizard } from "./wizards/ShowTableDetailsWizards";
 import { DBFluxTableDetails } from "./ui/DBFluxTableDetails";
 import { addColumnSnippet } from "./wizards/AddColumnSnippet";
+import { getWorkspaceRootPath } from "./helper/utilities";
 
 
 
@@ -79,8 +80,8 @@ export async function activate(context: ExtensionContext) {
 
 
 
-    const projectInfos = getProjectInfos(context);
-    LoggingService.logInfo(`dbFlux-Mode is ${dbFluxMode} and FlexMode is ${projectInfos.isFlexMode}`);
+    const projectInfos = await getProjectInfos(context);
+    LoggingService.logInfo(`Mode is ${dbFluxMode} and FlexMode is ${projectInfos.isFlexMode}`);
 
 
     LoggingService.logDebug('Setting Context Infos');
@@ -101,6 +102,17 @@ export async function activate(context: ExtensionContext) {
       // Commands to view and remove dbFlux - Config
       context.subscriptions.push(commands.registerCommand('dbFlux.showConfig', () => showDBFluxConfig(context)));
       context.subscriptions.push(commands.registerCommand('dbFlux.removeConfiguration', () => removeDBFluxConfig(context)));
+
+      // this for migration of old Storage of PWD
+      if (context.workspaceState.get("dbFlux_DB_APP_PWD")) {
+        context.secrets.store(getWorkspaceRootPath() + "|dbFlux_DB_APP_PWD", context.workspaceState.get("dbFlux_DB_APP_PWD")!);
+        context.workspaceState.update("dbFlux_DB_APP_PWD", undefined);
+        LoggingService.logInfo(`Migration of old Password storage to the new VSCode SecretAPI successfully done`);
+      }
+
+
+
+
     } else {
       const applyFileName = join(workspace.workspaceFolders[0].uri.fsPath, dbFluxMode === "dbFlow"?"apply.env":".xcl/env.yml");
       const buildFileName = join(workspace.workspaceFolders[0].uri.fsPath, dbFluxMode === "dbFlow"?"build.env":"xcl.yml");

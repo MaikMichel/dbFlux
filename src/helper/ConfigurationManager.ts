@@ -1,5 +1,6 @@
 import { commands, ExtensionContext, languages, Uri, ViewColumn, window, workspace } from "vscode";
 import { LoggingService } from "./LoggingService";
+import { getWorkspaceRootPath } from "./utilities";
 
 
 interface ICustomTriggerRuns {
@@ -110,13 +111,14 @@ export function showConfig(applyFileName:string, buildFileName:string){
     });
 }
 
-export function showDBFluxConfig(context:ExtensionContext){
+export async function showDBFluxConfig(context:ExtensionContext){
+  LoggingService.show();
 
-  LoggingService.logInfo("Outputting Configuration", true);
+  LoggingService.logInfo("Outputting Configuration");
 
   LoggingService.logInfo("DB_TNS: " + context.workspaceState.get("dbFlux_DB_TNS"));
   LoggingService.logInfo("DB_APP_USER: " + context.workspaceState.get("dbFlux_DB_APP_USER"));
-  LoggingService.logInfo("DB_APP_PWD: " + context.workspaceState.get("dbFlux_DB_APP_PWD"));
+  LoggingService.logInfo("DB_APP_PWD: " + await context.secrets.get(getWorkspaceRootPath() + "|dbFlux_DB_APP_PWD")+"");
   LoggingService.logInfo("DB_ADMIN_USER: " + context.workspaceState.get("dbFlux_DB_ADMIN_USER"));
 
   LoggingService.logInfo("PROJECT: " + context.workspaceState.get("dbFlux_PROJECT"));
@@ -154,7 +156,7 @@ export async function rmDBFluxConfig(context:ExtensionContext) {
   context.workspaceState.update("dbFlux_mode", undefined);
   context.workspaceState.update("dbFlux_DB_TNS", undefined);
   context.workspaceState.update("dbFlux_DB_APP_USER", undefined);
-  context.workspaceState.update("dbFlux_DB_APP_PWD", undefined);
+  await context.secrets.delete(getWorkspaceRootPath()+"|dbFlux_DB_APP_PWD");
   context.workspaceState.update("dbFlux_DB_ADMIN_USER", undefined);
 
   context.workspaceState.update("dbFlux_PROJECT", undefined);

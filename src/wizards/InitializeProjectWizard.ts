@@ -487,7 +487,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
           context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase() + "_depl");
       }
 
-      context.workspaceState.update("dbFlux_DB_APP_PWD", state.dbAppPwd);
+      await context.secrets.store(getWorkspaceRootPath()+"|dbFlux_DB_APP_PWD", state.dbAppPwd);
       context.workspaceState.update("dbFlux_DB_ADMIN_USER", state.dbAdminUser);
 
       context.workspaceState.update("dbFlux_PROJECT", state.projectName.toLowerCase());

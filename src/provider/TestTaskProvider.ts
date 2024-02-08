@@ -94,8 +94,8 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
       let apexUri:Uri = Uri.file(path.join(fileUri.fsPath, 'apex/f0000/install.sql'));
 
       if (apexUri !== undefined) {
-        this.setInitialCompileInfo("test.sh", apexUri, runner);
-        const projectInfos = getProjectInfos(this.context);
+        await this.setInitialCompileInfo("test.sh", apexUri, runner);
+        const projectInfos = await getProjectInfos(this.context);
         if (TestTaskStore.getInstance().selectedSchemas) {
           runner.connectionArray = TestTaskStore.getInstance().selectedSchemas!.map((element) =>{
             return '"' + this.buildConnectionUser(projectInfos, element) +'"';
@@ -302,7 +302,7 @@ async function getAnsiHtmlFile(wsRoot:string, projectInfos: IProjectInfos, schem
 
 export async function openTestResult(context: ExtensionContext){
   const wsRoot = getWorkspaceRootPath();
-  const projectInfos = getProjectInfos(context);
+  const projectInfos = await getProjectInfos(context);
 
   TestTaskStore.getInstance().selectedSchemas?.forEach(async element => {
     const schemaName = element.split('/')[1];

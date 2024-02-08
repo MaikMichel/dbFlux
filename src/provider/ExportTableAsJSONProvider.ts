@@ -95,7 +95,7 @@ export class ExportTableAsJSONProvider extends AbstractBashTaskProvider implemen
         runner.exportTable         = tablename;
         runner.exportToDir         = 'db/' + relativeFileName.split('/')[1] + '/tables/.descs';
 
-        this.setInitialCompileInfo("export_table_json.sh", Uri.file(fileName), runner);
+        await this.setInitialCompileInfo("export_table_json.sh", Uri.file(fileName), runner);
         ExportTableJSONStore.getInstance().fileName=runner.exportToDir+'/'+runner.exportTable+'.json';
       }
 

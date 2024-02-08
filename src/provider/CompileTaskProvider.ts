@@ -129,7 +129,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
     let fileUri:Uri|undefined = await getActiveFileUri();
 
     if (fileUri !== undefined) {
-      this.setInitialCompileInfo("deploy.sh", fileUri, runner);
+      await this.setInitialCompileInfo("deploy.sh", fileUri, runner);
 
 
       runner.activeFile         = fileUri.fsPath.split(path.sep).join(path.posix.sep);

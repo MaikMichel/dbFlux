@@ -88,8 +88,8 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
       let apexUri:vscode.Uri = vscode.Uri.file(path.join(fileUri.fsPath, 'apex/f0000/install.sql'));
 
       if (apexUri !== undefined) {
-        this.setInitialCompileInfo("compile.sh", apexUri, runner);
-        const projectInfos = getProjectInfos(this.context);
+        await this.setInitialCompileInfo("compile.sh", apexUri, runner);
+        const projectInfos = await getProjectInfos(this.context);
         if (CompileTaskStore.getInstance().selectedSchemas) {
           runner.connectionArray = CompileTaskStore.getInstance().selectedSchemas!.map((element) =>{
             return '"' + this.buildConnectionUser(projectInfos, element) + '"';

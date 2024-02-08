@@ -105,7 +105,7 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
           runner.exportAppID    = runner.exportAppPath.replace("/src", "").split("/").pop()?.replace("f", "");
 
         }
-        this.setInitialCompileInfo("remove_static_file.sh", connectionUri!, runner);
+        await this.setInitialCompileInfo("remove_static_file.sh", connectionUri!, runner);
 
       }
 

@@ -43,7 +43,7 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
   async refreshCache() {
     if (ConfigurationManager.getDBLockRESTUrl()) {
       try {
-        const urlToFetch = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/") + "/dblock/v1/files/" + getProjectInfos(this.context).projectName?.toLowerCase();
+        const urlToFetch = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/") + "/dblock/v1/files/" + (await getProjectInfos(this.context)).projectName?.toLowerCase();
         const options = {
           method: 'GET',
           headers: {  Accept: '*/*',

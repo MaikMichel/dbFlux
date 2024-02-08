@@ -155,6 +155,7 @@ export async function addHookFile(context: ExtensionContext) {
 
   const title = 'Add .hook file';
   const objectTypes = await getAvailableFolders(".hooks");
+
   if (objectTypes.length > 0) {
     const state = await collectInputs();
 
@@ -538,7 +539,7 @@ export async function addSchema(context: ExtensionContext) {
 
   const state = await collectInputs();
   if (state.schema) {
-    addMainFolders(state.schema, state.folders, getProjectInfos(context));
+    addMainFolders(state.schema, state.folders, await getProjectInfos(context));
   } else {
     LoggingService.logWarning('Canceled');
   }

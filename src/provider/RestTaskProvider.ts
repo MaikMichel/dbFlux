@@ -34,7 +34,7 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
     const result: Task[] = [];
 
     if (RestTaskStore.getInstance().restModule) {
-      const runTask: IRESTExportInfos = this.prepExportInfos(RestTaskStore.getInstance().restModule);
+      const runTask: IRESTExportInfos = await this.prepExportInfos(RestTaskStore.getInstance().restModule);
       result.push(this.createRestTask(this.createRestTaskDefinition("exportREST", runTask)));
     }
 
@@ -76,7 +76,7 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
     return _task;
   }
 
-  prepExportInfos(moduleFolder:string|undefined): IRESTExportInfos {
+  async prepExportInfos(moduleFolder:string|undefined): Promise<IRESTExportInfos> {
     let runner: IRESTExportInfos = {} as IRESTExportInfos;
 
     if (workspace.workspaceFolders) {
@@ -86,7 +86,7 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
       runner.restModule = moduleFolder;
 
       if (restUri !== undefined) {
-        this.setInitialCompileInfo("export_rest.sh", restUri, runner);
+        await this.setInitialCompileInfo("export_rest.sh", restUri, runner);
       }
     }
 

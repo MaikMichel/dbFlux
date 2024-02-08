@@ -31,7 +31,7 @@ export class ConvertToDBFlowProvider extends AbstractBashTaskProvider implements
   async getExpTasks(): Promise<Task[]> {
     const result: Task[] = [];
 
-    const runTask: IBashInfos = this.prepExportInfos();
+    const runTask: IBashInfos = await this.prepExportInfos();
     result.push(this.createConverTask(this.createConverTaskDefinition("convert2dbFlow", runTask)));
 
     return Promise.resolve(result);
@@ -67,12 +67,10 @@ export class ConvertToDBFlowProvider extends AbstractBashTaskProvider implements
     return _task;
   }
 
-  prepExportInfos(): IBashInfos {
+  async prepExportInfos(): Promise<IBashInfos> {
     let runnerInfo: IBashInfos = {} as IBashInfos;
 
-    // this.setInitialCompileInfo("export_app.sh", apexUri, runner);
-    // taken from setInitialCompileInfo
-    let projectInfos: IProjectInfos = getProjectInfos(this.context);
+    let projectInfos: IProjectInfos = await getProjectInfos(this.context);
 
     runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", "shell", "gen_dbflow.sh").split(path.sep).join(path.posix.sep);
     if (existsSync(runnerInfo.runFile)) {
