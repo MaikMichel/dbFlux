@@ -3,6 +3,7 @@ import * as Handlebars from "handlebars";
 import * as vscode from "vscode";
 import { workspace } from "vscode";
 import { existsSync, PathLike, readdirSync, readFileSync, renameSync, writeFileSync } from "fs";
+import { showInformationProgress } from "../helper/utilities";
 
 export class ReportTemplater {
   private sourceContent: string;
@@ -82,7 +83,7 @@ export class ReportTemplater {
             renameSync(uploadSQLFile, newFile);
           }
 
-          vscode.window.showInformationMessage('File created @' + newFile);
+          showInformationProgress('File created @' + newFile);
           vscode.window.showTextDocument(vscode.Uri.file(newFile));
 
         }

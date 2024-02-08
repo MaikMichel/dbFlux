@@ -324,3 +324,25 @@ export function toFlatPropertyMap(obj: object, keySeparator = '/') {
   };
   return flattenRecursive(obj);
 }
+
+export function showInformationProgress(msg:string, timeoutms:number = 3000) {
+  vscode.window.withProgress({
+    location: vscode.ProgressLocation.Notification,
+    title:  msg,
+    cancellable: false
+  }, (progress, token) => {
+
+    // for(let i = 0; i <= 10; i++) {
+    //   setTimeout(() => {
+    //     progress.report({ increment: i*10 });
+    //   }, Math.round(i * timeoutms / 10));
+    // }
+    const p = new Promise<void>(resolve => {
+      setTimeout(() => {
+        resolve();
+      }, timeoutms);
+    });
+
+    return p;
+  });
+}

@@ -29,7 +29,7 @@ import { createObjectTypeSnippetWizard } from "./wizards/CreateObjectTypeSnippet
 import { showTableDetailsWizard } from "./wizards/ShowTableDetailsWizards";
 import { DBFluxTableDetails } from "./ui/DBFluxTableDetails";
 import { addColumnSnippet } from "./wizards/AddColumnSnippet";
-import { getWorkspaceRootPath } from "./helper/utilities";
+import { getWorkspaceRootPath, showInformationProgress } from "./helper/utilities";
 
 
 
@@ -298,7 +298,7 @@ export async function activate(context: ExtensionContext) {
           }
           case "convert2dbFlow" : {
             rmDBFluxConfig(context);
-            window.showInformationMessage(`dbFLux Mode is now: 'dbFlow'`);
+            showInformationProgress(`dbFLux Mode is now: 'dbFlow'`);
             break;
           }
           case "createDBFlow" : {

@@ -3,6 +3,7 @@ import * as path from "path";
 import { CancellationToken, commands, DataTransfer, DataTransferItem, DocumentDropEdit, DocumentDropEditProvider, env, Event, EventEmitter, ExtensionContext, languages, Position, ProviderResult, SnippetString, TextDocument, ThemeIcon, TreeDataProvider, TreeDragAndDropController, TreeItem, TreeItemCollapsibleState, TreeView, window, workspace } from 'vscode';
 import { chooseSnippetWizard, getAvailableSnippetKeys, getSnippedBody } from '../wizards/ChooseSnippetWizzard';
 import { LoggingService } from '../helper/LoggingService';
+import { showInformationProgress } from '../helper/utilities';
 
 
 const uriListMime = 'text/uri-list';
@@ -337,7 +338,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
       const tmpItem = this.treedata.find(treeItem => (tableItem.contextValue === treeItem.contextValue && tableItem.description === treeItem.description));
 
       if (tmpItem) {
-        window.showInformationMessage(`${tableItem.label} allready added to Structure-Viewer`);
+        showInformationProgress(`${tableItem.label} allready added to Structure-Viewer`);
       } else if (workspace.workspaceFolders){
         const tableFile = path.join(workspace.workspaceFolders[0].uri.fsPath, 'db', fileName);
 

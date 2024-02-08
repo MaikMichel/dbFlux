@@ -1,6 +1,6 @@
 import { commands, ExtensionContext, languages, Uri, ViewColumn, window, workspace } from "vscode";
 import { LoggingService } from "./LoggingService";
-import { getWorkspaceRootPath } from "./utilities";
+import { getWorkspaceRootPath, showInformationProgress } from "./utilities";
 
 
 interface ICustomTriggerRuns {
@@ -142,7 +142,7 @@ export function removeDBFluxConfig(context:ExtensionContext){
       if (answer === "Yes") {
 
         rmDBFluxConfig(context);
-        window.showInformationMessage(`Configuration successfully removed`);
+        showInformationProgress(`Configuration successfully removed`);
       }
     });
 

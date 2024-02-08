@@ -5,7 +5,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { QuickPickItem, window, ExtensionContext, Uri, workspace, commands, ViewColumn } from 'vscode';
-import { createDirectoryPath, getWorkspaceRootPath } from '../helper/utilities';
+import { createDirectoryPath, getWorkspaceRootPath, showInformationProgress } from '../helper/utilities';
 import * as path from "path";
 
 import * as fs from "fs-extra";
@@ -663,7 +663,7 @@ export async function enableFlexMode(context: ExtensionContext, projectInfos:IPr
             context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
           }
 
-          window.showInformationMessage("Your Project is now in FlexMode!");
+          showInformationProgress("Your Project is now in FlexMode!");
           commands.executeCommand("dbFlux.reloadExtension");
         }
       });
@@ -728,6 +728,6 @@ export function registerResetPasswordCommand() {
   return commands.registerCommand("dbFlux.resetPassword", async () => {
     CompileTaskStore.getInstance().appPwd = undefined;
     CompileTaskStore.getInstance().adminPwd = undefined;
-    window.showInformationMessage("dbFlux: Password succefully reset");
+    showInformationProgress("dbFlux: Password succefully reset");
   });
 }

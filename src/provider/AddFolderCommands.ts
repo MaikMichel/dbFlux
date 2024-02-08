@@ -3,7 +3,7 @@ import { commands, env, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn,
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import * as path from "path";
 import { ConfigurationManager } from '../helper/ConfigurationManager';
-import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim } from '../helper/utilities';
+import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim, showInformationProgress } from '../helper/utilities';
 import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { getAvailableObjectTypes } from '../wizards/CreateObjectWizard';
 import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
@@ -718,7 +718,7 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
 
     if (splitted) {
       writeFileSync(fileName, splittedContent[0] + ConfigurationManager.fileSeparation + fileArray.join(lineSpliter + ConfigurationManager.fileSeparation) + lineSpliter);
-      window.showInformationMessage("dbFlux: file successfully splitted");
+      showInformationProgress("dbFlux: file successfully splitted", 3000);
     } else {
       window.showWarningMessage("dbFlux: nothing found to split by! You have to put -- File: ../relative/path/to/file.sql below contend to be splitted");
     }
@@ -754,7 +754,7 @@ export function registerJoinFromFilesCommand(projectInfos: IProjectInfos) {
 
     if (joined) {
       writeFileSync(fileName, splittedContent.join(ConfigurationManager.fileSeparation));
-      window.showInformationMessage("dbFlux: files successfully joined");
+      showInformationProgress("dbFlux: files successfully joined", 3000);
     } else {
       window.showWarningMessage("dbFlux: nothing found to join! You have to use: -- File: ../relative/path/to/file.sql to refer to files which should be joined");
     }
@@ -811,7 +811,7 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
 
     if (files.length > 0) {
       appendFileSync(fileName, "\n\n-- dbFlux reverse scanned ... \n" + files.join("\n"));
-      window.showInformationMessage("dbFlux: files successfully scanned your files");
+      showInformationProgress("dbFlux: files successfully scanned your files", 3000);
     } else {
       window.showWarningMessage("dbFlux: nothing found ... \n Files have to include tablename.");
     }
