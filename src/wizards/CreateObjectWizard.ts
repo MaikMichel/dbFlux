@@ -4,8 +4,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { QuickPickItem, window,ExtensionContext, Uri, workspace, commands, TextDocument } from 'vscode';
-import { matchRuleShort, toFlatPropertyMap } from '../helper/utilities';
+import { QuickPickItem, window,ExtensionContext, Uri, workspace, commands, TextDocument, ProgressLocation } from 'vscode';
+import { matchRuleShort, showInformationProgress, toFlatPropertyMap } from '../helper/utilities';
 import * as path from "path";
 import { existsSync, mkdirSync, PathLike, readdirSync, writeFileSync } from 'fs';
 import { MultiStepInput } from './InputFlowAction';
@@ -132,7 +132,8 @@ export async function createObjectWizard(context: ExtensionContext) {
       extension = "(tps/tpb)";
     }
 
-    window.showInformationMessage(`File for object '${baseF}${extension}' successfully created`);
+    showInformationProgress(`File for object '${baseF}${extension}' successfully created`);
+
 
   }
 }
@@ -229,7 +230,7 @@ export function callSnippet(wsPath:string, document:TextDocument, prefix:string|
             if (editor && editor.document) {
               if (editor.document.getText() !== "") {
                 if (prefix === undefined) {
-                  window.showInformationMessage(`Your snippet ${snippetName} was applied.`);
+                  showInformationProgress(`Your snippet ${snippetName} was applied.`);
                 } else {
                   window.showInformationMessage(`dbFlux snippet ${snippetName} was applied. See help if you want to remove it by your own.`);
                 }
@@ -359,7 +360,7 @@ export async function createTableDDL(context: ExtensionContext) {
     }
 
 
-    window.showInformationMessage(`File '${newDDLFileName}' successfully created`);
+    showInformationProgress(`File '${newDDLFileName}' successfully created`);
 
     workspace.openTextDocument(Uri.file(newDDLFileName)).then(doc => {
       window.showTextDocument(doc, {preview: false});
