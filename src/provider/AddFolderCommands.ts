@@ -897,8 +897,13 @@ function addHookFileToPath(folder: string, filename: string) {
   const dirName  = path.join(wsRoot, folder);
   const baseF    = rtrim(path.basename(filename), ".sql");
   const fullFile = dirName + '/' + baseF + ".sql";
-  const template = readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "hook.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8");
 
+  const tmplFileName = (folder.startsWith(".hooks") || folder.startsWith("db/.hooks")) ? "globalhook.tmpl.sql" : "hook.tmpl.sql"
+  const template = readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", tmplFileName).split(path.sep).join(path.posix.sep), "utf8");
+
+  if (!existsSync(dirName)) {
+    mkdirSync(dirName);
+  }
   writeFileSync(fullFile, template);
 
   if (existsSync(fullFile)) {
