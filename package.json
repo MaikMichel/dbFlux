@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "5.1.0",
+	"version": "5.1.1",
 	"engines": {
 		"vscode": "^1.82.0"
 	},
@@ -86,39 +86,40 @@
 			}
 		],
 		"menus": {
-			"commandPalette":[
-        {
-            "command":"dbflux.showTableDetails.treeview.add_item_context",
-            "when":"false"
-        },
+			"commandPalette": [
 				{
-					"command":"dbflux.showTableDetails.treeview.copy_selection_with_comma",
-					"when":"false"
+					"command": "dbflux.showTableDetails.treeview.add_item_context",
+					"when": "false"
 				},
 				{
-					"command":"dbflux.showTableDetails.treeview.copy_selection_with_semicomma",
-					"when":"false"
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_comma",
+					"when": "false"
 				},
 				{
-					"command":"dbflux.showTableDetails.treeview.copy_selection_with_colon",
-					"when":"false"
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_semicomma",
+					"when": "false"
 				},
 				{
-					"command":"dbflux.showTableDetails.treeview.copy_selection_with_colonequal",
-					"when":"false"
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_colon",
+					"when": "false"
 				},
 				{
-					"command":"dbflux.showTableDetails.treeview.refresh_items",
-					"when":"false"
-				},{
-					"command":"dbflux.showTableDetails.treeview.clear_items",
-					"when":"false"
+					"command": "dbflux.showTableDetails.treeview.copy_selection_with_colonequal",
+					"when": "false"
 				},
 				{
-					"command":"dbflux.showTableDetails.treeview.clear_item",
-					"when":"false"
+					"command": "dbflux.showTableDetails.treeview.refresh_items",
+					"when": "false"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.clear_items",
+					"when": "false"
+				},
+				{
+					"command": "dbflux.showTableDetails.treeview.clear_item",
+					"when": "false"
 				}
-    	],
+			],
 			"view/title": [
 				{
 					"command": "dbflux.dblock.treeview.view_refresh",
