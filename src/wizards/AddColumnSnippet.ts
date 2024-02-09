@@ -87,7 +87,7 @@ export async function addColumnSnippet(context: ExtensionContext) {
     targetSnippetContent[snippetKey] = {
       "scope": "dbflux.column_context",
       "body" : content?.replaceAll("\r\n", "\n").split("\n"),
-      "description": "dbFlux will replace the placeholder (§DBFLUX_COLUMN, ${§DBFLUX_COLUMN}, §dbflux_column, §{dbflux_column}). YOU HAVE TO USE: '§'!"
+      "description": "dbFlux will replace the placeholder (§DBFLUX_COLUMN, §{DBFLUX_COLUMN}, §dbflux_column, §{dbflux_column}). YOU HAVE TO USE: '§'!"
     }
     writeFileSync(snippetFile, JSON.stringify(targetSnippetContent, null, 2));
 
