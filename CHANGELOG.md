@@ -1,6 +1,10 @@
 # Change Log
 
 
+## [5.2.0 - 2024-02-08]
+- New: Add command to execute utPLSQL code coverage
+- Fix: Modified description for column snippets
+
 ## [5.1.0 - 2024-02-08]
 - Add: Use different hook templae for global hooks
 - Add: Small information messages will close themselves

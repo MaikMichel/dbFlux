@@ -26,6 +26,7 @@ Using this extension enables you to develop Oracle Database and APEX application
 - [**Upload any file to your APEX Application**](#upload-to-apex-static-applicatoin-files 'Jump to Upload to APEX Static Applicatoin Files')
   - Additionaly minify JavaScript and CSS Files
 - Run utPLSQL [**UnitTests**](#unittests 'Jump to Tests') for current TestPackage or on all selected schemas
+- Run utPLSQL Code Coverage [**CodeCoverage**](#codecoverage 'Jump to CodeCoverage') for current TestPackage
 - [**Create objects**](#create-objects 'Jumpt to Create Objects')
 - [**Create object-type snippets**](#create-object-type-snippets 'Jumpt to Create Object-type Snippets')
 - Automatic run snippet on new files
@@ -302,6 +303,17 @@ Compile current File     | `ctrl+alt+b`  | Creates the merged uploadfile and pla
   <br/>
 </p>
 
+## CodeCoverage [#](#features 'Jumpt back to Features')
+**dbFlux** is able to run Code-Coverage-Report with utPLSQL. With a currently opened test package, call the command: `Execute utPLSQL code coverage for current Package`. You will be asked for selecting one or more packages which will be the base for measuring the coverage. **dbFlux** will run the report and show the output in a panel.
+
+### Demo - Running utPLSQL CodeCoverage
+
+<p align="center">
+  <br/>
+  <img src="images/screen-rec-vscode-code-coverage.gif" style="max-width:600px; width:100%"  alt="Minify and Upload CSS Demo">
+  <br/>
+  <br/>
+</p>
 
 ### Keybindings
 
