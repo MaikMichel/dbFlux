@@ -31,6 +31,9 @@ fi
 if [[ "${base_package}" != "" ]]; then
   echo -e "${CLR_LBLUE}Package:${NC}      ${WHITE}${base_package}${DBFLOW_METHOD2TEST}${NC}"
 fi
+if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
+  echo -e "${CLR_LBLUE}Coverage:${NC}     ${WHITE}${DBFLOW_TARGET2COVER//"|"/"\n              "}${NC}"
+fi
 echo -e "${CLR_LBLUE}Format:${NC}       ${WHITE}${DBFLOW_TESTOUTPUT}${NC}"
 echo
 
@@ -45,7 +48,110 @@ if [[ -f ".gitignore" ]]; then
 fi
 
 
-if [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
+if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
+  ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/export_utrun.sql" )
+
+  for arg in "${CONN_ARRY[@]}"; do
+    echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${arg}${NC}"
+    # prepare output file
+    log_file="coverage.base64"
+
+    if [[ ${arg} == *"["* ]]; then
+      target_file="${arg#*'['}"
+      target_file=${target_file/']'/}
+      target_file="${target_file}_test"
+    else
+      target_file="${arg}_test"
+    fi
+
+    target_file="${target_file}_${log_file}"
+
+
+    # full_log_file="$(pwd)/${log_file}"
+    full_log_file="tests/results/${target_file}"
+    [[ -d "tests/results" ]] || mkdir -p "tests/results"
+    [[ -f $full_log_file ]] && rm -f $full_log_file
+
+    [[ -f ${full_log_file/base64/xml} ]] && rm -f ${full_log_file/base64/xml}
+    [[ -f ${full_log_file/base64/json} ]] && rm -f ${full_log_file/base64/json}
+    [[ -f ${full_log_file/base64/html} ]] && rm -f ${full_log_file/base64/html}
+
+    # ## FullExport
+    # PREPSTMT=":contents := to_base64(clob_to_blob(get_junit_full_xml()));"
+    # if [[ -n ${DBFLOW_FILE2TEST} ]]; then
+
+    PREPSTMT=":contents := to_base64(clob_to_blob(get_coverage_part_html('${base_package}${DBFLOW_METHOD2TEST}', '${DBFLOW_TARGET2COVER}')));"
+    # fi
+
+    # the export itself
+    if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
+      sqlplus -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+      set verify off
+      set scan off
+      set feedback off
+      set heading off
+      set trimout on
+      set trimspool on
+      set pagesize 0
+      set linesize 5000
+      set long 100000000
+      set longchunksize 32767
+      whenever sqlerror exit sql.sqlcode rollback
+      variable contents clob
+      DECLARE
+        ${ANOFUNCTIONS}
+      BEGIN
+        ${PREPSTMT}
+      END;
+      /
+
+      print contents
+
+EOF
+
+    else
+      sql -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+        set verify off
+        set scan off
+        set feedback off
+        set heading off
+        set trimout on
+        set trimspool on
+        set pagesize 0
+        set linesize 5000
+        set long 100000000
+        set longchunksize 32767
+        set serveroutput on
+        whenever sqlerror exit sql.sqlcode rollback
+        rem variable contents clob
+        DECLARE
+          v_content clob;
+          ${ANOFUNCTIONS}
+        BEGIN
+          ${PREPSTMT}
+          print_clob_to_output(v_content);
+        END;
+        /
+
+EOF
+
+    fi
+
+    if [[ -f "${full_log_file}" ]]; then
+      if grep -q "ORA-.*:" "${full_log_file}"; then
+        echo -e "${CLR_REDBGR}Error detected on export${NC}"
+        tput setaf 9
+        cat "${full_log_file}"
+        tput setaf default
+      else
+        base64 -d -i "${full_log_file}" > "${full_log_file/base64/html}"
+        echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}"
+      fi
+    fi
+
+  done
+
+elif [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
   array+=("set feedback off")
   array+=("set linesize 2000")
   array+=("set serveroutput on")

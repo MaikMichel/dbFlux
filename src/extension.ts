@@ -6,7 +6,7 @@ import { registerExportAPEXCommand } from "./provider/ExportTaskProvider";
 
 import { registerExportRESTCommand } from "./provider/RestTaskProvider";
 import { applyFileExists, getDBFlowMode, getProjectInfos} from "./provider/AbstractBashTaskProvider";
-import { openTestResult, registerExecuteTestPackageCommand, registerExecuteTestsTaskCommand } from "./provider/TestTaskProvider";
+import { openCoverageResult, openTestResult, registerExecuteTestPackageCommand, registerExecuteTestPackageCommandWithCodeCoverage, registerExecuteTestsTaskCommand } from "./provider/TestTaskProvider";
 import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
 import { LoggingService } from './helper/LoggingService';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
@@ -209,6 +209,7 @@ export async function activate(context: ExtensionContext) {
 
     // run test against current package
     context.subscriptions.push(registerExecuteTestPackageCommand(projectInfos, context));
+    context.subscriptions.push(registerExecuteTestPackageCommandWithCodeCoverage(projectInfos, context));
 
     // RUN SQLplus or SQLcl
     context.subscriptions.push(registerRunSQLcli(projectInfos, "dbFlux.run.SQLcl", "sql"));
@@ -294,6 +295,10 @@ export async function activate(context: ExtensionContext) {
           }
           case "executeTestPackage" : {
             openTestResult(context);
+            break;
+          }
+          case "executeTestPackageWithCodeCoverage" : {
+            openCoverageResult(context);
             break;
           }
           case "convert2dbFlow" : {

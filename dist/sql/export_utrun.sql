@@ -11,6 +11,37 @@
     return l_bas64;
   end;
 
+  -- copyright by utPLSQL, ut_util.string_to_table
+  function string_to_table(a_string varchar2, a_delimiter varchar2:= chr(10), a_skip_leading_delimiter varchar2 := 'N') return ut_varchar2_list is
+    l_offset                 integer := 1;
+    l_delimiter_position     integer;
+    l_skip_leading_delimiter boolean := coalesce(a_skip_leading_delimiter = 'Y',false);
+    l_result                 ut_varchar2_list := ut_varchar2_list();
+  begin
+    if a_string is null then
+      return l_result;
+    end if;
+    if a_delimiter is null then
+      return ut_varchar2_list(a_string);
+    end if;
+
+    loop
+      l_delimiter_position := instr(a_string, a_delimiter, l_offset);
+      if not (l_delimiter_position = 1 and l_skip_leading_delimiter) then
+        l_result.extend;
+        if l_delimiter_position > 0 then
+          l_result(l_result.last) := substr(a_string, l_offset, l_delimiter_position - l_offset);
+        else
+          l_result(l_result.last) := substr(a_string, l_offset);
+        end if;
+      end if;
+      logger.log('result: '||l_result(l_result.last));
+      exit when l_delimiter_position = 0;
+      l_offset := l_delimiter_position + 1;
+    end loop;
+    return l_result;
+  end;
+
   procedure print_clob_to_output (p_clob IN clob) is
    l_offset     pls_integer := 1;
    l_length     pls_integer := 128;
@@ -62,3 +93,16 @@
     end loop;
     return l_clob;
   end get_junit_part_xml;
+
+  function get_coverage_part_html(p_package in varchar2,
+                                  p_targets in varchar2) return clob is
+    l_clob clob := empty_clob();
+    l_targets ut_varchar2_list;
+  begin
+    l_targets := string_to_table(p_targets, '|');
+    for cur in (select column_value
+                  from table(ut.run(p_package, ut_coverage_html_reporter(), a_include_objects => l_targets))) loop
+      l_clob := l_clob || cur.column_value;
+    end loop;
+    return l_clob;
+  end get_coverage_part_html;

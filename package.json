@@ -469,6 +469,12 @@
 				"enablement": "inDbFlowProject && resourceDirname =~ /^.*[/|\\\\]db[/|\\\\].*[/|\\\\]tests[/|\\\\]packages$/"
 			},
 			{
+				"command": "dbFlux.executeTestPackageWithCodeCoverage",
+				"title": "Execute utPLSQL code coverage for current Package",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*[/|\\\\]db[/|\\\\].*[/|\\\\]tests[/|\\\\]packages$/"
+			},
+			{
 				"command": "dbFlux.resetPassword",
 				"title": "Reset password",
 				"category": "dbFlux",
@@ -624,6 +630,12 @@
 				"command": "dbFlux.executeTestPackage",
 				"key": "ctrl+alt+t",
 				"mac": "ctrl+alt+t",
+				"when": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.executeTestPackageWithCodeCoverage",
+				"key": "ctrl+alt+shift+t",
+				"mac": "ctrl+alt+shift+t",
 				"when": "inDbFlowProject"
 			},
 			{

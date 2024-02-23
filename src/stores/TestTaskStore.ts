@@ -4,12 +4,21 @@ export class TestTaskStore {
   private _selectedSchemas: string[] | undefined;
   private _fileName: string | undefined;
   private _selectedMethod: string | undefined;
+  private _targetPackage: string | undefined;
+
 
   public get selectedMethod(): string | undefined {
     return this._selectedMethod;
   }
   public set selectedMethod(value: string | undefined) {
     this._selectedMethod = value;
+  }
+
+  public get targetPackage(): string | undefined {
+    return this._targetPackage;
+  }
+  public set targetPackage(value: string | undefined) {
+    this._targetPackage = value;
   }
 
   public get fileName(): string | undefined {
