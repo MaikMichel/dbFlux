@@ -35,7 +35,6 @@
           l_result(l_result.last) := substr(a_string, l_offset);
         end if;
       end if;
-      logger.log('result: '||l_result(l_result.last));
       exit when l_delimiter_position = 0;
       l_offset := l_delimiter_position + 1;
     end loop;
