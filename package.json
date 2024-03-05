@@ -688,7 +688,7 @@
 					"dbFlux.exportApplications.AppendFollowingOptionString": {
 						"type": "string",
 						"default": "",
-						"markdownDescription": "Add addional options and arguments to `apex export` command, send to SQLcl\n\n```apex export -applicationid ${APP_ID} -split -skipExportDate ${YOUR_OPTIONS}``` \n\n For Example: \n- `-debug`\n- `-exptype APPLICTATION_SOURCE,READABLE_YAML",
+						"markdownDescription": "Add addional options and arguments to `apex export` command, send to SQLcl\n\n```apex export -applicationid ${APP_ID} -split ${YOUR_OPTIONS}``` \n\n For Example: \n- `-skipExportDate`\n- `-debug`\n- `-exptype APPLICTATION_SOURCE,READABLE_YAML",
 						"scope": "window"
 					},
 					"dbFlux.showWarningMessages.FocusProblemPanelWhenExists": {
