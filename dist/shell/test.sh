@@ -159,6 +159,7 @@ elif [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
   array+=("set serveroutput off")
   array+=("exec dbms_utility.compile_schema(schema => USER, compile_all => false);")
   array+=("exec dbms_session.reset_package;")
+  array+=("set serveroutput on format wrapped")
   array+=("set serveroutput on")
 
 
