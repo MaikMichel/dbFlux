@@ -1,6 +1,10 @@
 # Change Log
 
 
+## [5.3.0 - 2024-03-17]
+- Fix: Output to console with leading spaces when running unit tests
+- Fix: Remove parameter skipExportDate from Application Export
+
 ## [5.2.0 - 2024-02-08]
 - New: Add command to execute utPLSQL code coverage
 - Fix: Modified description for column snippets
