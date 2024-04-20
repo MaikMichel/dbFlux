@@ -332,12 +332,15 @@ async function getAnsiHtmlFile(wsRoot:string, projectInfos: IProjectInfos, schem
   if (existsSync(logFile)) {
     const logContent = readFileSync(logFile, "utf8");
 
-    const Convert = require('ansi-to-html');
-    const convert = new Convert({fg: '#FFF',
-                                bg: '#222',
-                                newline: true});
+    // const Convert = require('ansi-to-html');
+    // const convert = new Convert({fg: '#FFF',
+    //                             bg: '#222',
+    //                             newline: true});
 
-    const htmlContent = convert.toHtml(logContent);
+    // const htmlContent = convert.toHtml(logContent);
+
+    const termToHtml = require('term-to-html')
+    const htmlContent = termToHtml.strings(logContent, termToHtml.themes.dark.name)
 
     writeFileSync(htmlFile, htmlContent);
   }

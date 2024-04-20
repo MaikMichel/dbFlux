@@ -4,18 +4,17 @@ import * as Handlebars from "handlebars";
 import { getApplicationIdFromStaticPath, getTargetPathFromFileName } from "../helper/utilities";
 
 export class SimpleUploader {
-  private sourceContent: string;
   private isFlexMode: boolean;
 
-  constructor(private sourceFile: string, isFlexMode: boolean){
-    this.sourceContent = fs.readFileSync(this.sourceFile, {encoding: 'base64'});
+  constructor(isFlexMode: boolean){
     this.isFlexMode = isFlexMode;
   }
 
-  async genFile() {
-    const uploadSQLFile = this.sourceFile + '.sql';
-    const inAppID = getApplicationIdFromStaticPath(this.sourceFile, this.isFlexMode);
-    const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile);
+  async genFile(sourceFile:string) {
+    const sourceContent = fs.readFileSync(sourceFile, {encoding: 'base64'});
+    const uploadSQLFile = sourceFile + '.sql';
+    const inAppID = getApplicationIdFromStaticPath(sourceFile, this.isFlexMode);
+    const inFileName = getTargetPathFromFileName(inAppID, sourceFile);
 
 
     const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
@@ -23,7 +22,7 @@ export class SimpleUploader {
       "inAppID": inAppID,
       "files": [{
         "inFileName": inFileName,
-        "inFileContent": this.sourceContent.match(/.{1,200}/g)
+        "inFileContent": sourceContent.match(/.{1,200}/g)
       }]
     };
     fs.writeFileSync(uploadSQLFile, template(content));
