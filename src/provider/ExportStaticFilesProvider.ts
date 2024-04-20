@@ -189,7 +189,7 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
     let runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders) {
-      const connectionUri = await getActiveFileUri();
+      const connectionUri = await getActiveFileUri(this.context);
       const activeFilePath          = connectionUri?.path;
 
       if (activeFilePath && fileExists(activeFilePath)) {
@@ -225,7 +225,7 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
 export function registerExportCurrentStaticFileCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportCurrentStaticFile", async () => {
     // check what file has to build
-    let fileName = await getWorkingFile();
+    let fileName = await getWorkingFile(context);
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
 
 

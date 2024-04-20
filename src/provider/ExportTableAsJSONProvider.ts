@@ -85,7 +85,7 @@ export class ExportTableAsJSONProvider extends AbstractBashTaskProvider implemen
 
     if (workspace.workspaceFolders) {
 
-      let fileName = await getWorkingFile();
+      let fileName = await getWorkingFile(this.context);
       const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
 
       if (relativeFileName && fileExists(fileName)) {
@@ -114,7 +114,7 @@ export function registerExportCurrentTableDefinitionCommand(projectInfos: IProje
   return commands.registerCommand("dbFlux.exportCurrentTableAsJSONDefinition", async () => {
 
     // check what file has to build
-    let fileName = await getWorkingFile();
+    let fileName = await getWorkingFile(context);
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
 
     const insideTable = matchRuleShort(relativeFileName, 'db/*/tables/*');

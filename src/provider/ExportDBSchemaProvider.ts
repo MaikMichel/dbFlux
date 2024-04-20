@@ -189,7 +189,7 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
     let runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders) {
-      const connectionUri = await getActiveFileUri();
+      const connectionUri = await getActiveFileUri(this.context);
       runner.executableCli          = ConfigurationManager.getCliToUseForCompilation();
       const activeFilePath          = connectionUri?.path;
 
@@ -222,7 +222,7 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
 export function registerExportDBObjectCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportObject", async () => {
     // check what file has to build
-    let fileName = await getWorkingFile();
+    let fileName = await getWorkingFile(context);
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
 
 

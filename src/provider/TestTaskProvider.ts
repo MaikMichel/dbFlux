@@ -125,7 +125,7 @@ export function registerExecuteTestPackageCommand(projectInfos: IProjectInfos, c
     if (projectInfos.isValid) {
 
       // check what file has to build
-      let fileName = await getWorkingFile();
+      let fileName = await getWorkingFile(context);
       let methodName = "";
       const editor = window.activeTextEditor!;
       const selection = editor.selection;
@@ -176,7 +176,7 @@ export function registerExecuteTestPackageCommandWithCodeCoverage(projectInfos: 
     if (projectInfos.isValid) {
 
       // check what file has to build
-      let fileName = await getWorkingFile();
+      let fileName = await getWorkingFile(context);
 
       // now check connection infos
       setAppPassword(projectInfos);

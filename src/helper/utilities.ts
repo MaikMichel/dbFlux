@@ -142,22 +142,8 @@ export function groupByKey(array: any[], key: string | number) {
     }, {});
 }
 
-export async function getActiveFileUri():Promise<vscode.Uri | undefined>{
-  let fileUri;
-  if (vscode.window.activeTextEditor === undefined) {
-    const tmpClipboard = await vscode.env.clipboard.readText();
-
-    await vscode.commands.executeCommand('copyFilePath');
-    let fileName = await vscode.env.clipboard.readText();
-    await vscode.env.clipboard.writeText(tmpClipboard);
-
-    fileName = fileName.split('\n')[0];
-    fileUri = vscode.Uri.file(fileName);
-  } else {
-    fileUri = vscode.window.activeTextEditor.document.uri;
-  }
-
-  return fileUri;
+export async function getActiveFileUri(context: vscode.ExtensionContext):Promise<vscode.Uri | undefined>{
+  return vscode.Uri.file(await getWorkingFile(context));
 }
 
 export async function createDirectoryPath(path: any, fullPath: string, rootPaath: string) {
@@ -191,11 +177,13 @@ export function getSubFolders(source:string):string[] {
 }
 
 
-export async function getWorkingFile() {
-  let fileName = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
-
+export async function getWorkingFile(context: vscode.ExtensionContext) {
+  let fileName:string = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
+  LoggingService.logDebug(`fileName:string: ${fileName}`)
   if (fileName === undefined) {
+    LoggingService.logDebug(`call copyFilePath`);
     const tmpClipboard = await vscode.env.clipboard.readText();
+    await vscode.commands.executeCommand('workbench.action.focusSideBar');
     await vscode.commands.executeCommand('copyFilePath');
     fileName = await vscode.env.clipboard.readText();
 
@@ -205,8 +193,16 @@ export async function getWorkingFile() {
     }
 
     fileName = fileParts.join(path.posix.sep)!;
-
     await vscode.env.clipboard.writeText(tmpClipboard);
+  }
+
+  if (existsSync(fileName)) {
+    LoggingService.logDebug(`fileName: ${fileName} exists`);
+    context.globalState.update("lastFileName", fileName);
+  } else {
+    LoggingService.logDebug(`fileName: ${fileName} does not exist, reading globalState`);
+    fileName = context.globalState.get("lastFileName") + "";
+    LoggingService.logDebug(`fileName:globalstate: ${fileName}`)
   }
   return toUpperDriverLetter(fileName);
 }

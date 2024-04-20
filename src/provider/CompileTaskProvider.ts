@@ -126,7 +126,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
 
   async prepCompInfos(): Promise<ICompileInfos> {
     let runner: ICompileInfos = {} as ICompileInfos;
-    let fileUri:Uri|undefined = await getActiveFileUri();
+    let fileUri:Uri|undefined = await getActiveFileUri(this.context);
 
     if (fileUri !== undefined) {
       await this.setInitialCompileInfo("deploy.sh", fileUri, runner);
@@ -283,7 +283,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
     if (projectInfos.isValid) {
       LoggingService.logDebug(`Configuration is valid.`);
       // check what file has to build
-      let fileName = await getWorkingFile();
+      let fileName = await getWorkingFile(context);
       const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
 
       LoggingService.logDebug(`File to compile is: ${relativeFileName}`);
@@ -402,8 +402,8 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
               LoggingService.logDebug(`We are inside statics an there not in inside "css,js"`);
 
               // Otherwise (not JS or CSS) simple upload the file
-              const simpleUploader = new SimpleUploader(fileName, projectInfos.isFlexMode);
-              simpleUploader.genFile();
+              const simpleUploader = new SimpleUploader(projectInfos.isFlexMode);
+              simpleUploader.genFile(fileName);
 
               LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run generated files`);
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");

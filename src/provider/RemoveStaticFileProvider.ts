@@ -85,7 +85,7 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
     let runner: ISQLRemoveInfos = {} as ISQLRemoveInfos;
 
     if (workspace.workspaceFolders) {
-      const connectionUri = await getActiveFileUri();
+      const connectionUri = await getActiveFileUri(this.context);
       const activeFilePath          = connectionUri?.path;
 
       if (activeFilePath && fileExists(activeFilePath)) {
@@ -123,7 +123,7 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
 export function registerRemoveCurrentStaticFileCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.removeCurrentStaticFile", async () => {
     // check what file has to build
-    let fileName = await getWorkingFile();
+    let fileName = await getWorkingFile(context);
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
 
 
