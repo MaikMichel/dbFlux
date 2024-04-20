@@ -1,6 +1,10 @@
 # Change Log
 
 
+## [5.4.0 - 2024-04-20]
+- New: Add another lib to convert ansi output to html
+- Fix: Getting current working file on WSL
+
 ## [5.3.0 - 2024-03-17]
 - Fix: Output to console with leading spaces when running unit tests
 - Fix: Remove parameter skipExportDate from Application Export
