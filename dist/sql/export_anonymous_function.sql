@@ -402,7 +402,7 @@
                          else 'defaults'
                        end ||'/' ||lower(i.index_name)||'.sql' filename
                   from user_indexes i left join user_constraints c on i.index_name = c.index_name
-                 where index_type != 'lob'
+                 where index_type != 'LOB'
                    and (   p_object_name    is null
                         or upper(i.index_name)  = upper(p_object_name)
                         or upper(i.table_name||'_'||i.index_name)  = upper(p_object_name)
