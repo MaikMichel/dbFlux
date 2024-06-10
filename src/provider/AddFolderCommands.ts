@@ -3,7 +3,7 @@ import { commands, env, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn,
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import * as path from "path";
 import { ConfigurationManager } from '../helper/ConfigurationManager';
-import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim, showInformationProgress } from '../helper/utilities';
+import { createDirectoryPath, getApplicationIdFromApexPath, getSubFolders, getWorkspaceRootPath, rtrim, showInformationProgress } from '../helper/utilities';
 import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { getAvailableObjectTypes } from '../wizards/CreateObjectWizard';
 import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
@@ -232,6 +232,25 @@ export function addApplication(appID: string, folder: string) {
   }
 }
 
+export function addAppPlugin(plugID: string, folder: string, targetAPPID: string) {
+  if (workspace.workspaceFolders !== undefined && plugID) {
+    const plugFolder = targetAPPID.replace("apex", folder)! + "/" + plugID.toUpperCase();
+    const dirName:string = path.join(workspace.workspaceFolders[0].uri.fsPath, `${plugFolder}/src`);
+
+    if (!existsSync(dirName)){
+      mkdirSync(path.join(dirName, "js"), { recursive: true });
+      mkdirSync(path.join(dirName, "css"));
+      mkdirSync(path.join(dirName, "img"));
+
+      commands.executeCommand('revealInExplorer', Uri.file(dirName));
+    }
+
+
+    window.showInformationMessage(`Folder: ${plugFolder} created. Have fun, developing your plugin.`);
+  }
+}
+
+
 export function addStaticFolder(appID: string, folder: string) {
   if (workspace.workspaceFolders !== undefined && appID) {
     const staticFolder = `${folder.replace('apex', 'static')}/f${appID}/src`;
@@ -250,6 +269,11 @@ export function addStaticFolder(appID: string, folder: string) {
 
 export async function getNewApplication(): Promise<string> {
   const value:string | undefined = await window.showInputBox({ prompt: "dbFlux add Application", placeHolder: "Enter APP-ID" });
+  return value ? value : "";
+}
+
+export async function getNewAppPlugin(): Promise<string> {
+  const value:string | undefined = await window.showInputBox({ prompt: "dbFlux add Plugin Static ID", placeHolder: "Enter STATIC-ID" });
   return value ? value : "";
 }
 
@@ -681,6 +705,19 @@ export function registerAddApplicationCommand(projectInfos: IProjectInfos, conte
 
   });
 }
+
+export function registerAddApplicationPluginCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
+  return commands.registerCommand("dbFlux.addAPP.plugin", async () => {
+    // choose APP Folder
+    const targetAPPID = await ExportTaskStore.getInstance().getAppID(projectInfos, false);
+
+    if (targetAPPID) {
+      LoggingService.logDebug(`Target Appication selected: ${targetAPPID}`);
+      addAppPlugin(await getNewAppPlugin(), "plugin", targetAPPID!);
+    }
+  });
+}
+
 
 export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
   return commands.registerCommand("dbFlux.splitToFiles", async () => {

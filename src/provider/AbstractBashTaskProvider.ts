@@ -385,7 +385,7 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
     returnDBUser = projectInfos.dbAdminUser!;
   } else if (lowerPathParts[0] === "db") {
     returnDBUser = lowerPathParts[1];
-  } else if (["apex", "rest", "static"].includes(lowerPathParts[0])) {
+  } else if (["apex", "rest", "static", "plugin"].includes(lowerPathParts[0])) {
     if (projectInfos.isFlexMode) {
       returnDBUser = lowerPathParts[1];
     } else {

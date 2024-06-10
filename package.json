@@ -367,6 +367,12 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.exportAPEX.plugin",
+				"title": "Export APEX Application Plugin",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
 				"command": "dbFlux.exportREST",
 				"title": "Export REST Module",
 				"category": "dbFlux",
@@ -381,6 +387,12 @@
 			{
 				"command": "dbFlux.addAPP",
 				"title": "Add APEX Application",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
+				"command": "dbFlux.addAPP.plugin",
+				"title": "Add APEX Application Plugin",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject"
 			},

@@ -2,7 +2,7 @@ import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, T
 
 import { basename, join } from "path";
 import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
-import { registerExportAPEXCommand } from "./provider/ExportTaskProvider";
+import { registerExportAPEXCommand, registerExportAPEXPluginCommand } from "./provider/ExportTaskProvider";
 
 import { registerExportRESTCommand } from "./provider/RestTaskProvider";
 import { applyFileExists, getDBFlowMode, getProjectInfos} from "./provider/AbstractBashTaskProvider";
@@ -11,7 +11,7 @@ import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig, s
 import { LoggingService } from './helper/LoggingService';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
-import { registerAddApplicationCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerCopySelectionWithFilenameToClipBoard, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
+import { registerAddApplicationCommand, registerAddApplicationPluginCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerCopySelectionWithFilenameToClipBoard, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
 import { revealItemWizard } from "./wizards/RevealItemWizard";
 import { registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
@@ -176,6 +176,9 @@ export async function activate(context: ExtensionContext) {
 
     // Add APEX App
     context.subscriptions.push(registerAddApplicationCommand(projectInfos, context));
+
+    // Add APEX Applictaion Plugin
+    context.subscriptions.push(registerAddApplicationPluginCommand(projectInfos, context));
 
     // Add Workspace Folder
     context.subscriptions.push(registerAddWorkspaceCommand(projectInfos, context));
