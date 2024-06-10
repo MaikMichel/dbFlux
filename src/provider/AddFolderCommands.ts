@@ -3,7 +3,7 @@ import { commands, env, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn,
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
 import * as path from "path";
 import { ConfigurationManager } from '../helper/ConfigurationManager';
-import { createDirectoryPath, getApplicationIdFromApexPath, getSubFolders, getWorkspaceRootPath, rtrim, showInformationProgress } from '../helper/utilities';
+import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim, showInformationProgress } from '../helper/utilities';
 import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { getAvailableObjectTypes } from '../wizards/CreateObjectWizard';
 import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';

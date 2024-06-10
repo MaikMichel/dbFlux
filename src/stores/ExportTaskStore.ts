@@ -1,4 +1,4 @@
-import {workspace, window, Uri, ExtensionContext, commands} from "vscode";
+import {workspace, window, Uri} from "vscode";
 
 import * as path from "path";
 import { mkdirSync, PathLike, readdirSync, existsSync, copyFileSync } from "fs";

@@ -152,6 +152,8 @@ export async function activate(context: ExtensionContext) {
 
     // Export APEX
     context.subscriptions.push(registerExportAPEXCommand(projectInfos, context));
+    context.subscriptions.push(registerExportAPEXPluginCommand(projectInfos, context));
+
 
     // Export DBSchema
     context.subscriptions.push(registerExportDBSchemaCommand(projectInfos, context));

@@ -204,7 +204,7 @@
 		"scope": "plsql,sql",
 		"prefix": "dbf.tbl.con.fk",
 		"body": [
-		"-- File: constraints/foreigns/${TM_FILENAME_BASE}_${1:source_table_prefix}_${2:target_table_column}.sql",
+		"-- File: constraints/foreigns/${TM_FILENAME_BASE}_${1:source_table_prefix}_${2:target_table_column}_fk.sql",
 		"alter table ${TM_FILENAME_BASE} add (",
 		"  constraint ${TM_FILENAME_BASE}_${1:source_table_prefix}_${2:target_table_column}_fk",
 		"  foreign key (${1:source_table_prefix}_${2:target_table_column})",

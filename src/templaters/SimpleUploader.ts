@@ -14,7 +14,7 @@ export class SimpleUploader {
     const sourceContent = fs.readFileSync(sourceFile, {encoding: 'base64'});
     const uploadSQLFile = sourceFile + '.sql';
     const inAppID = getApplicationIdFromStaticPath(sourceFile, this.isFlexMode);
-    const inFileName = getTargetPathFromFileName(inAppID, sourceFile);
+    const inFileName = getTargetPathFromFileName(inAppID, sourceFile, undefined);
 
 
     const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));

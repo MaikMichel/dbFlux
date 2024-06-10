@@ -73,7 +73,7 @@ export function rtrim (s:string, c:string) {
 //   return str.replace(rgxtrim, '');
 // }
 
-export function getApplicationIdFromPath(pathType: "static"|"apex", sourceFile: string, isFlexMode: boolean) {
+export function getApplicationIdFromPath(pathType: "static"|"apex"|"plugin", sourceFile: string, isFlexMode: boolean) {
   if (isFlexMode) {
     // */[static|apex]/scheman_name/workspace_name/f_with_app_id/src/*
     const wsRoot = getWorkspaceRootPath();
@@ -81,46 +81,42 @@ export function getApplicationIdFromPath(pathType: "static"|"apex", sourceFile: 
     const appID = parts[3].substring(1);
     return appID;
   } else {
-    return sourceFile.split(pathType + '/f')[1].split('/src/')[0];
+    return sourceFile.split(pathType + '/f')[1].split(pathType === "plugin"?'/':'/src/')[0];
   }
+}
+
+export function getApplicationIdFromPluginPath(sourceFile: string, isFlexMode: boolean) {
+  return getApplicationIdFromPath("plugin", sourceFile, isFlexMode);
 }
 
 export function getApplicationIdFromStaticPath(sourceFile: string, isFlexMode: boolean) {
   return getApplicationIdFromPath("static", sourceFile, isFlexMode);
-  if (isFlexMode) {
-    // */static/scheman_name/workspace_name/f_with_app_id/src/*
-    const wsRoot = getWorkspaceRootPath();
-    const parts = sourceFile.replace(wsRoot+"/", "").split("/");
-    const appID = parts[3].substring(1);
-    return appID;
-  } else {
-    return sourceFile.split('static/f')[1].split('/src/')[0];
-  }
 }
 
 export function getApplicationIdFromApexPath(sourceFile: string, isFlexMode: boolean) {
   return getApplicationIdFromPath("apex", sourceFile, isFlexMode);
-  if (isFlexMode) {
-    // */static/scheman_name/workspace_name/f_with_app_id/src/*
-    const wsRoot = getWorkspaceRootPath();
-    const parts = sourceFile.replace(wsRoot+"/", "").split("/");
-    const appID = parts[3].substring(1);
-    return appID;
+}
+
+export function getPluginIDFromPath(inAppID: string, sourceFile: string, isFlexMode: boolean) {
+  return sourceFile.split('plugin/f'+inAppID+'/')[1].split('/')[0];
+}
+export function getTargetPathFromFileName(inAppID: string, sourceFile: string, pluginID: string|undefined) {
+  if (pluginID) {
+    return sourceFile.split(pluginID + '/src/')[1];
   } else {
-    return sourceFile.split('static/f')[1].split('/src/')[0];
+    return sourceFile.split('/f'+inAppID+'/src/')[1];
   }
 }
 
-export function getTargetPathFromFileName(inAppID: string, sourceFile: string) {
-    return sourceFile.split('/f'+inAppID+'/src/')[1];
-
-}
 
 export function getStaticReference(sourceFile: string, isFlexMode: boolean) {
-  const inAppID = getApplicationIdFromStaticPath(sourceFile, isFlexMode);
-  const targetPath = getTargetPathFromFileName(inAppID, sourceFile);
+  const isPlugin = sourceFile.startsWith("plugin/");
 
-  return "#APP_FILES#" + targetPath.replace(".js.sql", "#MIN#.js").replace(".css.sql", "#MIN#.css").replace(".sql", "");
+  const inAppID = isPlugin?getApplicationIdFromPluginPath(sourceFile, isFlexMode):getApplicationIdFromStaticPath(sourceFile, isFlexMode);
+  const pluginID = isPlugin?getPluginIDFromPath(inAppID, sourceFile, isFlexMode):undefined;
+  const targetPath = getTargetPathFromFileName(inAppID, sourceFile, pluginID);
+
+  return (isPlugin?"#PLUGIN_FILES#":"#APP_FILES#") + targetPath.replace(".js.sql", "#MIN#.js").replace(".css.sql", "#MIN#.css").replace(".sql", "");
 }
 
 export function changeExtension(filename: string, extension: string): string {

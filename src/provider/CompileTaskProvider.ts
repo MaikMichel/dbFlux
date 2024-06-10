@@ -148,10 +148,12 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
 
       // if we are on static and a file with runner.activeFile.sql exists then we are uploading to
       // apex and hopefully build the sql file ...
-      if (matchRuleShort(runner.activeFile, runner.projectInfos.isFlexMode?'*/static/*/*/f*/src/*':'*/static/f*/src/*') && fs.existsSync(runner.activeFile + ".sql")) {
+      const insideStatics = matchRuleShort(runner.relativeWSPath, runner.projectInfos.isFlexMode ? 'static/*/*/f*/src/*' : 'static/f*/src/*');
+      const insidePlugins = matchRuleShort(runner.relativeWSPath, runner.projectInfos.isFlexMode ? 'plugin/*/*/f*/*' : 'plugin/f*/*');
+      if ((insideStatics || insidePlugins) && fs.existsSync(runner.activeFile + ".sql")) {
         runner.activeFile += ".sql";
         runner.moveYesNo = "YES";
-        runner.additionalOutput = "Reference file by using: " + getStaticReference(runner.activeFile, runner.projectInfos.isFlexMode);
+        runner.additionalOutput = "Reference file by using: " + getStaticReference(runner.relativeWSPath+".sql", runner.projectInfos.isFlexMode);
       }
 
 
@@ -291,6 +293,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
       const insideSetup = (matchRuleShort(relativeFileName, 'db/_setup/*') || matchRuleShort(relativeFileName, 'db/.setup/*'));
       const insideDb = !insideSetup && matchRuleShort(relativeFileName, 'db/*');
       const insideStatics = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'static/*/*/f*/src/*' : 'static/f*/src/*');
+      const insidePlugins = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'plugin/*/*/f*/*/src/*' : 'plugin/f*/*/src/*');
       const insideReports = matchRuleShort(relativeFileName, 'reports/*');
       const insideAPEX = matchRuleShort(relativeFileName, 'apex/*') && path.basename(relativeFileName) === "install.sql";
       const insideREST = matchRuleShort(relativeFileName, 'rest/*');
@@ -407,6 +410,19 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
 
               LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run generated files`);
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+            } else if (insidePlugins && ['js'].includes(fileExtension.toLowerCase())) {
+              LoggingService.logDebug(`We are inside plugins an there inside "js", so just call Terserer to minify JavaScript`);
+
+              // Minify and create JS-Maps when needed
+              const tersered = new Terserer(fileName, projectInfos.isFlexMode);
+              const success = await tersered.genFile(true);
+              if (success) {
+                LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run generated files`);
+                commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+              } else {
+                LoggingService.logError("dbFlux/terser: " + tersered.getLastErrorMessage());
+                window.showErrorMessage("dbFlux/terser: " + tersered.getLastErrorMessage());
+              }
             } else if (insideReports && !extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
               LoggingService.logDebug(`We are inside reports, let's try to search for a template`);
 

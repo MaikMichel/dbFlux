@@ -17,7 +17,7 @@ export class Uglifyer {
   async genFile() {
     const uploadSQLFile = this.sourceFile + '.sql';
     const inAppID = getApplicationIdFromStaticPath(this.sourceFile, this.isFlexMode);
-    const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile);
+    const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile, undefined);
 
 
     const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
