@@ -439,6 +439,12 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.exportPluginFiles",
+				"title": "Export Plugin Files",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
 				"command": "dbFlux.removeCurrentStaticFile",
 				"title": "Remove Static Application File (current)",
 				"category": "dbFlux",
@@ -449,6 +455,12 @@
 				"title": "Export Static Application File (current)",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|\\/)static(\\\\|\\/).*$/"
+			},
+			{
+				"command": "dbFlux.exportCurrentPluginFile",
+				"title": "Export Plugin File (current)",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|\\/)plugin(\\\\|\\/).*$/"
 			},
 			{
 				"command": "dbFlux.exportCurrentTableAsJSONDefinition",

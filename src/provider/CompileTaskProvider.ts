@@ -411,7 +411,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
               LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run generated files`);
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
             } else if (insidePlugins && ['js'].includes(fileExtension.toLowerCase())) {
-              LoggingService.logDebug(`We are inside plugins an there inside "js", so just call Terserer to minify JavaScript`);
+              LoggingService.logDebug(`We are plugins plugin an there inside "js", so just call Terserer to minify JavaScript`);
 
               // Minify and create JS-Maps when needed
               const tersered = new Terserer(fileName, projectInfos.isFlexMode);
@@ -423,6 +423,24 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
                 LoggingService.logError("dbFlux/terser: " + tersered.getLastErrorMessage());
                 window.showErrorMessage("dbFlux/terser: " + tersered.getLastErrorMessage());
               }
+            } else if (insidePlugins && ['css'].includes(fileExtension.toLowerCase())) {
+              LoggingService.logDebug(`We are plugins plugin an there inside "css", so just call Uglifyer to minify JavaScript`);
+
+              // Minify CSS
+              const uglifyer = new Uglifyer(fileName, projectInfos.isFlexMode);
+              uglifyer.genFile(true);
+
+              LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run generated files`);
+              commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
+            } else if (insidePlugins) {
+              LoggingService.logDebug(`We are inside plugins an there not in inside "css,js"`);
+
+              // Otherwise (not JS or CSS) simple upload the file
+              const simpleUploader = new SimpleUploader(projectInfos.isFlexMode);
+              simpleUploader.genFile(fileName, true);
+
+              LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run generated files`);
+              commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
             } else if (insideReports && !extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase())) {
               LoggingService.logDebug(`We are inside reports, let's try to search for a template`);
 

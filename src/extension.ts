@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, TreeView, window, workspace } from "vscode";
+import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, window, workspace } from "vscode";
 
 import { basename, join } from "path";
 import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
@@ -30,6 +30,7 @@ import { showTableDetailsWizard } from "./wizards/ShowTableDetailsWizards";
 import { DBFluxTableDetails } from "./ui/DBFluxTableDetails";
 import { addColumnSnippet } from "./wizards/AddColumnSnippet";
 import { getWorkspaceRootPath, showInformationProgress } from "./helper/utilities";
+import { registerExportCurrentPluginFileCommand, registerExportPluginFilesCommand } from "./provider/ExportPluginFilesProvider";
 
 
 
@@ -163,9 +164,11 @@ export async function activate(context: ExtensionContext) {
 
     // Export APEX Static Files
     context.subscriptions.push(registerExportStaticFilesCommand(projectInfos, context));
+    context.subscriptions.push(registerExportPluginFilesCommand(projectInfos, context));
 
     // Export one APEX Static File
     context.subscriptions.push(registerExportCurrentStaticFileCommand(projectInfos, context));
+    context.subscriptions.push(registerExportCurrentPluginFileCommand(projectInfos, context));
 
     // Remove current APEX Static File
     context.subscriptions.push(registerRemoveCurrentStaticFileCommand(projectInfos, context));

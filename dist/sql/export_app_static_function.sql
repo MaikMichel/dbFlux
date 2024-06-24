@@ -316,6 +316,52 @@
         raise_application_error(-20001, sqlerrm);
   end;
 
+  function get_plugin_zip(p_app_id       in number,
+                          p_plugin_name  in varchar2,
+                          p_file_name    in varchar2 default null)
+                          return blob is
+    l_zip_file  blob;
+  begin
+
+    -- init boolean to validate, that something was exported, later
+    g_objects_found := false;
+
+    -- init global files array
+    g_files.delete;
+
+
+    dbms_lob.createtemporary(l_zip_file, true);
+
+    for cur in (select 'f'||application_id app_id, file_name, file_content, plugin_name
+                  from apex_appl_plugin_files
+                 where application_id = p_app_id
+                   and plugin_name = upper(p_plugin_name)
+                   and (file_name = p_file_name or p_file_name is null)
+                   and file_name not like '%.min.css'
+                   and file_name not like '%.min.js'
+                   and file_name not like '%.js.map')
+    loop
+      zip_add_file(p_zipped_blob => l_zip_file
+                  ,p_name        => cur.file_name
+                  ,p_content     => cur.file_content);
+    end loop;
+
+
+    if not g_objects_found then
+      raise no_data_found;
+    end if;
+
+    zip_finish(p_zipped_blob => l_zip_file);
+    return l_zip_file;
+
+    exception
+      -- we need the -20001, cause this is catched by bash
+      when no_data_found then
+        raise_application_error(-20002, 'Nothing found to export ('||p_app_id||'/'||p_plugin_name||'/'||p_file_name||')');
+
+      when others then
+        raise_application_error(-20001, sqlerrm);
+  end;
   -- #######################################################################################################
 
   --
