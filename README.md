@@ -35,6 +35,12 @@ Using this extension enables you to develop Oracle Database and APEX application
 - Addionaly Support for dbFlow and XCL projects
 - [**Lock and unlock Files**](#lock-and-unlock-files 'Jump to Lock and unlock Files'), so you can't accidentally delete changes allready made by another person
 - [**Export APEX Static Application Files**](#export-apex-static-application-files 'Jump to Export APEX Static Application Files') to static folder
+
+
+- [**Export APEX Plugins**](#export-apex-plugins 'Jump to Export APEX Plugins')
+- [**Compile JS/CSS and Upload Files to APEX Plugin**](#compile-jscss-and-upload-files-to-apex-plugin 'Jump to Compile JS/CSS and Upload Files to APEX Plugin')
+
+
 - [**Add FeatureSet as SubModule**](#add-featureset-as-submodule 'Jump to Add FeatureSet as SubModule') to your repo to benefit from other great contributions
 
 - [**TreeView, that will show columns infos based on tables**](#dbstruct---view-table-structure 'Jump to dbStruct - View table structure') you added. With some nice features
@@ -433,6 +439,21 @@ If you want to export an object, you must have already created a file for it and
 ## Export APEX Static Application Files [#](#features 'Jumpt back to Features')
 
 With **dbFLux** you can now export static application files of the configured applications to the static folder. You can either use the command: `Export Static Application Files` to export all files of an application or you can call the command: `Export Static Application File (current)` if you already have a static file open. In this case exactly this file will be downloaded from the Static Application Files. This makes it easy to start working with VSCode and dbFLux especially for existing projects.
+
+## Export APEX Plugins [#](#features 'Jumpt back to Features')
+
+**dbFlux** is able to support you when working with APEX Plugins. All you have to do is, to Add a plugin to your project. Just call command: `dbFlux Add APEX Plugin`. Here you have to choose the Application under which your plugin is hosted and enter the Static Identifier of the plugin itself. The Static Identifier should look like this: `COM.COMPANY.YOUR.PLUGIN`. This must match exactly the string you defined when creating the plugin in APEX.
+After that dbFlux will create a new folder inside a plugin-folder which is hosted on the root path of your project:
+`plugin/f123/COM.COMPANY.YOUR.PLUGIN/src`.
+To export the plugin from the database you have to call the command: "dbFlux: Export APEX Plugin". This will create the plugin-file itself, like: `com_company_your_plugin.sql`. This is the file, you will deploy/install into other environments.
+
+Additionaly you can export your static plugin files in order to edit them in VS-Code. In this case you call the command: "dbFlux: Export Plugin Files". This will create the files, which belongs to the plugin itself underneath the src-folder of your plugin (src/css, src/img/ src/js, ...). To export just the current file you are working with, call the command `dbFLux: Export Plugin File (current)`.
+
+
+## Compile JS/CSS and Upload Files to APEX Plugin [#](#features 'Jumpt back to Features')
+
+Just like with APEX Static Files you can upload and compile JavaScript, CSS or binary files. Just edit the file with VS-Code and execute the command: `dbFlux: Compile current file` or use the key: `Ctrl+Alt+B`. This will upload the current file into the plugin. In case you are uploading a JavaScript-File it will be minified and a map-File will be uploaded addionaly. When uploading a CSS-File, it will also be minified.
+
 
 
 ## Add: APEX Application, REST Module, Workspace or Schema

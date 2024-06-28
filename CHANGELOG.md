@@ -1,7 +1,14 @@
 # Change Log
 
 
-## [5.4.0 - 2024-04-20]
+## [5.5.0 - 2024-06-16]
+- Fix: Export Schema with Lob-Columns
+- New: Command to Add a plugin to folder
+- New: Command to Export a plugin into a folder (created by new Command Add Plugin)
+- New: Command to Compile/Upload JS, CSS and Binary Files to a specific plugin (created by new Command Add Plugin)
+- New: Command to export (current or all) static plugin files
+
+
 - New: Add another lib to convert ansi output to html
 - Fix: Getting current working file on WSL
 
