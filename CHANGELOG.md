@@ -1,6 +1,9 @@
 # Change Log
 
 
+## [5.5.1 - 2024-06-29]
+- Fix: Wildcard export of Application and Static Files
+
 ## [5.5.0 - 2024-06-16]
 - Fix: Export Schema with Lob-Columns
 - New: Command to Add a plugin to folder
