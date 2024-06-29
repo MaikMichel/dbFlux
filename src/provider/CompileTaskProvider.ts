@@ -295,7 +295,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
       const insideStatics = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'static/*/*/f*/src/*' : 'static/f*/src/*');
       const insidePlugins = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'plugin/*/*/f*/*/src/*' : 'plugin/f*/*/src/*');
       const insideReports = matchRuleShort(relativeFileName, 'reports/*');
-      const insideAPEX = matchRuleShort(relativeFileName, 'apex/*') && path.basename(relativeFileName) === "install.sql";
+      const insideAPEX = matchRuleShort(relativeFileName, 'apex/*');
       const insideREST = matchRuleShort(relativeFileName, 'rest/*');
       const fileExtension: string = "" + relativeFileName.split('.').pop();
       const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
@@ -358,7 +358,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
             CompileTaskStore.getInstance().targetWorkspace = undefined;
 
             if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideSetup || insideDb || insideREST || insideAPEX)) {
-              if (insideAPEX) {
+              if (insideAPEX && path.basename(relativeFileName) === "install.sql") {
                 LoggingService.logDebug(`We are inside apex and running an install.sql file`);
 
                 CompileTaskStore.getInstance().targetApplicationID = await askForTargetAppID(relativeFileName, projectInfos.isFlexMode);

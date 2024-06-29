@@ -37,7 +37,7 @@ export class ExportTaskStore {
   }
 
 
-  async getAppID(projectInfos:IProjectInfos, addAll:boolean = false):Promise<string|undefined> {
+  async getAppID(projectInfos:IProjectInfos, addAll:boolean):Promise<string|undefined> {
     let value:string|undefined;
     if (workspace.workspaceFolders !== undefined) {
       const rootPath = workspace.workspaceFolders[0].uri.fsPath;

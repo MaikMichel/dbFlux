@@ -203,7 +203,7 @@ export function registerExportAPEXCommand(projectInfos: IProjectInfos, context: 
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
         which('sql').then(async () => {
-          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos);
+          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, true);
 
           if (ExportTaskStore.getInstance().expID !== undefined) {
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportTaskProvider(context)));

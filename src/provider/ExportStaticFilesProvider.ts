@@ -110,7 +110,7 @@ export function registerExportStaticFilesCommand(projectInfos: IProjectInfos, co
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
         which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos);
+          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, true);
 
           if (ExportTaskStore.getInstance().expID !== undefined) {
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportStaticFilesProvider(context)));
