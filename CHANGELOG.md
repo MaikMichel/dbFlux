@@ -1,5 +1,7 @@
 # Change Log
 
+## [5.5.2 - 2024-06-29]
+- Add ask to add apexplugin.json when adding Plugin
 
 ## [5.5.1 - 2024-06-29]
 - Fix: Wildcard export of Application and Static Files
