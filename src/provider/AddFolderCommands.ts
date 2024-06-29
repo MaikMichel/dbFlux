@@ -242,11 +242,65 @@ export function addAppPlugin(plugID: string, folder: string, targetAPPID: string
       mkdirSync(path.join(dirName, "css"));
       mkdirSync(path.join(dirName, "img"));
 
+
+
       commands.executeCommand('revealInExplorer', Uri.file(dirName));
     }
 
+    const pluginJSONFile:string = path.join(workspace.workspaceFolders[0].uri.fsPath, `apexplugin.json`);
+    let answers:string[] = []
+    let optQuest:string = ""
+    if (!existsSync(pluginJSONFile)) {
+      answers = ["Yes", "No"]
+      optQuest = "Create file apexplugin.json?"
+    }
 
-    window.showInformationMessage(`Folder: ${plugFolder} created. Have fun, developing your plugin.`);
+    window.showInformationMessage(`Folder: ${plugFolder} created. Have fun, developing your plugin. ${optQuest}`, ... answers)
+    .then(async (answer) => {
+      if (answer === "Yes") {
+        const plugin =  {
+          "name" :        "Give me an name",
+          "version" :     "0.1.0",
+          "description" : "Give me a nice description",
+          "keywords" :    ["KEYWORDA", "KEYWORDB"],
+          "homepage" :    "https://maybe.you.can.find.me.oon.github.com",
+          "bugs" : {
+            "url" :       "https://maybe.you.can.find.me.oon.github.com/issues",
+            "email" :     "this.could.be.my@adress.com"
+          },
+          "license" :     "MIT",
+          "commercial" :  "No",
+          "author" : {
+            "name" :      "Your Name",
+            "email" :     "this.could.be.my@adress.com"
+          },
+          "repository" : {
+            "type" :      "git",
+            "url" :       "https://maybe.you.can.find.me.oon.github.git"
+          },
+          "oracle" : {
+            "versions" :  ["23.0.0"],
+            "apex" : {
+              "versions" :       ["23.1", "23.2", "24.1"],
+              "plugin" : {
+                "internalName" : plugID,
+                "type" :         "item",
+                "demo" :         "https://apex.oracle.com/some-kind-of-demo-app",
+                "previewImage" : `https://maybe.you.can.find.me.oon.github.com/${plugFolder}/src/img/demo.png`
+              }
+            }
+          }
+        };
+
+        // write the file
+        writeFileSync(pluginJSONFile, JSON.stringify(plugin, undefined, 2));
+
+        // and open it
+        workspace.openTextDocument(Uri.file(pluginJSONFile)).then(doc => {
+          window.showTextDocument(doc, {preview: false});
+        });
+      }});
+
   }
 }
 
