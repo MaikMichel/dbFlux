@@ -32,13 +32,16 @@ export interface IProjectInfos {
   isValid: boolean;
   isFlexMode: boolean;
   workspace: string|undefined;
+  dbPasses: any|undefined;
 }
 
 export abstract class AbstractBashTaskProvider {
   context: ExtensionContext;
+  dbFluxMode: string;
 
   constructor(context: ExtensionContext) {
     this.context = context;
+    this.dbFluxMode = getDBFlowMode(context)!
   }
 
   static dbFluxType: string = "dbFlux";
@@ -84,13 +87,32 @@ export abstract class AbstractBashTaskProvider {
 
 
   getConnection(projectInfos: IProjectInfos, currentPath: string): string {
-    return this.buildConnectionUser(projectInfos, currentPath) + `/"${projectInfos.dbAppPwd}"@${projectInfos.dbTns}`;
+    const connUser = this.buildConnectionUser(projectInfos, currentPath);
+    const connPass = this.getPassword(projectInfos, connUser);
+    return connUser + `/"${connPass}"@${projectInfos.dbTns}`;
   }
 
+  getPassword(pInfos: IProjectInfos, pTargetUser: string): string {
+    let passWord = "";
+
+    if (pTargetUser === pInfos.dbAdminUser) {
+      passWord = CompileTaskStore.getInstance().adminPwd!
+    } else if (this.dbFluxMode === "dbFlux" && pInfos.dbPasses?.hasOwnProperty(`dbFlux_${pTargetUser}_PWD`)){
+      passWord = pInfos.dbPasses[`dbFlux_${pTargetUser}_PWD`];
+    } else if (this.dbFluxMode === "dbFlow" && pInfos.dbPasses?.hasOwnProperty(`DBFLOW_${pTargetUser}_PWD`)){
+      passWord = pInfos.dbPasses[`DBFLOW_${pTargetUser}_PWD`];
+    } else {
+      passWord = CompileTaskStore.getInstance().appPwd!;
+    }
+
+    return passWord;
+
+  }
 
    async setInitialCompileInfo(execFileName:string, fileUri: Uri, runnerInfo:IBashInfos):Promise<void> {
     let projectInfos: IProjectInfos = await getProjectInfos(this.context);
     const activeFile = fileUri.fsPath.split(path.sep).join(path.posix.sep);
+
 
     runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", "shell", execFileName).split(path.sep).join(path.posix.sep);
     if (existsSync(runnerInfo.runFile)) {
@@ -100,9 +122,9 @@ export abstract class AbstractBashTaskProvider {
 
     runnerInfo.connectionTns  = projectInfos.dbTns;
     runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd, fileUri.path);
-    runnerInfo.connectionPass = runnerInfo.connectionUser === projectInfos.dbAdminUser ? CompileTaskStore.getInstance().adminPwd! : CompileTaskStore.getInstance().appPwd!;
-    runnerInfo.projectInfos   = projectInfos;
+    runnerInfo.connectionPass = this.getPassword(projectInfos, runnerInfo.connectionUser);
 
+    runnerInfo.projectInfos   = projectInfos;
     runnerInfo.coloredOutput  = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
 
     if (matchRuleShort(runnerInfo.connectionPass, "${*}") ||
@@ -121,10 +143,16 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
   if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
     return projectInfos.dbAdminUser+"".toLowerCase();
   } else {
-    if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath.toLowerCase()) {
-      return `${projectInfos.dbAppUser}`;
+    // check if there is a var with pattern: DBFLOW_||dbFlux_..._PWD,
+    if (projectInfos.dbPasses?.hasOwnProperty(`DBFLOW_${dbUserFromPath}_PWD`) || projectInfos.dbPasses?.hasOwnProperty(`dbFlux_${dbUserFromPath}_PWD`)) {
+      return `${dbUserFromPath}`
     } else {
-      return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
+      // otherwise as usual
+      if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath.toLowerCase()) {
+        return `${projectInfos.dbAppUser}`;
+      } else {
+        return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
+      }
     }
   }
 }
@@ -172,11 +200,15 @@ export function applyFileExists(pMode:string) {
 
 function getProjectInfosFromDBFlow():IProjectInfos {
   const projectInfos: IProjectInfos = {} as IProjectInfos;
+  const regex = /^DBFLOW_.*_PWD$/;
+
+
   if (workspace.workspaceFolders !== undefined) {
     const f = workspace.workspaceFolders[0].uri.fsPath;
 
     const applyEnv = dotenv.config({ path: path.join(f, "apply.env")});
     const buildEnv = dotenv.config({ path: path.join(f, "build.env")});
+
 
     if (applyEnv.parsed) {
       projectInfos.dbAppUser   = applyEnv.parsed.DB_APP_USER;
@@ -193,6 +225,20 @@ function getProjectInfosFromDBFlow():IProjectInfos {
       if (projectInfos.dbAdminPwd && projectInfos.dbAdminPwd.startsWith("!")) {
         projectInfos.dbAdminPwd = Buffer.from(projectInfos.dbAdminPwd.substring(1), 'base64').toString('utf8').replace("\n", "");
       }
+
+      // get all keys with pattern DBFLOW_..._PWD and store them in array
+      const filteredKeys = Object.keys(applyEnv.parsed).filter(key => regex.test(key));
+
+      // add PWDs to dbPasses
+      for (let key of filteredKeys) {
+        LoggingService.logInfo('Custom Schemapassword found: ' + key);
+        projectInfos.dbPasses = projectInfos.dbPasses || {};
+        if (applyEnv.parsed[key] && applyEnv.parsed[key].startsWith("!")) {
+          projectInfos.dbPasses[key] =  Buffer.from(applyEnv.parsed[key].substring(1), 'base64').toString('utf8').replace("\n", "");
+        } else {
+          projectInfos.dbPasses[key] = applyEnv.parsed[key];
+        }
+      };
     }
 
     if (buildEnv.parsed) {
@@ -232,6 +278,17 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
       projectInfos.projectName  = context.workspaceState.get("dbFlux_PROJECT");
       projectInfos.projectMode  = context.workspaceState.get("dbFlux_PROJECT_MODE");
       projectInfos.workspace    = context.workspaceState.get("dbFlux_WORKSPACE");
+
+      // get all keys with pattern DBFLOW_..._PWD and store them in array
+
+      const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD"));
+
+      for (const key of filteredKeys) {
+        LoggingService.logInfo('Custom Schemapassword found: ' + key);
+        projectInfos.dbPasses = projectInfos.dbPasses || {};
+        // console.log(key + ": " + context.workspaceState.get(key));
+        projectInfos.dbPasses[key]    = await context.secrets.get(getWorkspaceRootPath()+"|" + key )+"";
+      }
 
   }
 

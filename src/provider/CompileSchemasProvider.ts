@@ -14,6 +14,7 @@ interface CompileSchemaTaskDefinition extends vscode.TaskDefinition {
 
 interface ISQLCompileInfos extends IBashInfos {
   connectionArray:    string[];
+  connectionPasses:   string[];
   executableCli:      string;
   enableWarnings:     string;
   sqlWarningString:   string;
@@ -64,7 +65,7 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
           DBFLOW_SQLCLI:     definition.runner.executableCli,
           DBFLOW_DBTNS:      definition.runner.connectionTns,
           DBFLOW_DBPASS:     definition.runner.connectionPass,
-
+          DBFLOW_DBPASSES:   definition.runner.connectionPasses.join("°"),
           DBFLOW_COLOR_ON:          definition.runner.coloredOutput,
           DBFLOW_ENABLE_WARNINGS:   definition.runner.enableWarnings,
           DBFLOW_SQL_WARNING_STRING:  definition.runner.sqlWarningString?definition.runner.sqlWarningString:"NIX",
@@ -93,6 +94,9 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
         if (CompileTaskStore.getInstance().selectedSchemas) {
           runner.connectionArray = CompileTaskStore.getInstance().selectedSchemas!.map((element) =>{
             return '"' + this.buildConnectionUser(projectInfos, element) + '"';
+          });
+          runner.connectionPasses = CompileTaskStore.getInstance().selectedSchemas!.map((element) =>{
+            return '"' + this.getPassword(projectInfos, this.buildConnectionUser(projectInfos, element)) +'"';
           });
         };
 

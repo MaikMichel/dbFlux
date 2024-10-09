@@ -58,7 +58,9 @@ export class RestTaskStore {
           }
         });
 
-        apps.unshift(projectInfos.isFlexMode?'rest/*/modules/*':'rest/modules/*');
+        if (!projectInfos.dbPasses ||projectInfos.dbPasses.length === 0) {
+          apps.unshift(projectInfos.isFlexMode?'rest/*/modules/*':'rest/modules/*');
+        }
 
         return apps;
       };

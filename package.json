@@ -289,6 +289,12 @@
 				"category": "dbFlux"
 			},
 			{
+				"command": "dbFlux.setSchemaPassword",
+				"title": "Set Schema Password",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject && !isSingleMode"
+			},
+			{
 				"command": "dbFlux.addFeatureSet",
 				"title": "Add FeatureSet as SubModule",
 				"category": "dbFlux",
@@ -463,12 +469,6 @@
 				"enablement": "inDbFlowProject && resourceDirname =~ /^.*(\\\\|\\/)plugin(\\\\|\\/).*$/"
 			},
 			{
-				"command": "dbFlux.exportCurrentTableAsJSONDefinition",
-				"title": "Export Table as JSON (current)",
-				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*db.*(tables|tables(\\\\|\\/)tables_ddl)$/"
-			},
-			{
 				"command": "dbFlux.addReportFolder",
 				"title": "Add REPORT type",
 				"category": "dbFlux",
@@ -502,7 +502,7 @@
 				"command": "dbFlux.resetPassword",
 				"title": "Reset password",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject"
+				"enablement": "inDbFlowProject && !isDBFluxMode"
 			},
 			{
 				"command": "dbFlux.openSpecOrBody",

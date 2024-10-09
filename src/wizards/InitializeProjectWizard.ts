@@ -46,7 +46,7 @@ const getEnvValue = (file: string, key: string): string | null => {
  * @param {string} key Key to update/insert
  * @param {string} value Value to update/insert
  */
-const setEnvValue = (file: string, key: string, value: string) => {
+export const setEnvValue = (file: string, key: string, value: string) => {
   const envVars = readEnvVars(file);
   const targetLine = envVars.find((line) => line.split("=")[0] === key);
 

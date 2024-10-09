@@ -31,6 +31,7 @@ import { DBFluxTableDetails } from "./ui/DBFluxTableDetails";
 import { addColumnSnippet } from "./wizards/AddColumnSnippet";
 import { getWorkspaceRootPath, showInformationProgress } from "./helper/utilities";
 import { registerExportCurrentPluginFileCommand, registerExportPluginFilesCommand } from "./provider/ExportPluginFilesProvider";
+import { registerSetSchemaPassword } from "./provider/SetSchemaPassword";
 
 
 
@@ -90,6 +91,7 @@ export async function activate(context: ExtensionContext) {
     commands.executeCommand("setContext", "dbLockEnabled", ConfigurationManager.isDBLockEnabled());
     commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
     commands.executeCommand("setContext", "isDBFluxMode", (dbFluxMode === "dbFlux"));
+    commands.executeCommand("setContext", "isSingleMode", projectInfos.projectMode === "SINGLE");
 
 
     LoggingService.logDebug('Generate StatusBar and Item');
@@ -155,6 +157,8 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(registerExportAPEXCommand(projectInfos, context));
     context.subscriptions.push(registerExportAPEXPluginCommand(projectInfos, context));
 
+    // Set Schema Password
+    context.subscriptions.push(registerSetSchemaPassword(projectInfos, context));
 
     // Export DBSchema
     context.subscriptions.push(registerExportDBSchemaCommand(projectInfos, context));
@@ -319,10 +323,6 @@ export async function activate(context: ExtensionContext) {
             commands.executeCommand("dbFlux.reloadExtension")
             break;
           }
-          // case "exportCurrentTableAsJSONDefinition" : {
-          //   processTableJSON(projectInfos, context);
-          //   break;
-          // }
           // case "compileFile" : {
           //   lockFileByRest(task, projectInfos, decoProvider);
           //   break;

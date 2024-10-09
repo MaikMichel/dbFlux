@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as path from "path";
 
-import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, getDBFlowMode, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ExportDBSchemaStore } from "../stores/ExportDBSchemaStore";
@@ -236,7 +236,7 @@ export function registerExportDBObjectCommand(projectInfos: IProjectInfos, conte
         if (CompileTaskStore.getInstance().appPwd !== undefined) {
 
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            const schema = getSchemaFromFile(fileName);
+            const schema = getSchemaFromFile(fileName, getDBFlowMode(context) === "dbFlux");
             const state:ExportSchemaWizardState = await exportObjectWizard(context, schema);
 
             ExportDBSchemaStore.getInstance().schemaName = state.schemaName.label;

@@ -23,6 +23,7 @@ interface TestTaskDefinition extends TaskDefinition {
 
 interface ISQLTestInfos extends IBashInfos {
   connectionArray:    string[];
+  connectionPasses:   string[];
   executableCli:      string;
   fileToTest:         string;
   methodToTest:       string;
@@ -74,6 +75,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
           DBFLOW_SQLCLI:     definition.runner.executableCli,
           DBFLOW_DBTNS:      definition.runner.connectionTns,
           DBFLOW_DBPASS:     definition.runner.connectionPass,
+          DBFLOW_DBPASSES:   definition.runner.connectionPasses.join("°"),
           DBFLOW_FILE2TEST:  this.mode === "executeTests" ? "" : definition.runner.fileToTest,
           DBFLOW_METHOD2TEST: this.mode === "executeTests" || this.mode === "executeTestPackageWithCodeCoverage" ? "" : definition.runner.methodToTest.length > 0 ? "."+definition.runner.methodToTest : "",
           DBFLOW_TARGET2COVER: this.mode === "executeTests" || this.mode !== "executeTestPackageWithCodeCoverage" ? "" : definition.runner.targetToCover.length > 0 ? definition.runner.targetToCover : "",
@@ -101,6 +103,9 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
         if (TestTaskStore.getInstance().selectedSchemas) {
           runner.connectionArray = TestTaskStore.getInstance().selectedSchemas!.map((element) =>{
             return '"' + this.buildConnectionUser(projectInfos, element) +'"';
+          });
+          runner.connectionPasses = TestTaskStore.getInstance().selectedSchemas!.map((element) =>{
+            return '"' + this.getPassword(projectInfos, this.buildConnectionUser(projectInfos, element)) +'"';
           });
         };
 
@@ -199,8 +204,8 @@ export function registerExecuteTestPackageCommandWithCodeCoverage(projectInfos: 
               context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTestPackageWithCodeCoverage")));
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTestPackageWithCodeCoverage");
             }
-          }).catch(() => {
-            window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
+          }).catch((e:any) => {
+            window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path! ${e}`);
           });
         } else {
           window.showWarningMessage('Current filetype is not supported by dbFlux ...');

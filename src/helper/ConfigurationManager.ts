@@ -131,6 +131,11 @@ export async function showDBFluxConfig(context:ExtensionContext){
     LoggingService.logInfo("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
   }
 
+  const otherPWDs = context.workspaceState.keys().filter(key => key.endsWith("_PWD") && key !== "dbFlux_DB_APP_PWD");
+  for (const key of otherPWDs) {
+    LoggingService.logInfo(key + ": " + await context.secrets.get(getWorkspaceRootPath() +`|${key}`));
+  }
+
   LoggingService.logInfo("WORKSPACE: " + context.workspaceState.get("dbFlux_WORKSPACE"));
 
 }
@@ -164,7 +169,7 @@ export async function rmDBFluxConfig(context:ExtensionContext) {
   context.workspaceState.update("dbFlux_DATA_SCHEMA", undefined);
   context.workspaceState.update("dbFlux_LOGIC_SCHEMA", undefined);
   context.workspaceState.update("dbFlux_APP_SCHEMA", undefined);
-
+  // FIXME: Hier müssen auch die anderen PWDs raus
   await commands.executeCommand("dbFlux.reloadExtension");
 }
 

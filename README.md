@@ -577,7 +577,6 @@ When gathering additional infos about running dbFlux, you alway have the option 
 | dbFlux.exportObject                         | Export current Object into current File                           |
 | dbFlux.exportAPEX                           | Export APEX Application                                           |
 | dbFlux.exportREST                           | Export REST Module                                                |
-| dbFlux.exportCurrentTableAsJSONDefinition   | Export Table as JSON (current)                                    |
 | &nbsp;                                      |                                                                   |
 | dbFlux.addREST                              | Add REST Module                                                   |
 | dbFlux.addAPP                               | Add APEX Application                                              |

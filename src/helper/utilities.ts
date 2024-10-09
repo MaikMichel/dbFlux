@@ -210,10 +210,12 @@ export function getRelativePartsFromFile(filePath:string):string[] {
   return parts;
 }
 
-export function getSchemaFromFile(filePath:string):string {
+export function getSchemaFromFile(filePath:string, isFlexMode:boolean):string {
   const parts:string[] = getRelativePartsFromFile(filePath);
 
-  if (parts[0] === "db") {
+  if (parts[0] === "db" && parts[1] !== "*") {
+    return parts[1]
+  } else if (parts[0] === "apex" && isFlexMode && parts[1] !== "*") {
     return parts[1]
   }
 

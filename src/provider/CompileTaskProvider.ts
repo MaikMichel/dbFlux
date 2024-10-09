@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationManager, focusProblemPanel } from "../helper/ConfigurationManager";
-import { getActiveFileUri, getApplicationIdFromApexPath, getApplicationIdFromStaticPath, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
+import { getActiveFileUri, getApplicationIdFromApexPath, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
 import { AbstractBashTaskProvider, buildConnectionUser, getDBSchemaFolders, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { CompileTaskStore, setAdminPassword, setAdminUserName, setAppPassword } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
@@ -307,7 +307,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
         await setAdminPassword(projectInfos);
       } else {
         LoggingService.logDebug(`outside setup, check application pass`);
-        await setAppPassword(projectInfos);
+        await setAppPassword(projectInfos, context, relativeFileName);
       }
 
       if ((insideSetup
