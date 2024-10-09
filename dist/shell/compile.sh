@@ -77,12 +77,12 @@ Begin
                                     replace(substr(text, 1, instr(text, ':', 1, 1) -1), ' ') errtype,
                                     replace(substr(text, instr(text, ': ', 1, 1) + 2), chr(10), ' ') errtext,
                                     case
-                                      when type = 'PACKAGE BODY' and lower(name) like 'test/_%' escape '/' then 'db/'||lower(user)||'/tests/packages/'||lower(name)||'.pkb'
-                                      when type = 'PACKAGE'      and lower(name) like 'test/_%' escape '/' then 'db/'||lower(user)||'/tests/packages/'||lower(name)||'.pks'
+                                      when type = 'PACKAGE BODY' and exists(select 1 from user_source where text like '% --%/%suite%' escape '/') then 'db/'||lower(user)||'/tests/packages/'||lower(name)||'.pkb'
+                                      when type = 'PACKAGE'      and exists(select 1 from user_source where text like '% --%/%suite%' escape '/') then 'db/'||lower(user)||'/tests/packages/'||lower(name)||'.pks'
                                       when type = 'PACKAGE BODY' and lower(name) not like 'test/_%' escape '/' then 'db/'||lower(user)||'/sources/packages/'||lower(name)||'.pkb'
                                       when type = 'PACKAGE'      and lower(name) not like 'test/_%' escape '/' then 'db/'||lower(user)||'/sources/packages/'||lower(name)||'.pks'
-                                      when type = 'TYPE BODY' and lower(name) like 'test/_%' escape '/' then 'db/'||lower(user)||'/tests/types/'||lower(name)||'.tpb'
-                                      when type = 'TYPE'      and lower(name) like 'test/_%' escape '/' then 'db/'||lower(user)||'/tests/types/'||lower(name)||'.tps'
+                                      when type = 'TYPE BODY' and exists(select 1 from user_source where text like '% --%/%suite%' escape '/') then 'db/'||lower(user)||'/tests/types/'||lower(name)||'.tpb'
+                                      when type = 'TYPE'      and exists(select 1 from user_source where text like '% --%/%suite%' escape '/') then 'db/'||lower(user)||'/tests/types/'||lower(name)||'.tps'
                                       when type = 'TYPE BODY' and lower(name) not like 'test/_%' escape '/' then 'db/'||lower(user)||'/sources/types/'||lower(name)||'.tpb'
                                       when type = 'TYPE'      and lower(name) not like 'test/_%' escape '/' then 'db/'||lower(user)||'/sources/types/'||lower(name)||'.tps'
                                       when type = 'FUNCTION'     then 'db/'||lower(user)||'/sources/functions/'||lower(name)||'.sql'
