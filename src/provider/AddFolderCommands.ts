@@ -263,9 +263,9 @@ export function addAppPlugin(plugID: string, folder: string, targetAPPID: string
           "version" :     "0.1.0",
           "description" : "Give me a nice description",
           "keywords" :    ["KEYWORDA", "KEYWORDB"],
-          "homepage" :    "https://maybe.you.can.find.me.oon.github.com",
+          "homepage" :    "https://maybe.you.can.find.me.on.github.com",
           "bugs" : {
-            "url" :       "https://maybe.you.can.find.me.oon.github.com/issues",
+            "url" :       "https://maybe.you.can.find.me.on.github.com/issues",
             "email" :     "this.could.be.my@adress.com"
           },
           "license" :     "MIT",
@@ -276,7 +276,7 @@ export function addAppPlugin(plugID: string, folder: string, targetAPPID: string
           },
           "repository" : {
             "type" :      "git",
-            "url" :       "https://maybe.you.can.find.me.oon.github.git"
+            "url" :       "https://maybe.you.can.find.me.on.github.git"
           },
           "oracle" : {
             "versions" :  ["23.0.0"],
@@ -286,7 +286,7 @@ export function addAppPlugin(plugID: string, folder: string, targetAPPID: string
                 "internalName" : plugID,
                 "type" :         "item",
                 "demo" :         "https://apex.oracle.com/some-kind-of-demo-app",
-                "previewImage" : `https://maybe.you.can.find.me.oon.github.com/${plugFolder}/src/img/demo.png`
+                "previewImage" : `https://maybe.you.can.find.me.on.github.com/${plugFolder}/src/img/demo.png`
               }
             }
           }
