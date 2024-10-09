@@ -101,7 +101,7 @@ export class ExportTaskStore {
 
 
         const apps = projectInfos.isFlexMode ? getApplications(getWorkspaces(source, getSchemaFolders(source))):getApplications([source]);
-        value = await window.showQuickPick(apps, { placeHolder: "Select Application to export" });
+        value = await window.showQuickPick(apps, { placeHolder: "Select Application" });
 
       }
     }
