@@ -14,10 +14,17 @@ initialize_session;
 # connections from args
 CONN_ARRY=( "$@" )
 
+# PWDs zu Array
+IFS='°'
+CONN_PASSES=($DBFLOW_DBPASSES)
+unset IFS
 
-for arg in "${CONN_ARRY[@]}"; do
-  echo -e "${CLR_LBLUE}Compiling Connection ${arg}@${DBFLOW_DBTNS} ${NC}"
-  ${DBFLOW_SQLCLI} -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF
+for index in "${!CONN_ARRY[@]}"; do
+  l_conn=${CONN_ARRY[$index]}
+  l_pass=${CONN_PASSES[$index]}
+
+  echo -e "${CLR_LBLUE}Compiling Connection ${l_conn}@${DBFLOW_DBTNS} ${NC}"
+  ${DBFLOW_SQLCLI} -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} << EOF
 
 set scan off
 set define off

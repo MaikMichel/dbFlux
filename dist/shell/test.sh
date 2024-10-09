@@ -15,6 +15,12 @@ initialize_session;
 
 CONN_ARRY=( "$@" )
 
+# PWDs zu Array
+IFS='°'
+CONN_PASSES=($DBFLOW_DBPASSES)
+unset IFS
+
+
 basefl=$(basename -- "${DBFLOW_FILE2TEST}")
 dirfl=$(dirname -- "${DBFLOW_FILE2TEST}")
 extension="${basefl##*.}"
@@ -51,17 +57,19 @@ fi
 if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
   ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/export_utrun.sql" )
 
-  for arg in "${CONN_ARRY[@]}"; do
-    echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${arg}${NC}"
+  for index in "${!CONN_ARRY[@]}"; do
+    l_conn=${CONN_ARRY[$index]}
+    l_pass=${CONN_PASSES[$index]}
+    echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${l_conn}${NC}"
     # prepare output file
     log_file="coverage.base64"
 
-    if [[ ${arg} == *"["* ]]; then
-      target_file="${arg#*'['}"
+    if [[ ${l_conn} == *"["* ]]; then
+      target_file="${l_conn#*'['}"
       target_file=${target_file/']'/}
       target_file="${target_file}_test"
     else
-      target_file="${arg}_test"
+      target_file="${l_conn}_test"
     fi
 
     target_file="${target_file}_${log_file}"
@@ -85,7 +93,7 @@ if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
 
     # the export itself
     if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
-      sqlplus -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+      sqlplus -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
       set verify off
       set scan off
       set feedback off
@@ -110,7 +118,7 @@ if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
 EOF
 
     else
-      sql -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+      sql -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
         set verify off
         set scan off
         set feedback off
@@ -173,18 +181,21 @@ elif [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
     array+=("exec ut.run(a_color_console => true);")
   fi
 
-  for arg in "${CONN_ARRY[@]}"; do
-    echo -e "${CLR_LBLUE}Executing tests on Connection ${arg}@${DBFLOW_DBTNS} ${NC}" | tee -a ${full_log_file}
+  for index in "${!CONN_ARRY[@]}"; do
+    l_conn=${CONN_ARRY[$index]}
+    l_pass=${CONN_PASSES[$index]}
+
+    echo -e "${CLR_LBLUE}Executing tests on Connection ${l_conn}@${DBFLOW_DBTNS} ${NC}" | tee -a ${full_log_file}
 
     # prepare output file
     log_file="console.log"
 
-    if [[ ${arg} == *"["* ]]; then
-      target_file="${arg#*'['}"
+    if [[ ${l_conn} == *"["* ]]; then
+      target_file="${l_conn#*'['}"
       target_file=${target_file/']'/}
       target_file="${target_file}_test"
     else
-      target_file="${arg}_test"
+      target_file="${l_conn}_test"
     fi
 
     target_file="${target_file}_${log_file}"
@@ -195,7 +206,7 @@ elif [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
     [[ -d "tests/results" ]] || mkdir -p "tests/results"
     [[ -f $full_log_file ]] && rm -f $full_log_file
 
-    ${DBFLOW_SQLCLI} -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF | tee -a ${full_log_file}
+    ${DBFLOW_SQLCLI} -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} << EOF | tee -a ${full_log_file}
     $(
         for element in "${array[@]}"
         do
@@ -212,17 +223,20 @@ EOF
 else
   ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/export_utrun.sql" )
 
-  for arg in "${CONN_ARRY[@]}"; do
-    echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${arg}${NC}"
+  for index in "${!CONN_ARRY[@]}"; do
+    l_conn=${CONN_ARRY[$index]}
+    l_pass=${CONN_PASSES[$index]}
+
+    echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${l_conn}${NC}"
     # prepare output file
     log_file="junit.base64"
 
-    if [[ ${arg} == *"["* ]]; then
-      target_file="${arg#*'['}"
+    if [[ ${l_conn} == *"["* ]]; then
+      target_file="${l_conn#*'['}"
       target_file=${target_file/']'/}
       target_file="${target_file}_test"
     else
-      target_file="${arg}_test"
+      target_file="${l_conn}_test"
     fi
 
     target_file="${target_file}_${log_file}"
@@ -245,7 +259,7 @@ else
 
     # the export itself
     if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
-      sqlplus -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+      sqlplus -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
       set verify off
       set scan off
       set feedback off
@@ -270,7 +284,7 @@ else
 EOF
 
     else
-      sql -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+      sql -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
         set verify off
         set scan off
         set feedback off
