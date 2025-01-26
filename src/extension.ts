@@ -32,6 +32,7 @@ import { addColumnSnippet } from "./wizards/AddColumnSnippet";
 import { getWorkspaceRootPath, showInformationProgress } from "./helper/utilities";
 import { registerExportCurrentPluginFileCommand, registerExportPluginFilesCommand } from "./provider/ExportPluginFilesProvider";
 import { registerSetSchemaPassword } from "./provider/SetSchemaPassword";
+import { existsSync } from "fs";
 
 
 
@@ -112,8 +113,6 @@ export async function activate(context: ExtensionContext) {
         context.workspaceState.update("dbFlux_DB_APP_PWD", undefined);
         LoggingService.logInfo(`Migration of old Password storage to the new VSCode SecretAPI successfully done`);
       }
-
-
 
 
     } else {
@@ -315,7 +314,7 @@ export async function activate(context: ExtensionContext) {
           }
           case "convert2dbFlow" : {
             rmDBFluxConfig(context);
-            showInformationProgress(`dbFLux Mode is now: 'dbFlow'`);
+            showInformationProgress(`dbFlux Mode is now: 'dbFlow'`);
             break;
           }
           case "createDBFlow" : {
@@ -333,8 +332,31 @@ export async function activate(context: ExtensionContext) {
 
     }, undefined, context.subscriptions);
 
+    workspace.onDidChangeConfiguration( ( event ) => {
+      if ( event.affectsConfiguration( 'dbFlux.mapping.dbFolder' ) ) {
+        if (!existsSync(join(workspace.workspaceFolders![0].uri.fsPath, ConfigurationManager.getDBFolderName()))){
+          window.setStatusBarMessage(`dbFlux: Databasefolder: ${ConfigurationManager.getDBFolderName()} does not exists! Change workspace settings ...`, 3000);
+        } else {
+          window.setStatusBarMessage(`dbFlux: Databasefolder: ${ConfigurationManager.getDBFolderName()} exists`, 2000);
+          window.showInformationMessage('dbFlux: You have to reload the workspace', "Reload Extension").then((setting)=>{
+            if (setting) {
+              commands.executeCommand( 'dbFlux.reloadExtension');
+            }
+          });
+        }
+      }
+    });
 
-    LoggingService.logInfo('dbFLux initialized');
+    if (!existsSync(join(workspace.workspaceFolders[0].uri.fsPath, ConfigurationManager.getDBFolderName()))){
+      const msg = `dbFlux: Databasefolder: ${ConfigurationManager.getDBFolderName()} does not exists! Change workspace settings and reload.`;
+      window.setStatusBarMessage(`dbFlux: Databasefolder: ${ConfigurationManager.getDBFolderName()} does not exists! Change workspace settings ...`);
+
+      window.showErrorMessage(msg, "Open Settings").then(()=>{
+        commands.executeCommand( 'workbench.action.openWorkspaceSettings', 'dbFlux.mapping.dbFolder' );
+      });
+    }
+
+    LoggingService.logInfo('dbFlux initialized');
   } else {
     LoggingService.logInfo("dbFlux not configured. Context inDbFlowProject set to false");
 

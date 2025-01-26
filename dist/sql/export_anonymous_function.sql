@@ -303,6 +303,35 @@
     return l_script;
   end;
 
+  function get_grants(p_object_name in varchar2) return clob is
+    l_content clob;
+  begin
+     l_content := 'Prompt Revoke all grants found in user_tab_privs_made of object: '||p_object_name||chr(10)
+              || 'begin'||chr(10)
+              || '  for revoke_rec in (select privilege, table_name, grantee'||chr(10)
+              || '                       from user_tab_privs_made'||chr(10)
+              || '                      where table_name = '''||upper(p_object_name)||'''  )'||chr(10)
+              || '  loop'||chr(10)
+              || '    execute immediate ''revoke '' || revoke_rec.privilege || '' on '' || revoke_rec.table_name || '' from '' || revoke_rec.grantee;'||chr(10)
+              || '  end loop;'||chr(10)
+              || 'end;'||chr(10)
+              || '/'||chr(10)
+              || ''||chr(10)
+              || ''||chr(10)
+              || 'Prompt Grants to object: '||p_object_name;
+
+    for cur in (select 'grant ' || privilege || ' on ' || table_name || ' to ' || grantee ||
+                      case when grantable = 'YES' then ' with grant option;' else ';' end as grant_script
+                  from user_tab_privs_made
+                 where table_name = p_object_name
+                order by grantee)
+    loop
+      l_content := concat(l_content, chr(10) || cur.grant_script);
+    end loop;
+    l_content := concat(l_content, chr(10)||chr(10));
+    return l_content;
+  end;
+
   procedure add_tables(p_zip_file in out nocopy blob,
                        p_table_name varchar2 default null) is
   begin
@@ -430,8 +459,9 @@
       end loop;
   end;
 
-  function get_source(p_source_name in varchar2,
-                      p_source_type in varchar2)
+  function get_source(p_source_name        in varchar2,
+                      p_source_type        in varchar2,
+                      p_grant_with_object  in boolean  default false)
                       return clob is
     l_script clob;
   begin
@@ -440,12 +470,17 @@
     -- remove double quotes
     l_script := replace(l_script, '"'||upper(p_source_name)||'"', lower(p_source_name));
 
+    if p_grant_with_object and p_source_type not in ('PACKAGE_BODY', 'TYPE_BODY') then
+      l_script := concat(l_script, chr(10) || get_grants(p_source_name));
+    end if;
+
     return l_script;
   end;
 
-  procedure add_sources(p_zip_file     in out nocopy blob,
-                        p_object_name  in            varchar2 default null,
-                        p_object_type  in            varchar2 default null) is
+  procedure add_sources(p_zip_file           in out nocopy blob,
+                        p_object_name        in            varchar2 default null,
+                        p_object_type        in            varchar2 default null,
+                        p_grant_with_object  in            boolean  default false) is
   begin
     for cur in (select object_name,
                         case
@@ -487,8 +522,9 @@
     loop
       zip_add_file(p_zipped_blob => p_zip_file
                   ,p_name        => cur.filename
-                  ,p_content     => clob_to_blob(get_source(p_source_name => cur.object_name,
-                                                            p_source_type => cur.source_type)));
+                  ,p_content     => clob_to_blob(get_source(p_source_name       => cur.object_name,
+                                                            p_source_type       => cur.source_type,
+                                                            p_grant_with_object => p_grant_with_object)));
     end loop;
   end;
 
@@ -569,18 +605,32 @@
     end loop;
   end;
 
-  function get_view(p_view_name in varchar2)
+  function get_view(p_view_name         in varchar2,
+                    p_grant_with_object in boolean  default false)
                       return clob is
     l_script clob;
   begin
-    l_script := get_lowercase_ddl('VIEW', upper(p_view_name));
+    -- special workaround to be able to grant on invalid views
+    if p_grant_with_object then
+      -- first create a dummy view
+      l_script := 'create or replace force view '||lower(p_view_name)||' as '||chr(10)||
+                  'select * from json_table(''{dummy:"a"}'', ''$'' columns(dummy varchar2(10) path ''$.dummy''));'||chr(10)||chr(10);
+
+      -- gen grants
+      l_script := concat(l_script, get_grants(upper(p_view_name)));
+
+      -- grants will be kept when underlying object is recreated ...
+    end if;
+
+    l_script := concat(l_script, get_lowercase_ddl('VIEW', upper(p_view_name)));
 
     return l_script;
   end;
 
-  procedure add_views(p_zip_file     in out nocopy blob,
-                      p_object_name  in            varchar2 default null,
-                      p_object_type  in            varchar2 default null) is
+  procedure add_views(p_zip_file           in out nocopy blob,
+                      p_object_name        in            varchar2 default null,
+                      p_object_type        in            varchar2 default null,
+                      p_grant_with_object  in            boolean  default false) is
   begin
     for cur in (select view_name, 'views/'||lower(view_name)||'.sql' filename
                   from user_views
@@ -590,7 +640,8 @@
     loop
       zip_add_file(p_zipped_blob => p_zip_file
                   ,p_name        => cur.filename
-                  ,p_content     => clob_to_blob(get_view(p_view_name   => cur.view_name)));
+                  ,p_content     => clob_to_blob(get_view(p_view_name         => cur.view_name,
+                                                          p_grant_with_object => p_grant_with_object)));
     end loop;
   end;
 
@@ -746,8 +797,48 @@
     end loop;
   end;
 
-  function get_zip(p_folder     in varchar2 default null,
-                   p_file_name  in varchar2 default null)
+  procedure add_grants(p_zip_file           in out nocopy blob,
+                       p_grant_with_object  in            boolean  default false) is
+    l_content clob;
+    l_grant_with_object varchar(1) := case when p_grant_with_object then 'Y' else 'N' end;
+  begin
+    l_content := 'Prompt Revoke all grants found in user_tab_privs_made'||chr(10)
+              || 'begin'||chr(10)
+              || '  for revoke_rec in (select privilege, table_name, grantee'||chr(10)
+              || '                       from user_tab_privs_made'||chr(10)
+              || '                      where ('''||l_grant_with_object||''' = ''N'' or type not in (''VIEW'', ''PACKAGE''))'||chr(10)
+              || '                        and table_name != user -- not INHERIT PRIVILEGES'||chr(10)
+              || '                     )'||chr(10)
+              || '  loop'||chr(10)
+              || '    execute immediate ''revoke '' || revoke_rec.privilege || '' on '' || revoke_rec.table_name || '' from '' || revoke_rec.grantee;'||chr(10)
+              || '  end loop;'||chr(10)
+              || 'end;'||chr(10)
+              || '/'||chr(10)
+              || ''||chr(10)
+              || ''||chr(10)
+              || 'Prompt Grants to all known objects';
+
+    for cur in (select 'grant ' || privilege || ' on ' || table_name || ' to ' || grantee ||
+                      case when grantable = 'YES' then ' with grant option;' else ';' end as grant_script
+                  from user_tab_privs_made
+                where not exists (select 1 from user_recyclebin where object_name = table_name )
+                  and table_name != user -- not INHERIT PRIVILEGES
+                  and (l_grant_with_object = 'N' or type not in ('VIEW', 'PACKAGE'))
+                order by grantee, table_name)
+    loop
+      l_content := concat(l_content, chr(10) || cur.grant_script);
+    end loop;
+    l_content := concat(l_content, chr(10));
+
+
+     zip_add_file(p_zipped_blob => p_zip_file
+                  ,p_name        => 'ddl/base/010_grants.sql'
+                  ,p_content     => clob_to_blob(l_content));
+  end;
+
+  function get_zip(p_folder             in varchar2 default null,
+                   p_file_name          in varchar2 default null,
+                   p_grant_with_object  in boolean default false)
                    return blob is
     l_zip_file  blob;
     v_file      blob;
@@ -783,9 +874,10 @@
     end if;
 
     if (l_object_type is null or l_object_type in ('SOURCES/PACKAGES', 'SOURCES/TYPES', 'SOURCES/FUNCTIONS', 'SOURCES/PROCEDURES', 'SOURCES/TRIGGERS')) then
-      add_sources(p_zip_file      => l_zip_file,
-                  p_object_name   => l_object_name,
-                  p_object_type   => l_object_type);
+      add_sources(p_zip_file          => l_zip_file,
+                  p_object_name       => l_object_name,
+                  p_object_type       => l_object_type,
+                  p_grant_with_object => p_grant_with_object);
     end if;
 
     if (l_object_type is null or l_object_type in ('TESTS/PACKAGES', 'TESTS/TYPES', 'TESTS/FUNCTIONS', 'TESTS/PROCEDURES')) then
@@ -801,9 +893,10 @@
     end if;
 
     if (l_object_type is null or l_object_type in ('VIEWS')) then
-      add_views(p_zip_file      => l_zip_file,
-                p_object_name   => l_object_name,
-                p_object_type   => l_object_type);
+      add_views(p_zip_file          => l_zip_file,
+                p_object_name       => l_object_name,
+                p_object_type       => l_object_type,
+                p_grant_with_object => p_grant_with_object);
     end if;
 
     if (l_object_type is null or l_object_type in ('MVIEWS')) then
@@ -836,7 +929,10 @@
                    p_object_type   => l_object_type);
     end if;
 
-
+    if (l_object_type is null) then
+      add_grants(p_zip_file           => l_zip_file,
+                 p_grant_with_object  => p_grant_with_object);
+    end if;
 
     if not g_objects_found then
       raise no_data_found;

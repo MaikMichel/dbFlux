@@ -1,3 +1,9 @@
+## ToDo
+
+- Export All bei Flex anschalten
+- Set SchemaPWD muss die möglichen Nummern im Namen wegnehmen
+
+
 // "vscode:prepublish": "npm run compile",
 		// "compile": "tsc -p ./",
 		// "watch": "tsc -watch -p ./",

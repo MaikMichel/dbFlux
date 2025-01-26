@@ -93,7 +93,7 @@ export class ExportTableAsJSONProvider extends AbstractBashTaskProvider implemen
 
         runner.executableCli       = ConfigurationManager.getCliToUseForCompilation();
         runner.exportTable         = tablename;
-        runner.exportToDir         = 'db/' + relativeFileName.split('/')[1] + '/tables/.descs';
+        runner.exportToDir         = ConfigurationManager.getDBFolderName() + '/' + relativeFileName.split('/')[1] + '/tables/.descs';
 
         await this.setInitialCompileInfo("export_table_json.sh", Uri.file(fileName), runner);
         ExportTableJSONStore.getInstance().fileName=runner.exportToDir+'/'+runner.exportTable+'.json';
@@ -117,7 +117,7 @@ export function registerExportCurrentTableDefinitionCommand(projectInfos: IProje
     let fileName = await getWorkingFile(context);
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
 
-    const insideTable = matchRuleShort(relativeFileName, 'db/*/tables/*');
+    const insideTable = matchRuleShort(relativeFileName, ConfigurationManager.getDBFolderName()+'/*/tables/*');
 
     if (insideTable) {
       if (projectInfos.isValid) {

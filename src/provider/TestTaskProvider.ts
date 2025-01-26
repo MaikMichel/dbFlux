@@ -105,7 +105,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
             return '"' + this.buildConnectionUser(projectInfos, element) +'"';
           });
           runner.connectionPasses = TestTaskStore.getInstance().selectedSchemas!.map((element) =>{
-            return '"' + this.getPassword(projectInfos, this.buildConnectionUser(projectInfos, element)) +'"';
+            return '"' + this.getPassword(projectInfos, this.buildConnectionUser(projectInfos, element), false) +'"';
           });
         };
 
@@ -150,15 +150,14 @@ export function registerExecuteTestPackageCommand(projectInfos: IProjectInfos, c
 
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        // const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
-        const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
+        const insideTests = matchRuleShort(fileName, `*/${ConfigurationManager.getDBFolderName()}/*/tests/packages/*`);
         const fileExtension: string = "" + fileName.split('.').pop();
         const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
 
 
         if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideTests)) {
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            TestTaskStore.getInstance().selectedSchemas = ["db/" + getDBUserFromPath(fileName, projectInfos)];
+            TestTaskStore.getInstance().selectedSchemas = [ConfigurationManager.getDBFolderName() + "/" + getDBUserFromPath(fileName, projectInfos)];
             TestTaskStore.getInstance().fileName = fileName;
             TestTaskStore.getInstance().selectedMethod = methodName;
 
@@ -187,15 +186,14 @@ export function registerExecuteTestPackageCommandWithCodeCoverage(projectInfos: 
       setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        // const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
-        const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
+        const insideTests = matchRuleShort(fileName, `*/${ConfigurationManager.getDBFolderName()}/*/tests/packages/*`);
         const fileExtension: string = "" + fileName.split('.').pop();
         const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
 
 
         if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideTests)) {
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            TestTaskStore.getInstance().selectedSchemas = ["db/" + getDBUserFromPath(fileName, projectInfos)];
+            TestTaskStore.getInstance().selectedSchemas = [ConfigurationManager.getDBFolderName() + "/" + getDBUserFromPath(fileName, projectInfos)];
             TestTaskStore.getInstance().fileName = fileName;
             TestTaskStore.getInstance().selectedMethod = "";
             TestTaskStore.getInstance().targetPackage = (await getTargetPackages())?.join('|');
@@ -372,7 +370,7 @@ export async function openTestResult(context: ExtensionContext){
     if ( existsSync(htmlFile)) {
       // Create and show panel
       const webViewTestPanel = window.createWebviewPanel(
-        'dbFLux',
+        'dbFlux',
         'utPLSQL Output - ' + schemaName,
         ViewColumn.Beside,
         {}
@@ -395,7 +393,7 @@ export async function openCoverageResult(context: ExtensionContext){
     if ( existsSync(htmlFile)) {
       // Create and show panel
       const webViewTestPanel = window.createWebviewPanel(
-        'dbFLux',
+        'dbFlux',
         'utPLSQL Output - ' + schemaName,
         ViewColumn.Beside,
         {enableScripts:true} // utPLSQL is referencing some js, css and images //FIXME: later
@@ -412,8 +410,8 @@ async function getTargetPackages(): Promise<string[] | undefined> {
   const dbSchemaFolders = await getDBSchemaFolders();
   const packages:QuickPickItem[] = [];
   for (const schema of dbSchemaFolders ) {
-    const packageFiles = readdirSync(path.join(getWorkspaceRootPath(), "db", schema.label, "sources", "packages"));
-    // console.log('packageFiles', packageFiles.filter((pckName) => pckName.endsWith(".pkb")));
+    const packageFiles = readdirSync(path.join(getWorkspaceRootPath(), ConfigurationManager.getDBFolderName(), schema.label, "sources", "packages"));
+
     packages.push(...packageFiles
                           .filter((pckName) => pckName.endsWith(".pkb"))
                           .map(function(elem){return {"label": elem, "description": schema.label}})

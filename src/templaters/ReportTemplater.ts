@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { workspace } from "vscode";
 import { existsSync, PathLike, readdirSync, readFileSync, renameSync, writeFileSync } from "fs";
 import { showInformationProgress } from "../helper/utilities";
+import { ConfigurationManager } from "../helper/ConfigurationManager";
 
 export class ReportTemplater {
   private sourceContent: string;
@@ -55,7 +56,7 @@ export class ReportTemplater {
         if (workspace.workspaceFolders) {
           let folders:string[] = [];
           const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-          const sourceDB = path.join(wsRoot, "db");
+          const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
 
           const getSchemaFolders = (source: PathLike) =>
           readdirSync(source, { withFileTypes: true })

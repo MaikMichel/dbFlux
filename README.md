@@ -5,7 +5,7 @@
 <p align="center">
   <br />
   <a title="Learn more adbFlux" href="#">
-  <img src="images/dbflux.png" alt="dbFlux Logo" width="150"/>
+  <img src="images/dbFlux.png" alt="dbFlux Logo" width="150"/>
   </a>
   <h1 align="center">dbFlux<br/><span style="font-size: medium">Easy development flow for Oracle Database and APEX applications</span></h1>
 
@@ -61,19 +61,19 @@ Using this extension enables you to develop Oracle Database and APEX application
 
 | Mode       | Description
 |------------|------------------------------------------------------
-| **dbFLux** | In dbFLux mode, the configuration of the project is managed internally by **dbFlux** itself. For this you simply have to execute the command: `dbFlux: Initialize Project structure`. In this case the settings are internally managed by **dbFlux** via VSCode.
+| **dbFlux** | In dbFlux mode, the configuration of the project is managed internally by **dbFlux** itself. For this you simply have to execute the command: `dbFlux: Initialize Project structure`. In this case the settings are internally managed by **dbFlux** via VSCode.
 | **dbFLow** | In dbFLow mode, the project structure and the respective connection data are read via the dbFlow configuration files (build.env and apply.env).
 | **xcl**    | In xcl mode, the project structure and the respective connection data are read via the xcl configuration files (xcl.yml and .xcl/env.env).
 
 
-The Mode which dbFLux is using, will be display inside the statusbar with a little database icon in front. By Clicking on this item the configuration files will be opened or the configuration will be printed to the output panel when mode is dbFLux.
+The Mode which dbFlux is using, will be display inside the statusbar with a little database icon in front. By Clicking on this item the configuration files will be opened or the configuration will be printed to the output panel when mode is dbFlux.
 
-![Toolbar show dbFlux-Mode](images/doc_toolbar_dbflux_mode.png)
+![Toolbar show dbFlux-Mode](images/doc_toolbar_dbFlux_mode.png)
 
 
 ### Project Structure  [#](#features 'Jumpt back to Features')
 
-dbFLux knows the following directories mostly at the root level of the project itself
+dbFlux knows the following directories mostly at the root level of the project itself
 
 | Folder          | Description
 | --------------- | ---------------------------------------------------
@@ -147,9 +147,9 @@ Each schemafolder inside **db** folder except `_setup` is build with the same st
 ## Initialize project [#](#features 'Jumpt back to Features')
 
 
-To work with **dbFLux** you must either have an existing **dbFlow** or **xlc** project opened.
-*BUT* sometimes you don't need CI/CD tools to support your development process. Therefore you are now able to create the desired folder structure by just triggering the command: `dbFlux: Initialize project structure`. During the initialization you will have to enter some information about the project and the database connection. Additionally you have to define the project type (see [**Project Structure**](#project-structure 'Project Structure ')). The corresponding users, as well as scripts to create the APEX workspace and initial workspace users will be created automatically by **dbFLux**. **dbFlux** collects all these scripts in the file `db/_setup/install.sql`, so you don't have to install all files manually.
-> If you use FlexMode, you have to create Schemas (Command: `dbFLux: Add Schema`) and Workspace Folders (Command: Add `dbFLux: Workspace`) first. Again, **dbFlux** collects all corresponding scripts in the file `db/_setup/install.sql` where you can apply your changes in one go.
+To work with **dbFlux** you must either have an existing **dbFlow** or **xlc** project opened.
+*BUT* sometimes you don't need CI/CD tools to support your development process. Therefore you are now able to create the desired folder structure by just triggering the command: `dbFlux: Initialize project structure`. During the initialization you will have to enter some information about the project and the database connection. Additionally you have to define the project type (see [**Project Structure**](#project-structure 'Project Structure ')). The corresponding users, as well as scripts to create the APEX workspace and initial workspace users will be created automatically by **dbFlux**. **dbFlux** collects all these scripts in the file `db/_setup/install.sql`, so you don't have to install all files manually.
+> If you use FlexMode, you have to create Schemas (Command: `dbFlux: Add Schema`) and Workspace Folders (Command: Add `dbFlux: Workspace`) first. Again, **dbFlux** collects all corresponding scripts in the file `db/_setup/install.sql` where you can apply your changes in one go.
 
 
 <p align="center">
@@ -178,10 +178,10 @@ If you have a **dbFlux** project configuration and you have not entered a passwo
 ## Compile [#](#features 'Jumpt back to Features')
 
 
-The main task of dbFLux is to execute, compile or deploy SQL scripts to the target database.
-With **dbFlux** you can deploy SQL scripts into the database on exactly the same schema as the file you are currently working on. So if you execute the command: `dbFLux: Compile current File` *`(Ctrl+ALt+B)`* with the currently opened file "`db/**scott**/tables/emp.sql`", this file will be run against the schema **`SCOTT`**.
+The main task of dbFlux is to execute, compile or deploy SQL scripts to the target database.
+With **dbFlux** you can deploy SQL scripts into the database on exactly the same schema as the file you are currently working on. So if you execute the command: `dbFlux: Compile current File` *`(Ctrl+ALt+B)`* with the currently opened file "`db/**scott**/tables/emp.sql`", this file will be run against the schema **`SCOTT`**.
 Files that you execute in the `db/_setup` folder are executed with the corresponding administrator account, e.g. sys or admin.
-Additionally you can compile all selected schemas with the command `dbFLux: Compile selected Schemas` *`(Shift+Alt+B)`*.
+Additionally you can compile all selected schemas with the command `dbFlux: Compile selected Schemas` *`(Shift+Alt+B)`*.
 
 By configuring the `dbFlux.customTriggerRuns` setting you have the option to specify which files to run in addition to the one you just ran. These files are then also executed according to their assigned database schema. This has the advantage that you can, for example, directly create a TableAPI whenever you run a table script.
 
@@ -275,7 +275,7 @@ Compile current File     | `ctrl+alt+b`  | Upload the current or selected file a
 
 ## Using Reports [#](#features 'Jumpt back to Features')
 
-If you want to upload files to a specific table or service, place them inside the reports folder/subfolder ex.: `reports/aop`. Here you have to put a template file with the name template.sql in. This template is merged into an upload file. When calling the command `dbFLux: Compile current file` you are prompted for a filename and a target directory to place the resulting file in.
+If you want to upload files to a specific table or service, place them inside the reports folder/subfolder ex.: `reports/aop`. Here you have to put a template file with the name template.sql in. This template is merged into an upload file. When calling the command `dbFlux: Compile current file` you are prompted for a filename and a target directory to place the resulting file in.
 By using command `dbFlux: Add REPORT Type` you are asked to give a name. Then a respective subfolder is created underneath reports mainfolder with a template.sql file inside. You have to modify this file to place the resulting blob to a row of your target table.
 
 #### Demo - Create a report type, merge with template, move to target folder and compile
@@ -297,7 +297,7 @@ Compile current File     | `ctrl+alt+b`  | Creates the merged uploadfile and pla
 
 ## UnitTests [#](#features 'Jumpt back to Features')
 
-**dbFlux** supports the execution of unit tests with utPLSQL. There are two commands for this. With the command `Execute utPLSQL test with current Package` the currently opened package from the directory db/*/tests/packages can be explicitly tested. With the command `dbFLux: Execute utPLSQL tests` all tests of the selected schemas can be executed. Depending on the configuration (SingleSchema, MultiSchema or FlexSchema), the system connects to the relevant schema and executes the tests using utPLSQL.
+**dbFlux** supports the execution of unit tests with utPLSQL. There are two commands for this. With the command `Execute utPLSQL test with current Package` the currently opened package from the directory db/*/tests/packages can be explicitly tested. With the command `dbFlux: Execute utPLSQL tests` all tests of the selected schemas can be executed. Depending on the configuration (SingleSchema, MultiSchema or FlexSchema), the system connects to the relevant schema and executes the tests using utPLSQL.
 
 
 ### Demo - Running utPLSQL Test
@@ -332,8 +332,8 @@ Execute utPLSQL tests                     | `ctrl+alt+t ctrl+alt+t`  | Calls `ex
 
 ## Create Objects [#](#features 'Jumpt back to Features')
 
-**dbFlux** also helps you to create database objects / files. With the command: `dbFLux: Create Object` *(`Ctrl+alt+c`)* you can specify in which directory you want to create an object, and what it should be called. Afterwards this file, for packages one per specification and body, will be created. You can use VSCode's built-in fuzzy search. This allows you to enter only parts of the query. For example, to create a package in the Logic schema, you only need to enter logpack.
-Furthermore **dbFlux** will try, if you have a snippet stored, to execute it directly when creating new files. It doesn't matter if the file was created with the command `dbFLux: Create Object` or by hand. If there is a snippet with the name of the respective subfolder starting from the schema folder (e.g. tables.sql or sources-packages.pks) separated by a hyphen and the corresponding extension, this will be executed. If there is no snippet stored by you, **dbFlux** will use its own snippet, if available.
+**dbFlux** also helps you to create database objects / files. With the command: `dbFlux: Create Object` *(`Ctrl+alt+c`)* you can specify in which directory you want to create an object, and what it should be called. Afterwards this file, for packages one per specification and body, will be created. You can use VSCode's built-in fuzzy search. This allows you to enter only parts of the query. For example, to create a package in the Logic schema, you only need to enter logpack.
+Furthermore **dbFlux** will try, if you have a snippet stored, to execute it directly when creating new files. It doesn't matter if the file was created with the command `dbFlux: Create Object` or by hand. If there is a snippet with the name of the respective subfolder starting from the schema folder (e.g. tables.sql or sources-packages.pks) separated by a hyphen and the corresponding extension, this will be executed. If there is no snippet stored by you, **dbFlux** will use its own snippet, if available.
 
 ### Demo - Create Object
 
@@ -362,7 +362,7 @@ Create Object | `Ctrl+alt+c`      | Choose a folder by using fuzzy-search and na
 ## Split and Join Files [#](#features 'Jumpt back to Features')
 
 **dbFlux** focuses on the approach of the deployment framework **dbFLow**. The idea is to store all database objects in a directory separated by type. This concept becomes relevant later on when creating the deployment / the actual build. This is because in the database world, the correct order is important when deploying.
-During development this can sometimes become quite a pain. Especially when you want to create a table with different indexes, primary and foreign keys and check constraints. With **dbFlux** you can write these scripts first into one file. After successful execution these components / objects can be splitted with the command `dbFLux: Split File` *`(Ctrl+alt+s`)* into the appropriate files and then checked in for example into the version management. If you want to execute all objects as a single script at a later time, you can combine them into one file with the command `dbFLux: Join Files` *`(Ctrl+alt+j)`*.
+During development this can sometimes become quite a pain. Especially when you want to create a table with different indexes, primary and foreign keys and check constraints. With **dbFlux** you can write these scripts first into one file. After successful execution these components / objects can be splitted with the command `dbFlux: Split File` *`(Ctrl+alt+s`)* into the appropriate files and then checked in for example into the version management. If you want to execute all objects as a single script at a later time, you can combine them into one file with the command `dbFlux: Join Files` *`(Ctrl+alt+j)`*.
 > When using this feature it is important that the line before the respective index or constraint is structured according to the following scheme: `"--File: path/to/object/inside/schema.sql"` Here is an example: `"--File: constraints/foreigns/employees_dept_fk.sql"`
 **dbFlux** provides several snippets for this function, which take the typing work out of it. All these snippets can be called via dbf.tbl.*.
 
@@ -393,7 +393,7 @@ Join Files    | `Ctrl+alt+j`      | Combines all mentioned files into currentfil
 
 ## Open Package Specification or Body
 
-If you have just opened a package specification in the editor, you can open the corresponding body with the command `dbFLux: Open corresponding Spec/Body` *(`Ctrl+alt+o`)*. Of course, the whole thing works the other way around, too.
+If you have just opened a package specification in the editor, you can open the corresponding body with the command `dbFlux: Open corresponding Spec/Body` *(`Ctrl+alt+o`)*. Of course, the whole thing works the other way around, too.
 
 ### Keybindings
 
@@ -404,7 +404,7 @@ Open corresponding Spec or Body   | `Ctrl+alt+o`      | when active file has the
 
 ## Copy "package.method" to clipboard
 
-When you select a method name in a package, you can copy the selection and the package name serperated with a dot to clipboard. This is very handy, if you just want to paste a method call to an APEX Process for example. Just run command: `dbFLux: Write package name.selection to ClipBoard`
+When you select a method name in a package, you can copy the selection and the package name serperated with a dot to clipboard. This is very handy, if you just want to paste a method call to an APEX Process for example. Just run command: `dbFlux: Write package name.selection to ClipBoard`
 
 ### Keybindings
 
@@ -420,16 +420,16 @@ With **dbFlux** you can install the exported application right back to database.
 
 ## Export APEX Application [#](#features 'Jumpt back to Features')
 
-With **dbFlux** you can directly export the stored APEX applications. You just have to select an application by using command `dbFLux: Export APEX Application`. In the background APEX will then call SQLcl with the appropriate DB connection and export the application (splitted). In MultiSchema mode this is the APP schema.
-> Only those applications can be exported which have been stored in the directory structure. See command: `dbFLux: Add APEX Application`.
+With **dbFlux** you can directly export the stored APEX applications. You just have to select an application by using command `dbFlux: Export APEX Application`. In the background APEX will then call SQLcl with the appropriate DB connection and export the application (splitted). In MultiSchema mode this is the APP schema.
+> Only those applications can be exported which have been stored in the directory structure. See command: `dbFlux: Add APEX Application`.
 
 You have the option to pass addional arguments or options to the export command of SQLcl. Just enter them in the settings.
 
 
 ## Export REST Module [#](#features 'Jumpt back to Features')
 
-With **dbFlux** you can directly export the stored REST modules. All you have to do is to select a module by command `dbFLux: Export REST Module`. In the background APEX will then call SQLcl with the appropriate DB connection and export the module. In MultiSchema mode this is the APP schema.
-> Only those modules can be exported which have been stored in the directory structure. See command: `dbFLux: Add REST Module`.
+With **dbFlux** you can directly export the stored REST modules. All you have to do is to select a module by command `dbFlux: Export REST Module`. In the background APEX will then call SQLcl with the appropriate DB connection and export the module. In MultiSchema mode this is the APP schema.
+> Only those modules can be exported which have been stored in the directory structure. See command: `dbFlux: Add REST Module`.
 
 ## Export DB Schema or Object [#](#features 'Jumpt back to Features')
 
@@ -438,7 +438,7 @@ If you want to export an object, you must have already created a file for it and
 
 ## Export APEX Static Application Files [#](#features 'Jumpt back to Features')
 
-With **dbFLux** you can now export static application files of the configured applications to the static folder. You can either use the command: `Export Static Application Files` to export all files of an application or you can call the command: `Export Static Application File (current)` if you already have a static file open. In this case exactly this file will be downloaded from the Static Application Files. This makes it easy to start working with VSCode and dbFLux especially for existing projects.
+With **dbFlux** you can now export static application files of the configured applications to the static folder. You can either use the command: `Export Static Application Files` to export all files of an application or you can call the command: `Export Static Application File (current)` if you already have a static file open. In this case exactly this file will be downloaded from the Static Application Files. This makes it easy to start working with VSCode and dbFlux especially for existing projects.
 
 ## Export APEX Plugins [#](#features 'Jumpt back to Features')
 
@@ -447,7 +447,7 @@ After that dbFlux will create a new folder inside a plugin-folder which is hoste
 `plugin/f123/COM.COMPANY.YOUR.PLUGIN/src`.
 To export the plugin from the database you have to call the command: "dbFlux: Export APEX Plugin". This will create the plugin-file itself, like: `com_company_your_plugin.sql`. This is the file, you will deploy/install into other environments.
 
-Additionaly you can export your static plugin files in order to edit them in VS-Code. In this case you call the command: "dbFlux: Export Plugin Files". This will create the files, which belongs to the plugin itself underneath the src-folder of your plugin (src/css, src/img/ src/js, ...). To export just the current file you are working with, call the command `dbFLux: Export Plugin File (current)`.
+Additionaly you can export your static plugin files in order to edit them in VS-Code. In this case you call the command: "dbFlux: Export Plugin Files". This will create the files, which belongs to the plugin itself underneath the src-folder of your plugin (src/css, src/img/ src/js, ...). To export just the current file you are working with, call the command `dbFlux: Export Plugin File (current)`.
 
 
 ## Compile JS/CSS and Upload Files to APEX Plugin [#](#features 'Jumpt back to Features')
@@ -463,23 +463,23 @@ Since the concept of **dbFlux** and dbFlow is based on a defined directory tree,
 
 ### Add APEX Application
 
-So you can use the command: `dbFLux: Add APEX Application` to create a directory with the given ApplicationID at the right place in the directory. If your project is configured in SingleSchema or MultiSchema mode, the application directory will be created directly as a subfolder in the main directory `apex`. If FlexSchema mode is enabled, you will also be asked for the target schema and workspace to place the application directory exactly there.
+So you can use the command: `dbFlux: Add APEX Application` to create a directory with the given ApplicationID at the right place in the directory. If your project is configured in SingleSchema or MultiSchema mode, the application directory will be created directly as a subfolder in the main directory `apex`. If FlexSchema mode is enabled, you will also be asked for the target schema and workspace to place the application directory exactly there.
 > To add an application in FlexSchema mode, a schema and a workspace must first exist under the `apex` directory.
 
 ### Add REST Module
 
-With the command `dbFLux: Add REST Module` you can create a directory for the correspondingly named REST module. If your project is configured in SingleSchema or MultiSchema mode, then the REST module directory will be created directly as a subfolder in the main `rest/modules` directory. If FlexSchema mode is enabled, you will also be asked for the target schema to place the module directory into.
+With the command `dbFlux: Add REST Module` you can create a directory for the correspondingly named REST module. If your project is configured in SingleSchema or MultiSchema mode, then the REST module directory will be created directly as a subfolder in the main `rest/modules` directory. If FlexSchema mode is enabled, you will also be asked for the target schema to place the module directory into.
 > To add a REST module in FlexSchema mode, a schema must first exist under the `rest` directory.
 
 
 ### Add Workspace
 
-In FlexSchema mode **dbFlux** additionally offers you the command `dbFLux: Add Workspace`. With this you can create a workspace in a schema directory, which must be a subfolder of the main folder `apex`. After selecting the respective schema, you only have to enter the name of the workspace and you are done. Afterwards you can create applications in this folder using the command `dbFLux: Add APEX Application`.
+In FlexSchema mode **dbFlux** additionally offers you the command `dbFlux: Add Workspace`. With this you can create a workspace in a schema directory, which must be a subfolder of the main folder `apex`. After selecting the respective schema, you only have to enter the name of the workspace and you are done. Afterwards you can create applications in this folder using the command `dbFlux: Add APEX Application`.
 > In order to add a workspace in FlexSchema mode, a schema must first be available under the `apex` directory.
 
 ### Add Schema
 
-In FlexSchema mode, dbFLux also offers you the command `dbFLux: Add Schema`. With this command you can add Schemas inside the different main directories: **`apex, db, rest, static`**. You will be shown a selection of these folders, in which you have to select all or only one, before you enter the actual schema name.
+In FlexSchema mode, dbFlux also offers you the command `dbFlux: Add Schema`. With this command you can add Schemas inside the different main directories: **`apex, db, rest, static`**. You will be shown a selection of these folders, in which you have to select all or only one, before you enter the actual schema name.
 
 <p align="center">
   <br/>
@@ -543,16 +543,16 @@ As soon as your project has the file `.featureCatalog`, dbFlux will check at the
 
 ## dbStruct - View table structure [#](#features 'Jumpt back to Features')
 
-With the command: `dbFlux: Add Table to Column-Viewer` you can add a table, either the current one (file in the tables folder) or the current text selection, if available as a table, or a table file to be selected, to the *dbStruct* view. *dbFLux* will parse the file and determine all column definitions from the first pair of brackets. Using the context menu from a column or the table itself, you then have 4 options available to write the respective columns to the clipboard with the selected separator. You can also drag and drop the columns to the current file. If no *column snippets* have been stored, the predefined separator is used as the separator. You can adjust this accordingly in the settings.
+With the command: `dbFlux: Add Table to Column-Viewer` you can add a table, either the current one (file in the tables folder) or the current text selection, if available as a table, or a table file to be selected, to the *dbStruct* view. *dbFlux* will parse the file and determine all column definitions from the first pair of brackets. Using the context menu from a column or the table itself, you then have 4 options available to write the respective columns to the clipboard with the selected separator. You can also drag and drop the columns to the current file. If no *column snippets* have been stored, the predefined separator is used as the separator. You can adjust this accordingly in the settings.
 
 ### Column Snippets
 
-As soon as you have stored *column snippets*, you can select them accordingly when dropping. You can store a column snippet with the command: `dbFlux: Add Column-Snippet`. These column snippets are basically normal VSCode snippets. In addition, dbFlux will replace the variables (§{DBFLUX_TABLE}, §{dbflux_table}, §{DBFLUX_COLUMN}, §{dbflux_column}) according to the selection. This means that upper and lower case are available for the table and column names.
+As soon as you have stored *column snippets*, you can select them accordingly when dropping. You can store a column snippet with the command: `dbFlux: Add Column-Snippet`. These column snippets are basically normal VSCode snippets. In addition, dbFlux will replace the variables (§{dbFlux_TABLE}, §{dbFlux_table}, §{dbFlux_COLUMN}, §{dbFlux_column}) according to the selection. This means that upper and lower case are available for the table and column names.
 
 
 ## View and configure logging output [#](#features 'Jumpt back to Features')
 
-When gathering additional infos about running dbFlux, you alway have the option to view the output-channel of dbFLux. Here you see the output dbFlux creates when running. You can adjust the level of ouput by changing the settings `dbFlux.loggingMode` to one of the following: DEBUG, INFO, WARN, ERROR, NONE
+When gathering additional infos about running dbFlux, you alway have the option to view the output-channel of dbFlux. Here you see the output dbFlux creates when running. You can adjust the level of ouput by changing the settings `dbFlux.loggingMode` to one of the following: DEBUG, INFO, WARN, ERROR, NONE
 
 
 

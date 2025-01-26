@@ -70,7 +70,8 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
           DBFLOW_DBUSER:     definition.runner.connectionUser,
           DBFLOW_DBPASS:     definition.runner.connectionPass,
           DBFLOW_SCHEMA:     definition.runner.schemaName!,
-          DBFLOW_SCHEMA_NEW: definition.runner.schemaNameNew!
+          DBFLOW_SCHEMA_NEW: definition.runner.schemaNameNew!,
+          DBFLOW_EXP_GRANTS_W_OBJ:  ConfigurationManager.getGrantsOfViewsAndSourcesAtObject()
         },
       })
 
@@ -84,7 +85,7 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
     let runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders && schemaName !== undefined) {
-      const connectionUri = Uri.file(path.join(workspace.workspaceFolders[0].uri.path, "db", schemaName, "tables", "egal.sql"))
+      const connectionUri = Uri.file(path.join(workspace.workspaceFolders[0].uri.path, ConfigurationManager.getDBFolderName(), schemaName, "tables", "egal.sql"))
       runner.schemaName = schemaName;
       runner.schemaNameNew = schemaNameNew;
       runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
@@ -123,11 +124,9 @@ export function registerExportDBSchemaCommand(projectInfos: IProjectInfos, conte
           window.showErrorMessage('dbFlux: No executable "sql" found on path!');
         });
       }
-
     }
   });
 };
-
 
 export class ExportDBObjectProvider extends AbstractBashTaskProvider implements TaskProvider {
   static dbFluxType: string = "dbFlux";
@@ -168,14 +167,15 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
       ExportDBObjectProvider.dbFluxType,
       new ShellExecution(definition.runner.runFile, {
         env: {
-          DBFLOW_SQLCLI:      definition.runner.executableCli,
-          DBFLOW_DBTNS:       definition.runner.connectionTns,
-          DBFLOW_DBUSER:      definition.runner.connectionUser,
-          DBFLOW_DBPASS:      definition.runner.connectionPass,
-          DBFLOW_SCHEMA:      definition.runner.schemaName!,
-          DBFLOW_SCHEMA_NEW:  definition.runner.schemaNameNew!,
-          DBFLOW_EXP_FOLDER:  definition.runner.exportFolder!,
-          DBFLOW_EXP_FNAME:   definition.runner.exportFileName!
+          DBFLOW_SQLCLI:            definition.runner.executableCli,
+          DBFLOW_DBTNS:             definition.runner.connectionTns,
+          DBFLOW_DBUSER:            definition.runner.connectionUser,
+          DBFLOW_DBPASS:            definition.runner.connectionPass,
+          DBFLOW_SCHEMA:            definition.runner.schemaName!,
+          DBFLOW_SCHEMA_NEW:        definition.runner.schemaNameNew!,
+          DBFLOW_EXP_FOLDER:        definition.runner.exportFolder!,
+          DBFLOW_EXP_FNAME:         definition.runner.exportFileName!,
+          DBFLOW_EXP_GRANTS_W_OBJ:  ConfigurationManager.getGrantsOfViewsAndSourcesAtObject()
         },
       })
 
@@ -201,7 +201,7 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
         runner.schemaNameNew = schemaNameNew;
 
         const parts:string[] = getRelativePartsFromFile(activeFilePath);
-        if (parts[0] === "db") {
+        if (parts[0] === ConfigurationManager.getDBFolderName()) {
           runner.exportFolder           = getObjectTypePathFromFile(activeFilePath!);
           runner.exportFileName         = getObjectNameFromFile(activeFilePath!);
         }
@@ -226,8 +226,8 @@ export function registerExportDBObjectCommand(projectInfos: IProjectInfos, conte
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
 
 
-    const insideSetup = (matchRuleShort(relativeFileName, 'db/_setup/*') || matchRuleShort(relativeFileName, 'db/.setup/*') || matchRuleShort(relativeFileName, 'db/.hooks/*'));
-    const insideDb = !insideSetup && matchRuleShort(relativeFileName, 'db/*');
+    const insideSetup = (matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/_setup/*`) || matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/.setup/*`) || matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/.hooks/*`));
+    const insideDb = !insideSetup && matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/*`);
 
     if (insideDb) {
       if (projectInfos.isValid) {

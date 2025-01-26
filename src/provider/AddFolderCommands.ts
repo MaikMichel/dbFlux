@@ -401,7 +401,7 @@ export async function addRESTModule(context: ExtensionContext) {
       LoggingService.logWarning('Canceled');
     }
   } else {
-    window.showWarningMessage("dbFlux: You have to add at least one Schema-folder inside rest folder. Juse user Command dbFLux: Add Schema");
+    window.showWarningMessage("dbFlux: You have to add at least one Schema-folder inside rest folder. Juse user Command dbFlux: Add Schema");
   }
 }
 
@@ -524,7 +524,7 @@ export function addWorkspaceFolder(workspaceName: string, schema: string) {
 
   if (workspace.workspaceFolders !== undefined) {
     const wsRootPath = workspace.workspaceFolders![0];
-    [`apex/${schema}`, `static/${schema}`, `db/_setup/workspaces`].forEach(element => {
+    [`apex/${schema}`, `static/${schema}`, `${ConfigurationManager.getDBFolderName()}/_setup/workspaces`].forEach(element => {
       const dirName:string = path.join(wsRootPath.uri.fsPath, element, `/${workspaceName}`);
       if (!existsSync(dirName)){
         mkdirSync(dirName, { recursive: true });
@@ -538,7 +538,7 @@ export function addWorkspaceFolder(workspaceName: string, schema: string) {
     rewriteInstall();
 
     const openScript = 'Open Script';
-    window.showInformationMessage(`Schema: ${schema} created inside Folders: ${[`apex/${schema}`, `static/${schema}`, `db/_setup/workspaces`].join(',')}.
+    window.showInformationMessage(`Schema: ${schema} created inside Folders: ${[`apex/${schema}`, `static/${schema}`, `${ConfigurationManager.getDBFolderName()}/_setup/workspaces`].join(',')}.
     Schema creation script written to _setup schema. Open to run it.`, openScript)
     .then(selection => {
       if (selection === openScript) {
@@ -631,7 +631,7 @@ async function getMainFolders(): Promise<QuickPickItem[]> {
     const getMFolders = (source: PathLike) =>
           readdirSync(source, { withFileTypes: true })
           .filter((dirent) => {
-            return dirent.isDirectory() && ["apex", "db", "rest", "static"].includes(dirent.name);
+            return dirent.isDirectory() && ["apex", ConfigurationManager.getDBFolderName(), "rest", "static"].includes(dirent.name);
           })
           .map((dirent) => dirent.name);
 
@@ -660,7 +660,7 @@ function addMainFolders(schema: string, folders: any, projectInfos:IProjectInfos
           }
 
           // create db folder structure
-          if (wsPath.description === "db") {
+          if (wsPath.description === ConfigurationManager.getDBFolderName()) {
             createDirectoryPath(dbFolderDef, "/", dirName) ;
           }
 
@@ -687,7 +687,7 @@ function addMainFolders(schema: string, folders: any, projectInfos:IProjectInfos
         });
       }
     } else {
-      window.showWarningMessage(`dbFlux: No mainfolder selected (apex, db, rest, static)`);
+      window.showWarningMessage(`dbFlux: No mainfolder selected (apex, ${ConfigurationManager.getDBFolderName()}, rest, static)`);
     }
   }
 }
@@ -778,7 +778,7 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
     const fileName = window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
     const wsRoot = getWorkspaceRootPath();
     const dbUser = getDBUserFromPath(fileName, projectInfos);
-    const dirName = path.join(wsRoot, "db", dbUser);
+    const dirName = path.join(wsRoot, ConfigurationManager.getDBFolderName(), dbUser);
 
 
     const fileArray:String[] = [];
@@ -821,7 +821,7 @@ export function registerJoinFromFilesCommand(projectInfos: IProjectInfos) {
     const fileName = window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
     const wsRoot = getWorkspaceRootPath();
     const dbUser = getDBUserFromPath(fileName, projectInfos);
-    const dirName = path.join(wsRoot, "db", dbUser);
+    const dirName = path.join(wsRoot, ConfigurationManager.getDBFolderName(), dbUser);
     let joined = false;
 
     // read file
@@ -863,7 +863,7 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
     const wsRoot = getWorkspaceRootPath();
 
     const dbUser = getDBUserFromPath(fileName, projectInfos);
-    const dirName = path.join(wsRoot, "db", dbUser).replace(/\\/g, '/');
+    const dirName = path.join(wsRoot, ConfigurationManager.getDBFolderName(), dbUser).replace(/\\/g, '/');
     let joined = false;
 
     // loop through all constraint files with the tablename
@@ -911,35 +911,85 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
   });
 }
 
+
+function findFileWithHighestIndex(pathToRead:string, filePrefix:string): string|undefined {
+  const files = readdirSync(pathToRead);
+
+  const matchingFiles = files.filter(file => file.startsWith(filePrefix+".") && file.endsWith('.sql'));
+
+  let maxIndex = -1;
+  let maxFile = undefined;
+
+  matchingFiles.forEach(file => {
+    // extract number between dots "a_table.3.sql" -> 3
+    const match = file.match(/a_table\.(\d+)\.sql/);
+    if (match && match[1]) {
+      const index = parseInt(match[1], 10);
+      if (index > maxIndex) {
+        maxIndex = index;
+        maxFile = file;
+      }
+    }
+  });
+
+  return maxFile;
+}
+
 export function registerOpenSpecOrBody() {
   return commands.registerCommand("dbFlux.openSpecOrBody", async () => {
+    // currentFilename
     const fileName = window.activeTextEditor?.document.fileName;
     if (fileName) {
+
+      let fileNameNew = fileName;
       const extension = path.extname(fileName);
-      if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
-        LoggingService.logInfo('fileName: ' + fileName);
-        let extensionNew = "xxx";
-        if (extension === ".pks") {
-          extensionNew = ".pkb";
-        } else if (extension === ".PKS") {
-          extensionNew = ".PKB";
-        } else if (extension === ".pkb") {
-          extensionNew = ".pks";
-        } else if (extension === ".PKB") {
-          extensionNew = ".PKS";
-        } else if (extension === ".tps") {
-          extensionNew = ".tpb";
-        } else if (extension === ".TPS") {
-          extensionNew = ".TPB";
-        } else if (extension === ".tpb") {
-          extensionNew = ".tps";
-        } else if (extension === ".TPB") {
-          extensionNew = ".TPS";
+      const pathes = fileName.split(path.sep);
+
+      // remove filename from Array (last element)
+      pathes.pop();
+
+      // dependend from last folder
+      if (pathes[pathes.length-1] == "tables") {
+        // find matching file with max index
+        pathes.push("tables_ddl");
+        pathes.push(findFileWithHighestIndex(pathes.join(path.sep)!, path.basename(fileName).split(".")[0])!);
+
+        fileNameNew = pathes.join(path.sep);
+      } else if (pathes[pathes.length-1] == "tables_ddl") {
+        // find matching file without index
+        pathes.pop();
+        pathes.push(path.basename(fileName).split(".")[0]+extension);
+
+        fileNameNew = pathes.join(path.sep);
+      } else if (pathes[pathes.length-1] == "packages") {
+        // switch based on extension
+        if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
+          let extensionNew = "xxx";
+          if (extension === ".pks") {
+            extensionNew = ".pkb";
+          } else if (extension === ".PKS") {
+            extensionNew = ".PKB";
+          } else if (extension === ".pkb") {
+            extensionNew = ".pks";
+          } else if (extension === ".PKB") {
+            extensionNew = ".PKS";
+          } else if (extension === ".tps") {
+            extensionNew = ".tpb";
+          } else if (extension === ".TPS") {
+            extensionNew = ".TPB";
+          } else if (extension === ".tpb") {
+            extensionNew = ".tps";
+          } else if (extension === ".TPB") {
+            extensionNew = ".TPS";
+          }
+
+          fileNameNew = fileName.replace(extension, extensionNew);
         }
+      }
 
-        const fileNameNew = fileName.replace(extension, extensionNew);
-
-        if (existsSync(fileNameNew)) {
+      if (existsSync(fileNameNew)) {
+        if (fileName != fileNameNew) {
+          LoggingService.logInfo('Switch to file: ' + workspace.asRelativePath(fileNameNew));
           workspace.openTextDocument(Uri.file(fileNameNew)).then(doc => {
             window.showTextDocument(doc, {preview: false});
           });
@@ -990,7 +1040,7 @@ function addHookFileToPath(folder: string, filename: string) {
   const baseF    = rtrim(path.basename(filename), ".sql");
   const fullFile = dirName + '/' + baseF + ".sql";
 
-  const tmplFileName = (folder.startsWith(".hooks") || folder.startsWith("db/.hooks")) ? "globalhook.tmpl.sql" : "hook.tmpl.sql"
+  const tmplFileName = (folder.startsWith(".hooks") || folder.startsWith("${ConfigurationManager.getDBFolderName()}/.hooks")) ? "globalhook.tmpl.sql" : "hook.tmpl.sql"
   const template = readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", tmplFileName).split(path.sep).join(path.posix.sep), "utf8");
 
   if (!existsSync(dirName)) {

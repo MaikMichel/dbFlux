@@ -86,13 +86,13 @@ export abstract class AbstractBashTaskProvider {
 
 
 
-  getConnection(projectInfos: IProjectInfos, currentPath: string): string {
+  getConnection(projectInfos: IProjectInfos, currentPath: string, useDefaultPW: boolean ): string {
     const connUser = this.buildConnectionUser(projectInfos, currentPath);
-    const connPass = this.getPassword(projectInfos, connUser);
+    const connPass = this.getPassword(projectInfos, connUser, useDefaultPW);
     return connUser + `/"${connPass}"@${projectInfos.dbTns}`;
   }
 
-  getPassword(pInfos: IProjectInfos, pTargetUser: string): string {
+  getPassword(pInfos: IProjectInfos, pTargetUser: string, useDefaultPW: boolean): string {
     let passWord = "";
 
     if (pTargetUser === pInfos.dbAdminUser) {
@@ -102,7 +102,11 @@ export abstract class AbstractBashTaskProvider {
     } else if (this.dbFluxMode === "dbFlow" && pInfos.dbPasses?.hasOwnProperty(`DBFLOW_${pTargetUser}_PWD`)){
       passWord = pInfos.dbPasses[`DBFLOW_${pTargetUser}_PWD`];
     } else {
-      passWord = CompileTaskStore.getInstance().appPwd!;
+      if (useDefaultPW) {
+        passWord = pInfos.dbAppPwd!;
+      } else {
+        passWord = CompileTaskStore.getInstance().appPwd!;
+      }
     }
 
     return passWord;
@@ -122,7 +126,7 @@ export abstract class AbstractBashTaskProvider {
 
     runnerInfo.connectionTns  = projectInfos.dbTns;
     runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd, fileUri.path);
-    runnerInfo.connectionPass = this.getPassword(projectInfos, runnerInfo.connectionUser);
+    runnerInfo.connectionPass = this.getPassword(projectInfos, runnerInfo.connectionUser, false);
 
     runnerInfo.projectInfos   = projectInfos;
     runnerInfo.coloredOutput  = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
@@ -410,16 +414,12 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
   const lowerPathName = (pathName+"/").toLowerCase().replace(wsRoot, "");
   const lowerPathParts = lowerPathName.split(path.posix.sep);
 
-  LoggingService.logDebug(`get DB User from Path`, {
-    "lowerPathName": lowerPathName,
-    "lowerPathParts": lowerPathParts,
-    "currentFilePath": currentFilePath
-  });
+  LoggingService.logDebug(`get DB User from Path`);
 
-  if (currentFilePath !== undefined &&(lowerPathParts[0] === ".hooks" || (lowerPathParts[0] === "db" && lowerPathParts[1] === ".hooks"))) {
+  if (currentFilePath !== undefined &&(lowerPathParts[0] === ".hooks" || (lowerPathParts[0] === ConfigurationManager.getDBFolderName() && lowerPathParts[1] === ".hooks"))) {
     const lastElement = currentFilePath.split("/").pop();
     // check if any db schema folder is inside this file
-    getSchemaFolders(path.join(wsRoot, "db")).forEach((val)=>{
+    getSchemaFolders(path.join(wsRoot, ConfigurationManager.getDBFolderName())).forEach((val)=>{
       if (lastElement!.indexOf(val) > 0) {
         returnDBUser = val;
       }
@@ -431,16 +431,16 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
         returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
         window.showWarningMessage("You are compiling a hook-file. Keep in mind that the target schema-name must be a part of the filename. Otherwise dbFlow won't run this file!");
       } else {
-        const errorMessage = "dbFLux: Unknown schema, please use *_schema_name_*.sql to execute a hook file";
+        const errorMessage = "dbFlux: Unknown schema, please use *_schema_name_*.sql to execute a hook file";
         LoggingService.logError(errorMessage);
         window.showErrorMessage(errorMessage);
       }
 
     }
 
-  } else if (lowerPathParts[0] === "db" && (lowerPathParts[1] === "_setup" || lowerPathParts[1] === ".setup")) {
+  } else if (lowerPathParts[0] === ConfigurationManager.getDBFolderName() && (lowerPathParts[1] === "_setup" || lowerPathParts[1] === ".setup")) {
     returnDBUser = projectInfos.dbAdminUser!;
-  } else if (lowerPathParts[0] === "db") {
+  } else if (lowerPathParts[0] === ConfigurationManager.getDBFolderName()) {
     returnDBUser = lowerPathParts[1];
   } else if (["apex", "rest", "static", "plugin"].includes(lowerPathParts[0])) {
     if (projectInfos.isFlexMode) {
@@ -476,9 +476,9 @@ readdirSync(source, { withFileTypes: true })
 export async function getDBSchemaFolders():Promise<QuickPickItem[]> {
   if (workspace.workspaceFolders){
       const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-      const sourceDB = path.join(wsRoot, "db");
+      const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
 
-      return getSchemaFolders(sourceDB).map(function(element){return {"label":element, "description":"db/"+element , "alwaysShow": true};});
+      return getSchemaFolders(sourceDB).map(function(element){return {"label":element, "description":ConfigurationManager.getDBFolderName()+"/"+element , "alwaysShow": true};});
 
   }
   return [{label: "", description:""}];

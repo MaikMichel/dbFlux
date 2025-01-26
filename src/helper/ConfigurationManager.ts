@@ -19,10 +19,12 @@ export class ConfigurationManager {
 
   static dbFlux:string = "dbFlux";
   static fileSeparation:string = "-- File: ";
+  static folderName:string = ConfigurationManager.getDBFolderName();
 
   static get<T>(confPath:string):T {
     const myValue:T | undefined = workspace.getConfiguration(ConfigurationManager.dbFlux).get(confPath);
     const myDefault = workspace.getConfiguration(ConfigurationManager.dbFlux).inspect(confPath)?.defaultValue;
+
     return (myValue === undefined ? <T>myDefault : myValue);
   }
 
@@ -98,6 +100,14 @@ export class ConfigurationManager {
 
   static getAppExportOptions(): string {
     return this.get<string>("exportApplications.AppendFollowingOptionString")
+  }
+
+  static getDBFolderName(): string {
+    return this.get<string>("mapping.dbFolder")
+  }
+
+  static getGrantsOfViewsAndSourcesAtObject(): string {
+    return this.get<string>("exportSchema.grantsOfViewsAndSourcesAtObject")
   }
 }
 

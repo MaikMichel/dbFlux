@@ -179,7 +179,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
     ConfigurationManager.getCustomTriggerRuns().forEach((runner)=>{
       if (compInfos.activeFile.match(runner.triggeringExpression)) {
         const obj = {
-          "connection": this.getConnection(compInfos.projectInfos, runner.runFile),
+          "connection": this.getConnection(compInfos.projectInfos, runner.runFile, true),
           "file": '@' + runner.runFile + ((runner.runFileParameters) ? " " + runner.runFileParameters.map((item)=>`"${item}"`) .join(" ") : "")
         };
         myList.push(obj);
@@ -196,7 +196,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
     ConfigurationManager.getCustomTriggerCalls().forEach((runner)=>{
       if (compInfos.activeFile.match(runner.triggeringExpression)) {
         const obj = {
-          "connection": this.getConnection(compInfos.projectInfos, runner.runMethodTargetFile),
+          "connection": this.getConnection(compInfos.projectInfos, runner.runMethodTargetFile, true),
           "method": runner.runMethod,
           "tfile": runner.runMethodTargetFile
         };
@@ -290,8 +290,8 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
 
       LoggingService.logDebug(`File to compile is: ${relativeFileName}`);
 
-      const insideSetup = (matchRuleShort(relativeFileName, 'db/_setup/*') || matchRuleShort(relativeFileName, 'db/.setup/*'));
-      const insideDb = !insideSetup && matchRuleShort(relativeFileName, 'db/*');
+      const insideSetup = (matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/_setup/*`) || matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/.setup/*`));
+      const insideDb = !insideSetup && matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/*`);
       const insideStatics = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'static/*/*/f*/src/*' : 'static/f*/src/*');
       const insidePlugins = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'plugin/*/*/f*/*/src/*' : 'plugin/f*/*/src/*');
       const insideReports = matchRuleShort(relativeFileName, 'reports/*');

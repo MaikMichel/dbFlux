@@ -70,7 +70,8 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
           DBFLOW_ENABLE_WARNINGS:   definition.runner.enableWarnings,
           DBFLOW_SQL_WARNING_STRING:  definition.runner.sqlWarningString?definition.runner.sqlWarningString:"NIX",
           DBFLOW_SQL_WARNING_EXCLUDE: definition.runner.sqlWarningExcList?definition.runner.sqlWarningExcList:"-1",
-          DBFLOW_SQL_COMPILE_OPTION: definition.runner.sqlCompileOption==="Invalid"?"false":"true"
+          DBFLOW_SQL_COMPILE_OPTION: definition.runner.sqlCompileOption==="Invalid"?"false":"true",
+          DBFLOW_DB_FOLDER: ConfigurationManager.getDBFolderName()
         }
       }),
       ["$dbflux-plsql-all"]
@@ -96,7 +97,7 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
             return '"' + this.buildConnectionUser(projectInfos, element) + '"';
           });
           runner.connectionPasses = CompileTaskStore.getInstance().selectedSchemas!.map((element) =>{
-            return '"' + this.getPassword(projectInfos, this.buildConnectionUser(projectInfos, element)) +'"';
+            return '"' + this.getPassword(projectInfos, this.buildConnectionUser(projectInfos, element), false) +'"';
           });
         };
 

@@ -28,18 +28,15 @@ export class ExportPluingFilesProvider extends AbstractBashTaskProvider implemen
   static dbFluxType: string = "dbFlux";
 
   provideTasks(): Thenable<Task[]> | undefined {
-    console.log('provideTasks');
     return this.getExportPluginFilesTask();
   }
 
   resolveTask(task: Task): Task | undefined {
-    console.log('resolveTask');
     return task;
   }
 
 
   async getExportPluginFilesTask(): Promise<Task[]> {
-    console.log('getExportPluginFilesTask');
     const result: Task[] = [];
 
     if (ExportTaskStore.getInstance().expPlugin) {
@@ -51,7 +48,6 @@ export class ExportPluingFilesProvider extends AbstractBashTaskProvider implemen
   }
 
   createExpTaskDefinition(name: string, runner: ISQLExportInfos): ExportTaskDefinition {
-    console.log('createExpTaskDefinition');
     return {
       type: ExportPluingFilesProvider.dbFluxType,
       name,
@@ -60,7 +56,6 @@ export class ExportPluingFilesProvider extends AbstractBashTaskProvider implemen
   }
 
   createExpTask(definition: ExportTaskDefinition): Task {
-    console.log('createExpTask');
     let _task = new Task(
       definition,
       TaskScope.Workspace,
@@ -86,7 +81,6 @@ export class ExportPluingFilesProvider extends AbstractBashTaskProvider implemen
   }
 
   async prepExportInfos(pluginFolder:string|undefined): Promise<ISQLExportInfos> {
-    console.log('prepExportInfos', pluginFolder);
     let runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders && pluginFolder) {

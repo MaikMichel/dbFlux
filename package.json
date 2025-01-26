@@ -10,7 +10,7 @@
 	"bugs": "https://github.com/MaikMichel/dbFlux/issues",
 	"displayName": "dbFlux",
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
-	"version": "5.5.2",
+	"version": "5.6.1-alpha-1",
 	"engines": {
 		"vscode": "^1.82.0"
 	},
@@ -508,7 +508,7 @@
 				"command": "dbFlux.openSpecOrBody",
 				"title": "Open corresponding Spec or Body",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
+				"enablement": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb|sql]$/"
 			},
 			{
 				"command": "dbFlux.copySelectionWithFilenameToClipBoard",
@@ -575,6 +575,12 @@
 				"title": "Convert Project to dbFlow - Project",
 				"category": "dbFlux",
 				"enablement": "inDbFlowProject && isDBFluxMode"
+			},
+			{
+				"command": "dbFlux.reloadExtension",
+				"title": "Reload dbFlux",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
 			}
 		],
 		"keybindings": [
@@ -606,7 +612,7 @@
 				"command": "dbFlux.openSpecOrBody",
 				"key": "ctrl+alt+o",
 				"mac": "ctrl+alt+o",
-				"when": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb]$/"
+				"when": "inDbFlowProject && resourceExtname  =~ /.[pks|pkb|tps|tpb|sql]$/"
 			},
 			{
 				"command": "dbFlux.copySelectionWithFilenameToClipBoard",
@@ -691,6 +697,12 @@
 							"NONE"
 						],
 						"description": "Select Logging Level. Open Output Panel and select dbFlux to view the output",
+						"scope": "window"
+					},
+					"dbFlux.mapping.dbFolder": {
+						"type": "string",
+						"default": "db",
+						"markdownDescription": "Enter the name of the database folder here. The schemas and the database objects are expected in this directory (default = 'db'). This property will be ignored in dbFlow Projects!\n> You have to reload the workspace to have an Effect!",
 						"scope": "window"
 					},
 					"dbFlux.cliToUseForCompilation": {
@@ -871,6 +883,12 @@
 							" := \n"
 						],
 						"markdownDescription": "Choose which String to use as when dragging table or columns into editor per default? <br/> You can alway choose to copy by context menu on the items",
+						"scope": "window"
+					},
+					"dbFlux.exportSchema.grantsOfViewsAndSourcesAtObject": {
+						"type": "boolean",
+						"default": false,
+						"description": "Sometimes it is better to have the grant at the object script it self. If you activate this, grants of views ans sources will be placed in the object script itself",
 						"scope": "window"
 					}
 				}

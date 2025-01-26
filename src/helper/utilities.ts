@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readdirSync} from "fs";
 import { platform } from "os";
 import { exec } from "child_process";
 import { LoggingService } from "./LoggingService";
+import { ConfigurationManager } from "./ConfigurationManager";
 
 const isWindows = platform() === 'win32'
 
@@ -213,19 +214,19 @@ export function getRelativePartsFromFile(filePath:string):string[] {
 export function getSchemaFromFile(filePath:string, isFlexMode:boolean):string {
   const parts:string[] = getRelativePartsFromFile(filePath);
 
-  if (parts[0] === "db" && parts[1] !== "*") {
+  if (parts[0] === ConfigurationManager.getDBFolderName() && parts[1] !== "*") {
     return parts[1]
   } else if (parts[0] === "apex" && isFlexMode && parts[1] !== "*") {
     return parts[1]
   }
 
-  throw new Error("Unknown directory structur (getSchemaFromFile) first part is not 'db != '" + parts[0]);
+  throw new Error(`Unknown directory structur (getSchemaFromFile) first part is not '${ConfigurationManager.getDBFolderName()} != ${parts[0]}`);
 }
 
 export function getObjectTypePathFromFile(filePath:string):string {
   const parts:string[] = getRelativePartsFromFile(filePath);
 
-  if (parts[0] === "db") {
+  if (parts[0] === ConfigurationManager.getDBFolderName()) {
     parts.shift();
     parts.shift();
     parts.pop();
@@ -237,18 +238,18 @@ export function getObjectTypePathFromFile(filePath:string):string {
     return parts.join('/');
   }
 
-  throw new Error("Unknown directory structur (getObjectTypeFromFile) first part is not 'db != '" + parts[0]);
+  throw new Error(`Unknown directory structur (getObjectTypePathFromFile) first part is not '${ConfigurationManager.getDBFolderName()} != ${parts[0]}`);
 
 }
 
 export function getObjectNameFromFile(filePath:string):string {
   const parts:string[] = getRelativePartsFromFile(filePath);
 
-  if (parts[0] === "db") {
+  if (parts[0] === ConfigurationManager.getDBFolderName()) {
     return path.basename(filePath);
   }
-  LoggingService.logError("Unknown directory structur (getObjectNameFromFile) first part is not 'db != '" + parts[0]);
-  throw new Error("Unknown directory structur (getObjectNameFromFile) first part is not 'db != '" + parts[0]);
+  LoggingService.logError(`Unknown directory structur (getObjectNameFromFile) first part is not '${ConfigurationManager.getDBFolderName()} != ${parts[0]}`);
+  throw new Error(`Unknown directory structur (getObjectNameFromFile) first part is not '${ConfigurationManager.getDBFolderName()} != ${parts[0]}`);
 
 }
 

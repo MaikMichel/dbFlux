@@ -4,6 +4,7 @@ import { CancellationToken, commands, DataTransfer, DataTransferItem, DocumentDr
 import { chooseSnippetWizard, getAvailableSnippetKeys, getSnippedBody } from '../wizards/ChooseSnippetWizzard';
 import { LoggingService } from '../helper/LoggingService';
 import { showInformationProgress } from '../helper/utilities';
+import { ConfigurationManager } from '../helper/ConfigurationManager';
 
 
 const uriListMime = 'text/uri-list';
@@ -133,7 +134,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
           LoggingService.logInfo(`Loading last added TableFiles`);
           // which is stored by default in addTable itself
           oldFiles.forEach((file:any) => {
-            const tableFile = path.join(workspace.workspaceFolders![0].uri.fsPath, 'db', file);
+            const tableFile = path.join(workspace.workspaceFolders![0].uri.fsPath, ConfigurationManager.getDBFolderName(), file);
             if (existsSync(tableFile)) {
               LoggingService.logDebug(`loading: ${file}`);
               this.addTable(file);
@@ -317,7 +318,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
         this.treeContext.workspaceState.update(workspaceStateKey, undefined);
 
         for (let tableItem of this.treedata) {
-          const tableFile = path.join(workspace.workspaceFolders[0].uri.fsPath, 'db', ""+tableItem.description!);
+          const tableFile = path.join(workspace.workspaceFolders[0].uri.fsPath, ConfigurationManager.getDBFolderName(), ""+tableItem.description!);
 
           if (existsSync(tableFile)) {
             this.buildAndParsChildColumns(tableFile, tableItem);
@@ -340,7 +341,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
       if (tmpItem) {
         showInformationProgress(`${tableItem.label} allready added to Structure-Viewer`);
       } else if (workspace.workspaceFolders){
-        const tableFile = path.join(workspace.workspaceFolders[0].uri.fsPath, 'db', fileName);
+        const tableFile = path.join(workspace.workspaceFolders[0].uri.fsPath, ConfigurationManager.getDBFolderName(), fileName);
 
         if (existsSync(tableFile)) {
           this.buildAndParsChildColumns(tableFile, tableItem);

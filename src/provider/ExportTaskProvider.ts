@@ -7,6 +7,7 @@ import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractB
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
+import { LoggingService } from "../helper/LoggingService";
 
 const which = require('which');
 
@@ -142,8 +143,6 @@ export class ExportTaskPluginProvider extends AbstractBashTaskProvider implement
   }
 
   createExpTask(definition: ExportTaskDefinition): Task {
-    console.log('definition', definition);
-
     const plugFolder = ExportTaskStore.getInstance().expPlugin!;
     const pathItems = plugFolder?.split('/');
     const plugAppID = pathItems[pathItems?.length-2];
@@ -170,7 +169,6 @@ export class ExportTaskPluginProvider extends AbstractBashTaskProvider implement
     );
     _task.presentationOptions.echo = false;
 
-    console.log('_task', _task);
     return _task;
   }
 
@@ -201,7 +199,7 @@ export function registerExportAPEXCommand(projectInfos: IProjectInfos, context: 
     if (projectInfos.isValid) {
 
       which('sql').then(async () => {
-        const showWildCard = (!projectInfos.isFlexMode || (projectInfos.dbPasses && projectInfos.dbPasses.length > 0))
+        const showWildCard = (!projectInfos.isFlexMode || !(projectInfos.dbPasses && projectInfos.dbPasses.length > 0))
         ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, showWildCard);
 
         if (ExportTaskStore.getInstance().expID !== undefined) {
@@ -243,7 +241,7 @@ export function registerExportAPEXPluginCommand(projectInfos: IProjectInfos, con
             window.setStatusBarMessage('dbFlux: No Plugin found or selected', 2000);
           }
         } catch (err) {
-          console.log("err", err);
+          LoggingService.logError(err+"", err)
           window.showErrorMessage(err+"");
         }
       }).catch(() => {

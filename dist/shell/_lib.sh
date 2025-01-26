@@ -31,7 +31,7 @@ CLR_LVIOLETE="${ESC}${BSE_LVIOLETE}"        # Green
 lsourced="TRUE"
 
 function initialize_session() {
-  # TODO: Make that as Option, so that user of dbFLux can user there own
+  # TODO: Make that as Option, so that user of dbFlux can user there own
   # set default params
   export NLS_LANG="GERMAN_GERMANY.AL32UTF8"
   export NLS_DATE_FORMAT="DD.MM.YYYY HH24:MI:SS"

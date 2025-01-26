@@ -7,6 +7,7 @@ import { getSchemaFromFile, getWorkspaceRootPath } from "../helper/utilities";
 import { PathLike, readdirSync } from "fs";
 import * as path from "path";
 import { setEnvValue } from "../wizards/InitializeProjectWizard";
+import { ConfigurationManager } from "../helper/ConfigurationManager";
 
 export function registerSetSchemaPassword(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.setSchemaPassword", async () => {
@@ -16,7 +17,7 @@ export function registerSetSchemaPassword(projectInfos: IProjectInfos, context: 
       // Show all schemas and select one
       if (workspace.workspaceFolders) {
         const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-        const sourceDB = path.join(wsRoot, "db");
+        const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
 
         const getSchemaFolders = (source: PathLike) => readdirSync(source, { withFileTypes: true })
               .filter((dirent) => {
@@ -24,9 +25,11 @@ export function registerSetSchemaPassword(projectInfos: IProjectInfos, context: 
               })
               .map((dirent) => dirent.name);
 
-        const schema = await window.showQuickPick(getSchemaFolders(sourceDB), {placeHolder: "dbFlux: Select Schema"});
+        const schemaFolder = await window.showQuickPick(getSchemaFolders(sourceDB), {placeHolder: "dbFlux: Select Schema"});
 
-        if (schema) {
+        if (schemaFolder) {
+          // remove leading numbers with underscore
+          const schema = schemaFolder.replace(/^[\d_]+/, '');
 
           // then enter password
           const schema_pwd = await window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${schema}@${projectInfos.dbTns} - Leave blank to unset password `, placeHolder: "Password", password: true });
@@ -48,7 +51,7 @@ export function registerSetSchemaPassword(projectInfos: IProjectInfos, context: 
             }
           }
 
-        } // schema
+        } // schemaFolder
 
       }
     }
