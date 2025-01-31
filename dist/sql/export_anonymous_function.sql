@@ -470,7 +470,7 @@
     -- remove double quotes
     l_script := replace(l_script, '"'||upper(p_source_name)||'"', lower(p_source_name));
 
-    if p_grant_with_object and p_source_type not in ('PACKAGE_BODY', 'TYPE_BODY') then
+    if p_grant_with_object and p_source_type not in ('PACKAGE_BODY', 'TYPE_BODY', 'TRIGGER') then
       l_script := concat(l_script, chr(10) || get_grants(p_source_name));
     end if;
 
@@ -808,8 +808,9 @@
               || '                       from user_tab_privs_made'||chr(10)
               || '                      where ('''||l_grant_with_object||''' = ''N'' or type not in (''VIEW'', ''PACKAGE''))'||chr(10)
               || '                        and table_name != user -- not INHERIT PRIVILEGES'||chr(10)
-              || '                     )'||chr(10)
+              || '                      )'||chr(10)
               || '  loop'||chr(10)
+              || '    dbms_output.put_line(''revoke '' || revoke_rec.privilege || '' on '' || revoke_rec.table_name || '' from '' || revoke_rec.grantee);'||chr(10)
               || '    execute immediate ''revoke '' || revoke_rec.privilege || '' on '' || revoke_rec.table_name || '' from '' || revoke_rec.grantee;'||chr(10)
               || '  end loop;'||chr(10)
               || 'end;'||chr(10)
