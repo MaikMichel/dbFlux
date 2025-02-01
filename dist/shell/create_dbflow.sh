@@ -11,44 +11,44 @@ initialize_session;
 
 ######################################################
 
-echo -e "${CYAN}Generating project with following options${NC}"
-  echo -e "  Project:                          ${BWHITE}${wiz_project_name}${NC}"
-  echo -e "  Mode:                             ${BWHITE}${wiz_project_mode}${NC}"
-  echo -e "  Build Branch:                     ${BWHITE}${wiz_build_branch}${NC}"
-  echo -e "  Create Changelos:                 ${BWHITE}${wiz_create_changelogs}${NC}"
-  echo -e "  Schema Changelog proccessed:      ${BWHITE}${wiz_chl_schema}${NC}"
-  echo -e "  Connection:                       ${BWHITE}${wiz_db_tns}${NC}"
-  echo -e "  Admin User:                       ${BWHITE}${wiz_db_admin_user}${NC}"
-  echo -e "  Deployment User:                  ${BWHITE}${wiz_db_app_user}${NC}"
-  echo -e "  Location depot:                   ${BWHITE}${wiz_depot_path}${NC}"
-  echo -e "  Location logs:                    ${BWHITE}${wiz_logpath}${NC}"
-  echo -e "  Branch is mapped to Stage:        ${BWHITE}${wiz_stage}${NC}"
-  echo -e "  SQl commandline:                  ${BWHITE}${wiz_sqlcli}${NC}"
-  echo -e "  Install default tools:            ${BWHITE}${wiz_with_tools}${NC}"
-  echo -e "  Configure with default apps:      ${BWHITE}${wiz_apex_ids}${NC}"
-  echo -e "  Configure with default modules:   ${BWHITE}${wiz_rest_modules}${NC}"
-  echo -e "  Just install environment onyl:    ${BWHITE}${env_only}${NC}"
+printf "${CYAN}Generating project with following options${NC}\n"
+printf "  Project:                          ${BWHITE}${wiz_project_name}${NC}\n"
+printf "  Mode:                             ${BWHITE}${wiz_project_mode}${NC}\n"
+printf "  Build Branch:                     ${BWHITE}${wiz_build_branch}${NC}\n"
+printf "  Create Changelos:                 ${BWHITE}${wiz_create_changelogs}${NC}\n"
+printf "  Schema Changelog proccessed:      ${BWHITE}${wiz_chl_schema}${NC}\n"
+printf "  Connection:                       ${BWHITE}${wiz_db_tns}${NC}\n"
+printf "  Admin User:                       ${BWHITE}${wiz_db_admin_user}${NC}\n"
+printf "  Deployment User:                  ${BWHITE}${wiz_db_app_user}${NC}\n"
+printf "  Location depot:                   ${BWHITE}${wiz_depot_path}${NC}\n"
+printf "  Location logs:                    ${BWHITE}${wiz_logpath}${NC}\n"
+printf "  Branch is mapped to Stage:        ${BWHITE}${wiz_stage}${NC}\n"
+printf "  SQl commandline:                  ${BWHITE}${wiz_sqlcli}${NC}\n"
+printf "  Install default tools:            ${BWHITE}${wiz_with_tools}${NC}\n"
+printf "  Configure with default apps:      ${BWHITE}${wiz_apex_ids}${NC}\n"
+printf "  Configure with default modules:   ${BWHITE}${wiz_rest_modules}${NC}\n"
+printf "  Just install environment onyl:    ${BWHITE}${env_only}${NC}\n"
 
 
 
 # check if working dir is a git dir otherwise init
 if [[ ! -d ".git" ]]; then
-  echo -e "${CLR_LBLUE}Initializing git${NC}"
+  printf "${CLR_LBLUE}Initializing git${NC}\n"
   git init
 fi
 
 if [[ ! -d ".dbFlow" ]]; then
-  echo -e "${CLR_LBLUE}clone dbFlow as submodule${NC}"
+  printf "${CLR_LBLUE}clone dbFlow as submodule${NC}\n"
   git submodule add --force https://github.com/MaikMichel/dbFlow.git .dbFlow
 else
-  echo -e "${CLR_LBLUE}pulling changes from dbFLow submodule${NC}"
+  printf "${CLR_LBLUE}pulling changes from dbFLow submodule${NC}\n"
   cd .dbFlow
   git pull
   cd ..
 fi
 
 
-echo -e "${CLR_GREEN}dbFlow initialized${NC}"
-echo -e "${CLR_DGRAY}Documentation can be found here: ${CLR_LBLUE}https://maikmichel.github.io/dbFlow/${NC}"
+printf "${CLR_GREEN}dbFlow initialized${NC}\n"
+printf "${CLR_DGRAY}Documentation can be found here: ${CLR_LBLUE}https://maikmichel.github.io/dbFlow/${NC}\n"
 
 .dbFLow/setup.sh -g "${wiz_project_name}" -w

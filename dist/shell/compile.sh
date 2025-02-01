@@ -23,7 +23,7 @@ for index in "${!CONN_ARRY[@]}"; do
   l_conn=${CONN_ARRY[$index]}
   l_pass=${CONN_PASSES[$index]}
 
-  echo -e "${CLR_LBLUE}Compiling Connection ${l_conn}@${DBFLOW_DBTNS} ${NC}"
+  printf "${CLR_LBLUE}Compiling Connection ${l_conn}@${DBFLOW_DBTNS} ${NC}\n"
   ${DBFLOW_SQLCLI} -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} << EOF
 
 set scan off

@@ -13,11 +13,11 @@ initialize_session;
 
 MDATE=`date +%d.%m.%y_%H:%M:%S,%5N`
 
-echo -e "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}AppID:${NC}         ${WHITE}${DBFLOW_EXP_APP_ID}${NC}"
-echo -e "${CLR_LBLUE}File:${NC}          ${WHITE}${DBFLOW_EXP_FNAME}${NC}"
-echo -e "${CLR_LBLUE}Extension:${NC}     ${WHITE}${DBFLOW_EXP_FEXT}${NC}"
-echo -e "${CLR_LBLUE}OS-Time:${NC}       ${WHITE}${MDATE}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}AppID:${NC}         ${WHITE}${DBFLOW_EXP_APP_ID}${NC}\n"
+printf "${CLR_LBLUE}File:${NC}          ${WHITE}${DBFLOW_EXP_FNAME}${NC}\n"
+printf "${CLR_LBLUE}Extension:${NC}     ${WHITE}${DBFLOW_EXP_FEXT}${NC}\n"
+printf "${CLR_LBLUE}OS-Time:${NC}       ${WHITE}${MDATE}${NC}\n"
 
 
 ${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF
@@ -89,4 +89,4 @@ ${DBFLOW_SQLCLI} -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS}
 
 EOF
 
- echo -e "${CLR_ORANGE} >> you should now remove this file itself${NC}"
+ printf "${CLR_ORANGE} >> you should now remove this file itself${NC}\n"

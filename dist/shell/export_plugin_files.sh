@@ -11,14 +11,14 @@ initialize_session;
 
 ######################################################
 
-echo -e "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}AppID:${NC}         ${WHITE}${DBFLOW_EXP_APP_ID}${NC}"
-echo -e "${CLR_LBLUE}PluginID:${NC}      ${WHITE}${DBFLOW_EXP_PLG_ID}${NC}"
-echo -e "${CLR_LBLUE}File:${NC}          ${WHITE}${DBFLOW_EXP_FNAME}${NC}"
-echo -e "${CLR_LBLUE}Target:${NC}        ${WHITE}${DBFLOW_EXP_PATH}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}AppID:${NC}         ${WHITE}${DBFLOW_EXP_APP_ID}${NC}\n"
+printf "${CLR_LBLUE}PluginID:${NC}      ${WHITE}${DBFLOW_EXP_PLG_ID}${NC}\n"
+printf "${CLR_LBLUE}File:${NC}          ${WHITE}${DBFLOW_EXP_FNAME}${NC}\n"
+printf "${CLR_LBLUE}Target:${NC}        ${WHITE}${DBFLOW_EXP_PATH}${NC}\n"
 echo
-echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Files from ${DBFLOW_EXP_APP_ID}/${DBFLOW_EXP_PLG_ID} to plugin/${DBFLOW_EXP_APP_ID}/${DBFLOW_EXP_PLG_ID}/src ${NC}"
-echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}"
+printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Files from ${DBFLOW_EXP_APP_ID}/${DBFLOW_EXP_PLG_ID} to plugin/${DBFLOW_EXP_APP_ID}/${DBFLOW_EXP_PLG_ID}/src ${NC}\n"
+printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}\n"
 
 
 ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/export_app_static_function.sql" )
@@ -97,14 +97,14 @@ fi
  if [[ -f "${DBFLOW_EXP_PATH}.zip.base64" ]]; then
    #if grep -q "ORA-20001:" "${DBFLOW_EXP_PATH}.zip.base64"; then
    if grep -q "ORA-.*:" "${DBFLOW_EXP_PATH}.zip.base64"; then
-     echo -e "${CLR_REDBGR}Error detected on export${NC}"
+     printf "${CLR_REDBGR}Error detected on export${NC}\n"
      tput setaf 9
      cat "${DBFLOW_EXP_PATH}.zip.base64"
      tput setaf default
 
      rm "${DBFLOW_EXP_PATH}.zip.base64"
    else
-     echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported static file ... ${NC}"
+     printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported static file ... ${NC}\n"
      base64 -d -i "${DBFLOW_EXP_PATH}.zip.base64" > "${DBFLOW_EXP_PATH}.zip"
 
      # remove base64 garbage
@@ -113,10 +113,10 @@ fi
 
    # unzip file content
    if [[ -f "${DBFLOW_EXP_PATH}.zip" ]]; then
-     echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Unzipping exported schema file ... ${NC}"
+     printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Unzipping exported schema file ... ${NC}\n"
      unzip -o "${DBFLOW_EXP_PATH}.zip" -d "${DBFLOW_EXP_PATH}"
      rm "${DBFLOW_EXP_PATH}.zip"
-     echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
+     printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}\n"
    fi
  fi
 

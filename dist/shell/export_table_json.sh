@@ -11,13 +11,13 @@ initialize_session;
 
 ######################################################
 
-echo -e "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}Table:${NC}         ${WHITE}${DBFLOW_EXP_TABLE}${NC}"
-echo -e "${CLR_LBLUE}Path:${NC}          ${WHITE}${DBFLOW_EXP_TODIR}${NC}"
-# echo -e "${CLR_LBLUE}Target:${NC}        ${WHITE}${DBFLOW_EXP_PATH}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}Table:${NC}         ${WHITE}${DBFLOW_EXP_TABLE}${NC}\n"
+printf "${CLR_LBLUE}Path:${NC}          ${WHITE}${DBFLOW_EXP_TODIR}${NC}\n"
+# printf "${CLR_LBLUE}Target:${NC}        ${WHITE}${DBFLOW_EXP_PATH}${NC}\n"
 echo
-# echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Files from ${DBFLOW_EXP_APP_ID} to static/${DBFLOW_EXP_APP_ID}/src ${NC}"
-echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}"
+# printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Files from ${DBFLOW_EXP_APP_ID} to static/${DBFLOW_EXP_APP_ID}/src ${NC}\n"
+printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}\n"
 
 
 ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/json_query/tables.tmpl.sql" )
@@ -92,4 +92,4 @@ else
 fi
 
 
-echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}"
+printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}\n"

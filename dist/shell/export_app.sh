@@ -33,7 +33,7 @@ function export_app() {
       # what ist the actual ID
       DBFLOW_DIR_APPID="${d/f}"
 
-      echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Application ${DBFLOW_DIR_APPID} to ${APP_PATH} ${NC}"
+      printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Application ${DBFLOW_DIR_APPID} to ${APP_PATH} ${NC}\n"
 
       # remove folder when exists
       if [[ -d "f${DBFLOW_DIR_APPID}" ]]; then
@@ -46,7 +46,7 @@ function export_app() {
         CONN_DBFLOW_DBUSER=${DBFLOW_DBUSER/\*/$appschema}
       fi
 
-      echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> apex export -applicationid ${DBFLOW_DIR_APPID} -split ${NC}${CLR_ORANGE}${DBFLOW_EXPORT_OPTION}${NC}"
+      printf "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> apex export -applicationid ${DBFLOW_DIR_APPID} -split ${NC}${CLR_ORANGE}${DBFLOW_EXPORT_OPTION}${NC}\n"
       # the export itself
       sql -s -l ${CONN_DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF
         WHENEVER SQLERROR EXIT SQL.SQLCODE
@@ -54,7 +54,7 @@ function export_app() {
 EOF
 
       if [[ $? -ne 0 ]]; then
-        echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of Application ${DBFLOW_DIR_APPID}${NC}"
+        printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of Application ${DBFLOW_DIR_APPID}${NC}\n"
 
         # restore
         if [[ -d "f${DBFLOW_DIR_APPID}_bck" ]]; then
@@ -63,7 +63,7 @@ EOF
 
         exit 0
       elif [[ -d "f${DBFLOW_DIR_APPID}_bck" ]] && [[ ! -d "f${DBFLOW_DIR_APPID}" ]]; then
-        echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of Application ${DBFLOW_DIR_APPID}${NC}"
+        printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of Application ${DBFLOW_DIR_APPID}${NC}\n"
 
         # restore
         if [[ -d f${DBFLOW_DIR_APPID}_bck ]]; then
@@ -78,7 +78,7 @@ EOF
         # remove backup
         [[ -d "f${DBFLOW_DIR_APPID}_bck" ]] && rm -rf "f${DBFLOW_DIR_APPID}_bck"
 
-        echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done exporting Application ${DBFLOW_DIR_APPID} ${NC}"
+        printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done exporting Application ${DBFLOW_DIR_APPID} ${NC}\n"
       fi
 
       # remove sqlcl history.log
@@ -88,16 +88,16 @@ EOF
     done
     cd "${basepath}"
   else
-    echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> application folder ${DBFLOW_APPFOLDER} does not exist ${NC}"
+    printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> application folder ${DBFLOW_APPFOLDER} does not exist ${NC}\n"
   fi
 }
 
 
-echo -e "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
-echo -e "${CLR_LBLUE}AppID:${NC}       ${WHITE}${DBFLOW_APPID}${NC}"
-echo -e "${CLR_LBLUE}Folder:${NC}      ${WHITE}${DBFLOW_APPFOLDER}${NC}"
-echo -e "${CLR_LBLUE}ProjectMode:${NC} ${WHITE}${DBFLOW_MODE}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}\n"
+printf "${CLR_LBLUE}AppID:${NC}       ${WHITE}${DBFLOW_APPID}${NC}\n"
+printf "${CLR_LBLUE}Folder:${NC}      ${WHITE}${DBFLOW_APPFOLDER}${NC}\n"
+printf "${CLR_LBLUE}ProjectMode:${NC} ${WHITE}${DBFLOW_MODE}${NC}\n"
 echo
 
 if [[ "${DBFLOW_APPID}" == "*" ]]; then

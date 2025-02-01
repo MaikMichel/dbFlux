@@ -28,19 +28,19 @@ extension="${basefl##*.}"
 base_package=${basefl}
 base_package=${base_package/\.$extension/}
 
-echo -e "${CLR_LBLUE}Connection:${NC}   ${WHITE}${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}Schemas:${NC}      ${WHITE}${CONN_ARRY[@]}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}   ${WHITE}${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}Schemas:${NC}      ${WHITE}${CONN_ARRY[@]}${NC}\n"
 
 if [[ "${basefl}" != "" ]]; then
-echo -e "${CLR_LBLUE}File:${NC}         ${WHITE}${basefl}${NC}"
+printf "${CLR_LBLUE}File:${NC}         ${WHITE}${basefl}${NC}\n"
 fi
 if [[ "${base_package}" != "" ]]; then
-  echo -e "${CLR_LBLUE}Package:${NC}      ${WHITE}${base_package}${DBFLOW_METHOD2TEST}${NC}"
+  printf "${CLR_LBLUE}Package:${NC}      ${WHITE}${base_package}${DBFLOW_METHOD2TEST}${NC}\n"
 fi
 if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
-  echo -e "${CLR_LBLUE}Coverage:${NC}     ${WHITE}${DBFLOW_TARGET2COVER//"|"/"\n              "}${NC}"
+  printf "${CLR_LBLUE}Coverage:${NC}     ${WHITE}${DBFLOW_TARGET2COVER//"|"/"\n              "}${NC}\n"
 fi
-echo -e "${CLR_LBLUE}Format:${NC}       ${WHITE}${DBFLOW_TESTOUTPUT}${NC}"
+printf "${CLR_LBLUE}Format:${NC}       ${WHITE}${DBFLOW_TESTOUTPUT}${NC}\n"
 echo
 
 ###
@@ -60,7 +60,7 @@ if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
   for index in "${!CONN_ARRY[@]}"; do
     l_conn=${CONN_ARRY[$index]}
     l_pass=${CONN_PASSES[$index]}
-    echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${l_conn}${NC}"
+    printf "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${l_conn}${NC}\n"
     # prepare output file
     log_file="coverage.base64"
 
@@ -147,13 +147,13 @@ EOF
 
     if [[ -f "${full_log_file}" ]]; then
       if grep -q "ORA-.*:" "${full_log_file}"; then
-        echo -e "${CLR_REDBGR}Error detected on export${NC}"
+        printf "${CLR_REDBGR}Error detected on export${NC}\n"
         tput setaf 9
         cat "${full_log_file}"
         tput setaf default
       else
         base64 -d -i "${full_log_file}" > "${full_log_file/base64/html}"
-        echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}"
+        printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}\n"
       fi
     fi
 
@@ -185,7 +185,7 @@ elif [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
     l_conn=${CONN_ARRY[$index]}
     l_pass=${CONN_PASSES[$index]}
 
-    echo -e "${CLR_LBLUE}Executing tests on Connection ${l_conn}@${DBFLOW_DBTNS} ${NC}" | tee -a ${full_log_file}
+    printf "${CLR_LBLUE}Executing tests on Connection ${l_conn}@${DBFLOW_DBTNS} ${NC}\n" | tee -a ${full_log_file}
 
     # prepare output file
     log_file="console.log"
@@ -227,7 +227,7 @@ else
     l_conn=${CONN_ARRY[$index]}
     l_pass=${CONN_PASSES[$index]}
 
-    echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${l_conn}${NC}"
+    printf "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${l_conn}${NC}\n"
     # prepare output file
     log_file="junit.base64"
 
@@ -313,13 +313,13 @@ EOF
 
     if [[ -f "${full_log_file}" ]]; then
       if grep -q "ORA-.*:" "${full_log_file}"; then
-        echo -e "${CLR_REDBGR}Error detected on export${NC}"
+        printf "${CLR_REDBGR}Error detected on export${NC}\n"
         tput setaf 9
         cat "${full_log_file}"
         tput setaf default
       else
         base64 -d -i "${full_log_file}" > "${full_log_file/base64/xml}"
-        echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}"
+        printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}\n"
       fi
     fi
 

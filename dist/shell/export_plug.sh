@@ -68,7 +68,7 @@ function export_plug() {
       local target_basefile=$(toLowerCase ${PLUG_ID//./_}).sql
       local target_file=${target_path}/${target_basefile}
 
-      echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Pluging: ${APP_ID}/${PLUG_ID} to ${target_path} ${NC}"
+      printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Pluging: ${APP_ID}/${PLUG_ID} to ${target_path} ${NC}\n"
 
       # remove target_file when exists
       if [[ -f "${target_basefile}" ]]; then
@@ -81,14 +81,14 @@ function export_plug() {
         CONN_DBFLOW_DBUSER=${DBFLOW_DBUSER/\*/$appschema}
       fi
 
-      echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> get PLUGIN_ID from ${target_path} ${NC}"
+      printf "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> get PLUGIN_ID from ${target_path} ${NC}\n"
 
       # ask the id
       plugin_id=$(get_db_value "select to_char(plugin_id) from apex_appl_plugins where application_id = ''${DBFLOW_DIR_APPID}'' and name = ''${PLUG_ID}''" "NDF")
       plugin_id=$(tr -d '\n[:space:]' <<< "$plugin_id")
 
-      echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> PLUGIN_ID found ${plugin_id} ${NC}"
-      echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting with: apex exco -applicationid ${DBFLOW_DIR_APPID} -expcomponents PLUGIN:${plugin_id} ${NC}"
+      printf "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> PLUGIN_ID found ${plugin_id} ${NC}\n"
+      printf "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting with: apex exco -applicationid ${DBFLOW_DIR_APPID} -expcomponents PLUGIN:${plugin_id} ${NC}\n"
 
       # the export itself
       sql -s -l ${CONN_DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF
@@ -97,7 +97,7 @@ function export_plug() {
 EOF
 
       if [[ $? -ne 0 ]]; then
-        echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of Plugin ${target_path}${NC}"
+        printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of Plugin ${target_path}${NC}\n"
 
         # restore
         if [[ -f "${target_basefile}_bck" ]]; then
@@ -106,7 +106,7 @@ EOF
 
         exit 0
       elif [[ -f "${target_basefile}_bck" ]] && [[ ! -f "f${DBFLOW_DIR_APPID}.sql" ]]; then
-        echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of Plugin ${target_path}${NC}"
+        printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of Plugin ${target_path}${NC}\n"
 
         # restore
         if [[ -f ${target_basefile}_bck ]]; then
@@ -121,7 +121,7 @@ EOF
         # remove backup
         [[ -f "${target_basefile}_bck" ]] && rm "${target_basefile}_bck"
 
-        echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done exporting Plugin ${target_path} ${NC}"
+        printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done exporting Plugin ${target_path} ${NC}\n"
       fi
 
       # remove sqlcl history.log
@@ -131,22 +131,22 @@ EOF
     done
     cd "${basepath}"
   else
-    echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> application folder ${DBFLOW_APPFOLDER} does not exist ${NC}"
+    printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> application folder ${DBFLOW_APPFOLDER} does not exist ${NC}\n"
   fi
 }
 
 
-echo -e "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
-echo -e "${CLR_LBLUE}AppID:${NC}       ${WHITE}${DBFLOW_APPID}${NC}"
-echo -e "${CLR_LBLUE}Folder:${NC}      ${WHITE}${DBFLOW_PLGFOLDER}${NC}"
-echo -e "${CLR_LBLUE}Plugin:${NC}      ${WHITE}${DBFLOW_PLGID}${NC}"
-echo -e "${CLR_LBLUE}ProjectMode:${NC} ${WHITE}${DBFLOW_MODE}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}\n"
+printf "${CLR_LBLUE}AppID:${NC}       ${WHITE}${DBFLOW_APPID}${NC}\n"
+printf "${CLR_LBLUE}Folder:${NC}      ${WHITE}${DBFLOW_PLGFOLDER}${NC}\n"
+printf "${CLR_LBLUE}Plugin:${NC}      ${WHITE}${DBFLOW_PLGID}${NC}\n"
+printf "${CLR_LBLUE}ProjectMode:${NC} ${WHITE}${DBFLOW_MODE}${NC}\n"
 echo
 
 
 if [[ "${DBFLOW_APPID}" == "*" ]]; then
-  echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> multiple exports not implemented yet ${NC}"
+  printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> multiple exports not implemented yet ${NC}\n"
   # Array der Folders aufbauen
   # depth=0
   # if [[ ${DBFLOW_MODE} == "FLEX" ]]; then

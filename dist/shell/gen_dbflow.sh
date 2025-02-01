@@ -13,20 +13,20 @@ initialize_session;
 
 # check if working dir is a git dir otherwise init
 if [[ ! -d ".git" ]]; then
-  echo -e "${CLR_LBLUE}Initializing git${NC}"
+  printf "${CLR_LBLUE}Initializing git${NC}\n"
   git init
 fi
 
 if [[ ! -d ".dbFlow" ]]; then
-  echo -e "${CLR_LBLUE}clone dbFlow as submodule${NC}"
+  printf "${CLR_LBLUE}clone dbFlow as submodule${NC}\n"
   git submodule add --force https://github.com/MaikMichel/dbFlow.git .dbFlow
 else
-  echo -e "${CLR_LBLUE}pulling changes from dbFLow submodule${NC}"
+  printf "${CLR_LBLUE}pulling changes from dbFLow submodule${NC}\n"
   cd .dbFlow
   git pull
   cd ..
 fi
 
 
-echo -e "${CLR_GREEN}dbFlow initialized${NC}"
-echo -e "${CLR_DGRAY}Documentation can be found here: ${CLR_LBLUE}https://maikmichel.github.io/dbFlow/${NC}"
+printf "${CLR_GREEN}dbFlow initialized${NC}\n"
+printf "${CLR_DGRAY}Documentation can be found here: ${CLR_LBLUE}https://maikmichel.github.io/dbFlow/${NC}\n"
