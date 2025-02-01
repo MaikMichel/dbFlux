@@ -30,7 +30,7 @@ if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
 
   ## Or just an object
   if [[ -n ${DBFLOW_EXP_FOLDER} ]]; then
-    PREPSTMT=":contents :=  to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}', p_grant_with_object => ${DBFLOW_EXP_GRANTS_W_OBJ})));"
+    PREPSTMT=":contents :=  to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}', p_grant_with_object => ${DBFLOW_EXP_GRANTS_W_OBJ}));"
   fi
 
   sqlplus -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF > db/"${DBFLOW_SCHEMA}".zip.base64

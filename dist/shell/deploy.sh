@@ -309,7 +309,7 @@ EOF
     IFS=',' read -r -a files <<< "${DBFLOW_FILE_RUNS}"
 
     for i in "${!connection[@]}"; do
-      echo "Conn $i: ${connection[$i]}}"
+      # echo "Conn $i: ${connection[$i]}}"
       ${DBFLOW_SQLCLI} -s -l ${connection[$i]} << EOF
       $(
         for element in "${settings[@]}"
