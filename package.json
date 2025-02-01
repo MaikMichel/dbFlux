@@ -481,6 +481,12 @@
 				"enablement": "inDbFlowProject"
 			},
 			{
+				"command": "dbFlux.addCustomTriggerRun",
+				"title": "Add Custom Trigger Run",
+				"category": "dbFlux",
+				"enablement": "inDbFlowProject"
+			},
+			{
 				"command": "dbFlux.executeTests",
 				"title": "Execute utPLSQL tests",
 				"category": "dbFlux",
@@ -950,6 +956,7 @@
 		"dotenv": "^8.2.0",
 		"fs-extra": "^10.0.0",
 		"handlebars": "^4.7.7",
+		"jsonc-parser": "^3.3.1",
 		"junit2json": "^3.1.1",
 		"node-fetch": "^2.6.7",
 		"terser": "^5.6.1",

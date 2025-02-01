@@ -1,15 +1,16 @@
 import { commands, env, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, window, workspace } from 'vscode';
 
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
+import * as jsonc from 'jsonc-parser';
 import * as path from "path";
 import { ConfigurationManager } from '../helper/ConfigurationManager';
+import { LoggingService } from '../helper/LoggingService';
 import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim, showInformationProgress } from '../helper/utilities';
 import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { getAvailableObjectTypes } from '../wizards/CreateObjectWizard';
 import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
 import { MultiStepInput } from '../wizards/InputFlowAction';
 import { getDBUserFromPath, getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
-import { LoggingService } from '../helper/LoggingService';
 
 export async function addAPEXApp(context: ExtensionContext, folder:string) {
   interface State {
@@ -167,6 +168,57 @@ export async function addHookFile(context: ExtensionContext) {
   }
 }
 
+export async function addCustomTriggerRun(contexr:ExtensionContext) {
+  const workspaceFolder = workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+      window.showErrorMessage("dbFlux: No workspace opened");
+      return;
+  }
+
+  // path to settings.json
+  const settingsUri = workspaceFolder.uri.with({
+    path: workspaceFolder.uri.path + "/.vscode/settings.json"
+  });
+
+  try {
+    // Prüfen, ob settings.json existiert, ansonsten anlegen
+    let settingsDoc;
+    try {
+        settingsDoc = await workspace.fs.readFile(settingsUri);
+    } catch (err) {
+        settingsDoc = Buffer.from("{}"); // Falls nicht vorhanden, mit leerem JSON starten
+    }
+
+    // JSON-Inhalt parsen
+    let settings = jsonc.parse(settingsDoc.toString());
+
+    // Falls dbFlux.customTriggerRuns nicht existiert, initialisieren
+    if (!settings["dbFlux.customTriggerRuns"]) {
+        settings["dbFlux.customTriggerRuns"] = [];
+    }
+
+    // Neues Element, das hinzugefügt werden soll
+    const newTrigger = {
+        "triggeringExpression": "db\\/single\\/(tables|tables/tables_ddl)\\/.+\\.sql",
+        "runFile": "db/single/.hooks/post/010_demo.tables.sql",
+        "runFileParameters": ["dev", "dev", "${fileBasename}"]
+    };
+
+    // Neuen Trigger hinzufügen
+    settings["dbFlux.customTriggerRuns"].push(newTrigger);
+
+    // Änderungen in settings.json speichern
+    const edits = jsonc.modify(settingsDoc.toString(), ["dbFlux.customTriggerRuns"], settings["dbFlux.customTriggerRuns"], { formattingOptions: { insertSpaces: true, tabSize: 4 } });
+    const updatedSettings = jsonc.applyEdits(settingsDoc.toString(), edits);
+
+    await workspace.fs.writeFile(settingsUri, Buffer.from(updatedSettings));
+
+    window.showInformationMessage("dbFlux: New CustomTriggerRun added!\n\nYou have to edit the path and filename to make this work by your own.");
+
+  } catch (error) {
+      window.showErrorMessage("dbFlux: Error when editing settings.json: " + error);
+  }
+}
 
 async function getAvailableFolders(folderserach: string): Promise<QuickPickItem[]> {
   if (workspace.workspaceFolders !== undefined) {
@@ -716,6 +768,13 @@ export function registerAddHookFileCommand(context: ExtensionContext) {
     addHookFile(context)
   });
 }
+
+export function registerAddCustomtriggerRunCommand(context: ExtensionContext) {
+  return commands.registerCommand("dbFlux.addCustomTriggerRun", async () => {
+    addCustomTriggerRun(context)
+  });
+}
+
 
 export function registerAddStaticApplicationFolderCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.addStaticFolder", async () => {

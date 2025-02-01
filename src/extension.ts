@@ -11,7 +11,7 @@ import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig, s
 import { LoggingService } from './helper/LoggingService';
 import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
-import { registerAddApplicationCommand, registerAddApplicationPluginCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerCopySelectionWithFilenameToClipBoard, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
+import { registerAddApplicationCommand, registerAddApplicationPluginCommand, registerAddCustomtriggerRunCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerCopySelectionWithFilenameToClipBoard, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
 import { revealItemWizard } from "./wizards/RevealItemWizard";
 import { registerExportDBObjectCommand, registerExportDBSchemaCommand } from "./provider/ExportDBSchemaProvider";
@@ -230,6 +230,9 @@ export async function activate(context: ExtensionContext) {
 
     // Add hook file
     context.subscriptions.push(registerAddHookFileCommand(context));
+
+    // Add Custom Trigger Run Definition
+    context.subscriptions.push(registerAddCustomtriggerRunCommand(context));
 
     // Add REST Modul
     context.subscriptions.push(registerAddRESTModuleCommand(projectInfos, context));
