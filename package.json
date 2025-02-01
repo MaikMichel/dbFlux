@@ -490,13 +490,13 @@
 				"command": "dbFlux.executeTestPackage",
 				"title": "Execute utPLSQL test with current Package",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*[/|\\\\]db[/|\\\\].*[/|\\\\]tests[/|\\\\]packages$/"
+				"enablement": "inDbFlowProject && isInTestDir"
 			},
 			{
 				"command": "dbFlux.executeTestPackageWithCodeCoverage",
 				"title": "Execute utPLSQL code coverage for current Package",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && resourceDirname =~ /^.*[/|\\\\]db[/|\\\\].*[/|\\\\]tests[/|\\\\]packages$/"
+				"enablement": "inDbFlowProject && isInTestDir"
 			},
 			{
 				"command": "dbFlux.resetPassword",

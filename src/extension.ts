@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, window, workspace } from "vscode";
+import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, tasks, TextEditor, window, workspace } from "vscode";
 
 import { basename, join } from "path";
 import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunSQLcli } from "./provider/CompileTaskProvider";
@@ -87,12 +87,40 @@ export async function activate(context: ExtensionContext) {
     LoggingService.logInfo(`Mode is ${dbFluxMode} and FlexMode is ${projectInfos.isFlexMode}`);
 
 
-    LoggingService.logDebug('Setting Context Infos');
+    LoggingService.logDebug('Setting static Context Infos');
     commands.executeCommand("setContext", "inDbFlowProject", true);
     commands.executeCommand("setContext", "dbLockEnabled", ConfigurationManager.isDBLockEnabled());
     commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
     commands.executeCommand("setContext", "isDBFluxMode", (dbFluxMode === "dbFlux"));
     commands.executeCommand("setContext", "isSingleMode", projectInfos.projectMode === "SINGLE");
+
+    const updateContext = (editor?: TextEditor) => {
+      LoggingService.logDebug('Setting dynamic Context Infos');
+      if (!editor || !editor.document) {
+          commands.executeCommand("setContext", "isInTestDir", false);
+          return;
+      }
+
+      const workspaceFolder = workspace.getWorkspaceFolder(editor.document.uri);
+      if (!workspaceFolder) {
+          commands.executeCommand("setContext", "isInTestDir", false);
+          return;
+      }
+
+      const relativePath = workspace.asRelativePath(editor.document.uri);
+      const regex = /^db\/[^/]+\/tests\/packages\//; // Path rule: db/*/tests/packages/
+
+      const isValidPath = regex.test(relativePath);
+      commands.executeCommand("setContext", "isInTestDir", isValidPath);
+    };
+
+    // check at start
+    updateContext(window.activeTextEditor);
+
+    // Listen to changes
+    context.subscriptions.push(
+        window.onDidChangeActiveTextEditor(updateContext)
+    );
 
 
     LoggingService.logDebug('Generate StatusBar and Item');
