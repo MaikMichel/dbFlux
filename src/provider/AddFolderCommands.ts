@@ -168,7 +168,32 @@ export async function addHookFile(context: ExtensionContext) {
   }
 }
 
-export async function addCustomTriggerRun(contexr:ExtensionContext) {
+
+async function getFirstValidSubfolder(context:ExtensionContext): Promise<string> {
+  const wsRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (wsRoot) {
+    const projectInfos = await getProjectInfos(context);
+
+
+    const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
+    const getSchemaFolders = (source: PathLike) => readdirSync(source, { withFileTypes: true })
+    .filter((dirent) => {
+      return dirent.isDirectory() && !["_setup", ".setup", "dist", ".hooks"].includes(dirent.name);
+    })
+    .map((dirent) => dirent.name);
+
+    if (projectInfos.isFlexMode) {
+      return getSchemaFolders(sourceDB)[0];
+    } else {
+      return projectInfos.dataSchema;
+    }
+  }
+
+  return "demo";
+}
+
+
+export async function addCustomTriggerRun(context:ExtensionContext) {
   const workspaceFolder = workspace.workspaceFolders?.[0];
   if (!workspaceFolder) {
       window.showErrorMessage("dbFlux: No workspace opened");
@@ -197,10 +222,12 @@ export async function addCustomTriggerRun(contexr:ExtensionContext) {
         settings["dbFlux.customTriggerRuns"] = [];
     }
 
+
+    const folderName = await getFirstValidSubfolder(context);
     // Neues Element, das hinzugefügt werden soll
     const newTrigger = {
-        "triggeringExpression": "db\\/single\\/(tables|tables/tables_ddl)\\/.+\\.sql",
-        "runFile": "db/single/.hooks/post/010_demo.tables.sql",
+        "triggeringExpression": `db\\/${folderName}\\/(tables|tables/tables_ddl)\\/.+\\.sql`,
+        "runFile": `db/${folderName}/.hooks/post/010_demo.tables.sql`,
         "runFileParameters": ["dev", "dev", "${fileBasename}"]
     };
 
@@ -212,6 +239,10 @@ export async function addCustomTriggerRun(contexr:ExtensionContext) {
     const updatedSettings = jsonc.applyEdits(settingsDoc.toString(), edits);
 
     await workspace.fs.writeFile(settingsUri, Buffer.from(updatedSettings));
+
+    // Open the settings file in the editor
+    const document = await workspace.openTextDocument(settingsUri);
+    await window.showTextDocument(document);
 
     window.showInformationMessage("dbFlux: New CustomTriggerRun added!\n\nYou have to edit the path and filename to make this work by your own.");
 

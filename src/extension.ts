@@ -285,7 +285,7 @@ export async function activate(context: ExtensionContext) {
       LoggingService.logInfo('DBLock is enabled');
 
       // dbLock FileDecodations
-      const decoProvider = new ViewFileDecorationProvider(context)
+      const decoProvider = new ViewFileDecorationProvider(context);
 
       //create a local tree view and register it in vscode
       const tree = new DBLockTreeView(decoProvider);
@@ -350,7 +350,7 @@ export async function activate(context: ExtensionContext) {
           }
           case "createDBFlow" : {
             window.showInformationMessage(`dbFlow Project initialized, reloading extension settings`);
-            commands.executeCommand("dbFlux.reloadExtension")
+            commands.executeCommand("dbFlux.reloadExtension");
             break;
           }
           // case "compileFile" : {
