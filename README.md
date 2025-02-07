@@ -4,7 +4,7 @@
 
 <p align="center">
   <br />
-  <a title="Learn more adbFlux" href="#">
+  <a title="Learn more about dbFlux" href="#">
   <img src="images/dbflux.png" alt="dbFlux Logo" width="150"/>
   </a>
   <h1 align="center">dbFlux<br/><span style="font-size: medium">Easy development flow for Oracle Database and APEX applications</span></h1>
