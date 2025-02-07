@@ -51,4 +51,4 @@ fi
 printf "${CLR_GREEN}dbFlow initialized${NC}\n"
 printf "${CLR_DGRAY}Documentation can be found here: ${CLR_LBLUE}https://maikmichel.github.io/dbFlow/${NC}\n"
 
-.dbFLow/setup.sh -g "${wiz_project_name}" -w
+.dbFlow/setup.sh -g "${wiz_project_name}" -w
