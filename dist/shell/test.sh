@@ -38,7 +38,8 @@ if [[ "${base_package}" != "" ]]; then
   printf "${CLR_LBLUE}Package:${NC}      ${WHITE}${base_package}${DBFLOW_METHOD2TEST}${NC}\n"
 fi
 if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
-  printf "${CLR_LBLUE}Coverage:${NC}     ${WHITE}${DBFLOW_TARGET2COVER//"|"/"\n              "}${NC}\n"
+  target_coverage="${DBFLOW_TARGET2COVER//|/$'\n              '}"
+  printf "${CLR_LBLUE}Coverage:${NC}     ${WHITE}${target_coverage}${NC}\n"
 fi
 printf "${CLR_LBLUE}Format:${NC}       ${WHITE}${DBFLOW_TESTOUTPUT}${NC}\n"
 echo

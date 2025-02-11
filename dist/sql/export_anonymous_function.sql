@@ -465,10 +465,14 @@
                       return clob is
     l_script clob;
   begin
-    l_script :=ltrim(dbms_metadata.get_ddl(p_source_type, upper(p_source_name)), C_CRLF||' ');
+    -- add target version to ddl to ommit "editionable" clause
+    l_script :=ltrim(dbms_metadata.get_ddl(p_source_type, upper(p_source_name), user, '11.2.0'), C_CRLF||' ');
 
     -- remove double quotes
     l_script := replace(l_script, '"'||upper(p_source_name)||'"', lower(p_source_name));
+
+    -- change the first line of the content to lowercase
+    l_script := lower(substr(l_script, 1, instr(l_script, chr(10)) - 1)) || substr(l_script, instr(l_script, chr(10)));
 
     if p_grant_with_object and p_source_type not in ('PACKAGE_BODY', 'TYPE_BODY', 'TRIGGER') then
       l_script := concat(l_script, chr(10) || get_grants(p_source_name));
@@ -505,7 +509,11 @@
                         end filename
                   from user_objects
                  where object_type in ('TYPE', 'TYPE BODY', 'PACKAGE BODY', 'PACKAGE', 'FUNCTION', 'PROCEDURE', 'TRIGGER')
-                   and object_name not like 'TEST\_%' escape '\'
+                   and object_name not in (select name
+                                             from user_source
+                                            where name = object_name
+                                              and type = 'PACKAGE'
+                                              and instr(replace(lower(text), ' '), '--%suite(') > 0) -- exclude test suites
                    and object_name not like 'SYS\_PLSQL\_%' escape '\'
                    and (    p_object_name is null
                          or (    upper(object_name) = upper(p_object_name)
@@ -556,7 +564,11 @@
                         end filename
                   from user_objects
                  where object_type in ('TYPE', 'TYPE BODY', 'PACKAGE BODY', 'PACKAGE', 'FUNCTION', 'PROCEDURE')
-                   and object_name like 'TEST\_%' escape '\'
+                   and object_name in (select name
+                                          from user_source
+                                         where name = object_name
+                                           and type = 'PACKAGE'
+                                           and instr(replace(lower(text), ' '), '--%suite(') > 0) -- include test suites
                    and (    p_object_name is null
                          or (    upper(object_name) = upper(p_object_name)
                              and object_type like case lower(p_object_type)
