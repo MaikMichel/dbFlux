@@ -44,7 +44,7 @@ function export_module() {
 
       CONN_DBFLOW_DBUSER=${DBFLOW_DBUSER}
       if [[ ${DBFLOW_MODE} == "FLEX" ]]; then
-        appschema=$(basename $(dirname "${APP_PATH}"))
+        appschema=$(basename $(dirname "${MODULE_PATH}"))
         CONN_DBFLOW_DBUSER=${DBFLOW_DBUSER/\*/$appschema}
       fi
 
@@ -110,6 +110,8 @@ if [[ "${DBFLOW_RESTMODULE}" == "*" ]]; then
 
   for dirname in "${items[@]}"
   do
+    # echo "Export ${dirname} ${DBFLOW_RESTMODULE}"
+    dirname="${dirname#./}"
     export_module "${dirname}" "${DBFLOW_RESTMODULE}"
   done
 else
