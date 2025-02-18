@@ -9,7 +9,7 @@ import { getDBFlowMode, IProjectInfos } from "../provider/AbstractBashTaskProvid
 import { CompileTaskStore } from "../stores/CompileTaskStore";
 import { ExtensionContext } from "vscode";
 
-const isWindows = platform() === 'win32'
+const isWindows = platform() === 'win32';
 
 export interface KeyVal {
   key: string;
@@ -61,14 +61,14 @@ export function toUpperDriverLetter(wsf: string) {
 }
 
 export function ltrim (s:string, c:string) {
-  if (c === "]") c = "\\]";
-  if (c === "^") c = "\\^";
-  if (c === "\\") c = "\\\\";
+  if (c === "]") {c = "\\]";}
+  if (c === "^") {c = "\\^";}
+  if (c === "\\") {c = "\\\\";}
   return s.replace(new RegExp("^[" + c + "]+|[" + c + "]+$", "g"), "");
 }
 
 export function rtrim (s:string, c:string) {
-  if (s === undefined) s = '\\s';
+  if (s === undefined) {s = '\\s';}
   return s.replace(new RegExp("[" + c + "]*$"), '');
 };
 

@@ -414,8 +414,7 @@ async function getTargetPackages(): Promise<string[] | undefined> {
 
     packages.push(...packageFiles
                           .filter((pckName) => pckName.endsWith(".pkb"))
-                          .map(function(elem){return {"label": elem, "description": schema.label}});
-    );
+                          .map(function(elem){return {"label": elem, "description": schema.label};}));
   }
   const selectedPackages: QuickPickItem[] | undefined = await window.showQuickPick(packages, {
     title: 'Package(s) to measure coverage',
