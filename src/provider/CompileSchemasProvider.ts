@@ -5,6 +5,7 @@ import * as path from "path";
 import { AbstractBashTaskProvider, getProjectInfos, IBashInfos } from "./AbstractBashTaskProvider";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { CompileTaskStore } from "../stores/CompileTaskStore";
+import { getPassword } from "../helper/utilities";
 
 
 interface CompileSchemaTaskDefinition extends vscode.TaskDefinition {
@@ -97,7 +98,7 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
             return '"' + this.buildConnectionUser(projectInfos, element) + '"';
           });
           runner.connectionPasses = CompileTaskStore.getInstance().selectedSchemas!.map((element) =>{
-            return '"' + this.getPassword(projectInfos, this.buildConnectionUser(projectInfos, element), false) +'"';
+            return '"' + getPassword(projectInfos, this.buildConnectionUser(projectInfos, element), false, this.context) +'"';
           });
         };
 

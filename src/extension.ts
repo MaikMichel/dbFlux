@@ -250,8 +250,8 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(registerExecuteTestPackageCommandWithCodeCoverage(projectInfos, context));
 
     // RUN SQLplus or SQLcl
-    context.subscriptions.push(registerRunSQLcli(projectInfos, "dbFlux.run.SQLcl", "sql"));
-    context.subscriptions.push(registerRunSQLcli(projectInfos, "dbFlux.run.SQLplus", "sqlplus"));
+    context.subscriptions.push(registerRunSQLcli(projectInfos, "dbFlux.run.SQLcl", "sql", context));
+    context.subscriptions.push(registerRunSQLcli(projectInfos, "dbFlux.run.SQLplus", "sqlplus", context));
 
     // Reset Password
     context.subscriptions.push(registerResetPasswordCommand());

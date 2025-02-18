@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as dotenv from "dotenv";
 import { chmodSync, existsSync, PathLike, readdirSync, readFileSync } from "fs";
-import { getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
+import { getPassword, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import * as yaml from 'yaml';
 import { CompileTaskStore } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, Uri, window, workspace } from "vscode";
@@ -41,7 +41,7 @@ export abstract class AbstractBashTaskProvider {
 
   constructor(context: ExtensionContext) {
     this.context = context;
-    this.dbFluxMode = getDBFlowMode(context)!
+    this.dbFluxMode = getDBFlowMode(context)!;
   }
 
   static dbFluxType: string = "dbFlux";
@@ -88,30 +88,11 @@ export abstract class AbstractBashTaskProvider {
 
   getConnection(projectInfos: IProjectInfos, currentPath: string, useDefaultPW: boolean ): string {
     const connUser = this.buildConnectionUser(projectInfos, currentPath);
-    const connPass = this.getPassword(projectInfos, connUser, useDefaultPW);
+    const connPass = getPassword(projectInfos, connUser, useDefaultPW, this.context);
     return connUser + `/"${connPass}"@${projectInfos.dbTns}`;
   }
 
-  getPassword(pInfos: IProjectInfos, pTargetUser: string, useDefaultPW: boolean): string {
-    let passWord = "";
 
-    if (pTargetUser === pInfos.dbAdminUser) {
-      passWord = CompileTaskStore.getInstance().adminPwd!
-    } else if (this.dbFluxMode === "dbFlux" && pInfos.dbPasses?.hasOwnProperty(`dbFlux_${pTargetUser}_PWD`)){
-      passWord = pInfos.dbPasses[`dbFlux_${pTargetUser}_PWD`];
-    } else if (this.dbFluxMode === "dbFlow" && pInfos.dbPasses?.hasOwnProperty(`DBFLOW_${pTargetUser}_PWD`)){
-      passWord = pInfos.dbPasses[`DBFLOW_${pTargetUser}_PWD`];
-    } else {
-      if (useDefaultPW) {
-        passWord = pInfos.dbAppPwd!;
-      } else {
-        passWord = CompileTaskStore.getInstance().appPwd!;
-      }
-    }
-
-    return passWord;
-
-  }
 
    async setInitialCompileInfo(execFileName:string, fileUri: Uri, runnerInfo:IBashInfos):Promise<void> {
     let projectInfos: IProjectInfos = await getProjectInfos(this.context);
@@ -126,7 +107,7 @@ export abstract class AbstractBashTaskProvider {
 
     runnerInfo.connectionTns  = projectInfos.dbTns;
     runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd, fileUri.path);
-    runnerInfo.connectionPass = this.getPassword(projectInfos, runnerInfo.connectionUser, false);
+    runnerInfo.connectionPass = getPassword(projectInfos, runnerInfo.connectionUser, false, this.context);
 
     runnerInfo.projectInfos   = projectInfos;
     runnerInfo.coloredOutput  = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
@@ -149,7 +130,7 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
   } else {
     // check if there is a var with pattern: DBFLOW_||dbFlux_..._PWD,
     if (projectInfos.dbPasses?.hasOwnProperty(`DBFLOW_${dbUserFromPath}_PWD`) || projectInfos.dbPasses?.hasOwnProperty(`dbFlux_${dbUserFromPath}_PWD`)) {
-      return `${dbUserFromPath}`
+      return `${dbUserFromPath}`;
     } else {
       // otherwise as usual
       if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath.toLowerCase()) {
@@ -361,7 +342,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
 
   if (!projectInfos.isFlexMode) {
 
-    if ((projectInfos.projectMode == "MULTI") && (
+    if ((projectInfos.projectMode === "MULTI") && (
           (projectInfos.appSchema === undefined || !projectInfos.appSchema || projectInfos.appSchema.length === 0) ||
           (projectInfos.logicSchema === undefined || !projectInfos.logicSchema || projectInfos.logicSchema.length === 0) ||
           (projectInfos.dataSchema === undefined || !projectInfos.dataSchema || projectInfos.dataSchema.length === 0)
@@ -370,7 +351,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
           (DATA: ${projectInfos.dataSchema},
           LOGIC: ${projectInfos.logicSchema},
           APP: ${projectInfos.appSchema})`;
-    } else if ((projectInfos.projectMode == "SINGLE") && (
+    } else if ((projectInfos.projectMode === "SINGLE") && (
       (projectInfos.appSchema === undefined || !projectInfos.appSchema || projectInfos.appSchema.length === 0)
     )) {
       schemaMsg = `dbFlux: Schema configuration incomplete! Please check your configuration!

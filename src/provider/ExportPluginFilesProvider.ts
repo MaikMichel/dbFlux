@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as path from "path";
 
-import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
@@ -88,16 +88,23 @@ export class ExportPluingFilesProvider extends AbstractBashTaskProvider implemen
       let apexUri:Uri = Uri.file(path.join(fileUri.fsPath, pluginFolder + '/install.sql'));
 
       runner.exportAppPath  = pluginFolder + "/src";
-      const parts:string[] = getRelativePartsFromFile(pluginFolder)
-      runner.exportPluginName = parts[2];
-      runner.exportAppID    = parts[1].replace("f", "");
+      const parts:string[] = getRelativePartsFromFile(pluginFolder);
+
+      const projectInfos = await getProjectInfos(this.context);
+      if (projectInfos.isFlexMode) {
+        runner.exportPluginName = parts[4];
+        runner.exportAppID    = parts[3].replace("f", "");
+      } else {
+        runner.exportPluginName = parts[2];
+        runner.exportAppID    = parts[1].replace("f", "");
+      }
       runner.executableCli  = ConfigurationManager.getCliToUseForCompilation();
 
       if (apexUri !== undefined) {
         await this.setInitialCompileInfo("export_plugin_files.sh", apexUri, runner);
       }
     } else {
-      throw "Error workspace.workspaceFolders or schemaName undefined"
+      throw new Error("Error workspace.workspaceFolders or schemaName undefined");
     }
 
     return runner;
@@ -209,9 +216,15 @@ export class ExportCurrentPluginFileProvider extends AbstractBashTaskProvider im
 
           runner.exportAppPath  = runner.exportFileName.substring(0, runner.exportFileName.indexOf('/src/') + 4);
           runner.exportFileName = runner.exportFileName.replace(runner.exportAppPath+"/", "");
-          runner.exportPluginName = parts[2];
-          runner.exportAppID    = parts[1].replace("f", "");
 
+          const projectInfos = await getProjectInfos(this.context);
+          if (projectInfos.isFlexMode) {
+            runner.exportPluginName = parts[4];
+            runner.exportAppID    = parts[3].replace("f", "");
+          } else {
+            runner.exportPluginName = parts[2];
+            runner.exportAppID    = parts[1].replace("f", "");
+          }
 
         }
         await this.setInitialCompileInfo("export_plugin_files.sh", connectionUri!, runner);
@@ -220,7 +233,7 @@ export class ExportCurrentPluginFileProvider extends AbstractBashTaskProvider im
 
 
     } else {
-      throw "Error workspace.workspaceFolders or schemaName undefined"
+      throw new Error("Error workspace.workspaceFolders or schemaName undefined");
     }
 
     return runner;
@@ -233,7 +246,7 @@ export function registerExportCurrentPluginFileCommand(projectInfos: IProjectInf
   return commands.registerCommand("dbFlux.exportCurrentPluginFile", async () => {
     // check what file has to build
     let fileName = await getWorkingFile(context);
-    const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
+    const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
 
     const insidePlugins = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'plugin/*/*/f*/*' : 'plugin/f*/*');

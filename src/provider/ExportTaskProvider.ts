@@ -199,7 +199,9 @@ export function registerExportAPEXCommand(projectInfos: IProjectInfos, context: 
     if (projectInfos.isValid) {
 
       which('sql').then(async () => {
-        const showWildCard = (!projectInfos.isFlexMode || !(projectInfos.dbPasses && projectInfos.dbPasses.length > 0))
+        const hasDbPasses = projectInfos.dbPasses && Object.keys(projectInfos.dbPasses).length > 0;
+        const showWildCard = (!projectInfos.isFlexMode || !(hasDbPasses));
+
         ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, showWildCard);
 
         if (ExportTaskStore.getInstance().expID !== undefined) {
@@ -241,7 +243,7 @@ export function registerExportAPEXPluginCommand(projectInfos: IProjectInfos, con
             window.setStatusBarMessage('dbFlux: No Plugin found or selected', 2000);
           }
         } catch (err) {
-          LoggingService.logError(err+"", err)
+          LoggingService.logError(err+"", err);
           window.showErrorMessage(err+"");
         }
       }).catch(() => {
