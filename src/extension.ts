@@ -22,7 +22,6 @@ import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticF
 import { DBLockTreeView } from "./ui/DBLockTreeView";
 
 import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
-import { registerExportCurrentTableDefinitionCommand } from "./provider/ExportTableAsJSONProvider";
 import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
 import { registerAddFeatureSet, registerSyncFeatureSet } from "./provider/FeatureStoreProvider";
 import { createObjectTypeSnippetWizard } from "./wizards/CreateObjectTypeSnippetWizzard";
@@ -203,9 +202,6 @@ export async function activate(context: ExtensionContext) {
 
     // Remove current APEX Static File
     context.subscriptions.push(registerRemoveCurrentStaticFileCommand(projectInfos, context));
-
-    // Export current Table Definition
-    context.subscriptions.push(registerExportCurrentTableDefinitionCommand(projectInfos, context));
 
     // Enable FLEX Mode
     context.subscriptions.push(registerEnableFlexModeCommand(projectInfos, context));
