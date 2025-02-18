@@ -354,10 +354,8 @@ export function showInformationProgress(msg:string, timeoutms:number = 3000) {
 
     if (pTargetUser === pInfos.dbAdminUser) {
       passWord = CompileTaskStore.getInstance().adminPwd!;
-    } else if (dbFluxMode === "dbFlux" && pInfos.dbPasses?.hasOwnProperty(`dbFlux_${pTargetUser}_PWD`)){
+    } else if (["dbFlux", "dbFlow"].includes(dbFluxMode!) && pInfos.dbPasses?.hasOwnProperty(`dbFlux_${pTargetUser}_PWD`)){
       passWord = pInfos.dbPasses[`dbFlux_${pTargetUser}_PWD`];
-    } else if (dbFluxMode === "dbFlow" && pInfos.dbPasses?.hasOwnProperty(`DBFLOW_${pTargetUser}_PWD`)){
-      passWord = pInfos.dbPasses[`DBFLOW_${pTargetUser}_PWD`];
     } else {
       if (useDefaultPW) {
         passWord = pInfos.dbAppPwd!;

@@ -32,22 +32,19 @@ export function registerSetSchemaPassword(projectInfos: IProjectInfos, context: 
           const schema = schemaFolder.replace(/^[\d_]+/, '');
 
           // then enter password
-          const schema_pwd = await window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${schema}@${projectInfos.dbTns} - Leave blank to unset password `, placeHolder: "Password", password: true });
+          const schemaPWD = await window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${schema}@${projectInfos.dbTns} - Leave blank to unset password `, placeHolder: "Password", password: true });
 
           // write password base on dbFlux-Mode
-          const mode = getDBFlowMode(context)!
+          const mode = getDBFlowMode(context)!;
 
           // TODO: check mode to be valid first in this method
-          if (mode === "dbFlow"){
-            const file = path.join(wsRoot, "apply.env");
-            setEnvValue(file, `DBFLOW_${schema}_PWD`, schema_pwd!);
-          } else if (mode === "dbFlux"){
-            if (schema_pwd === undefined || schema_pwd.length === 0) {
-              context.workspaceState.update(`dbFlux_${schema}_PWD`, undefined)
+          if (["dbFlow", "dbFlux"].includes(mode)) {
+            if (schemaPWD === undefined || schemaPWD.length === 0) {
+              context.workspaceState.update(`dbFlux_${schema}_PWD`, undefined);
               await context.secrets.delete(getWorkspaceRootPath() +`|dbFlux_${schema}_PWD`);
             } else {
-              context.workspaceState.update(`dbFlux_${schema}_PWD`, 'secret')
-              await context.secrets.store(getWorkspaceRootPath() +`|dbFlux_${schema}_PWD`, schema_pwd);
+              context.workspaceState.update(`dbFlux_${schema}_PWD`, 'secret');
+              await context.secrets.store(getWorkspaceRootPath() +`|dbFlux_${schema}_PWD`, schemaPWD);
             }
           }
 

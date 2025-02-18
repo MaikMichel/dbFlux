@@ -128,8 +128,8 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
   if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
     return projectInfos.dbAdminUser+"".toLowerCase();
   } else {
-    // check if there is a var with pattern: DBFLOW_||dbFlux_..._PWD,
-    if (projectInfos.dbPasses?.hasOwnProperty(`DBFLOW_${dbUserFromPath}_PWD`) || projectInfos.dbPasses?.hasOwnProperty(`dbFlux_${dbUserFromPath}_PWD`)) {
+    // check if there is a var with pattern: dbFlux_..._PWD,
+    if (projectInfos.dbPasses?.hasOwnProperty(`dbFlux_${dbUserFromPath}_PWD`)) {
       return `${dbUserFromPath}`;
     } else {
       // otherwise as usual
@@ -147,7 +147,7 @@ export async function getProjectInfos(context: ExtensionContext) {
   if (getDBFlowMode(context) === "dbFlux") {
     projectInfos = await getProjectInfosFromDBFlux(context);
   } else if (getDBFlowMode(context) === "dbFlow") {
-    projectInfos = getProjectInfosFromDBFlow();
+    projectInfos = await getProjectInfosFromDBFlow(context);
   } else if (getDBFlowMode(context) === "xcl") {
     projectInfos = getProjectInfosFromXCL();
   }
@@ -183,10 +183,8 @@ export function applyFileExists(pMode:string) {
 }
 
 
-function getProjectInfosFromDBFlow():IProjectInfos {
+async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IProjectInfos> {
   const projectInfos: IProjectInfos = {} as IProjectInfos;
-  const regex = /^DBFLOW_.*_PWD$/;
-
 
   if (workspace.workspaceFolders !== undefined) {
     const f = workspace.workspaceFolders[0].uri.fsPath;
@@ -211,19 +209,14 @@ function getProjectInfosFromDBFlow():IProjectInfos {
         projectInfos.dbAdminPwd = Buffer.from(projectInfos.dbAdminPwd.substring(1), 'base64').toString('utf8').replace("\n", "");
       }
 
-      // get all keys with pattern DBFLOW_..._PWD and store them in array
-      const filteredKeys = Object.keys(applyEnv.parsed).filter(key => regex.test(key));
+      // get all keys with pattern dbFlux_..._PWD and store them in array
+      const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD")); // dbFlux as prefix because this is a dbFlux feature (not dbFlow)
 
-      // add PWDs to dbPasses
-      for (let key of filteredKeys) {
+      for (const key of filteredKeys) {
         LoggingService.logInfo('Custom Schemapassword found: ' + key);
         projectInfos.dbPasses = projectInfos.dbPasses || {};
-        if (applyEnv.parsed[key] && applyEnv.parsed[key].startsWith("!")) {
-          projectInfos.dbPasses[key] =  Buffer.from(applyEnv.parsed[key].substring(1), 'base64').toString('utf8').replace("\n", "");
-        } else {
-          projectInfos.dbPasses[key] = applyEnv.parsed[key];
-        }
-      };
+        projectInfos.dbPasses[key]    = await context.secrets.get(getWorkspaceRootPath()+"|" + key )+"";
+      }
     }
 
     if (buildEnv.parsed) {
@@ -264,14 +257,12 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
       projectInfos.projectMode  = context.workspaceState.get("dbFlux_PROJECT_MODE");
       projectInfos.workspace    = context.workspaceState.get("dbFlux_WORKSPACE");
 
-      // get all keys with pattern DBFLOW_..._PWD and store them in array
-
+      // get all keys with pattern dbFlux_..._PWD and store them in array
       const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD"));
 
       for (const key of filteredKeys) {
         LoggingService.logInfo('Custom Schemapassword found: ' + key);
         projectInfos.dbPasses = projectInfos.dbPasses || {};
-        // console.log(key + ": " + context.workspaceState.get(key));
         projectInfos.dbPasses[key]    = await context.secrets.get(getWorkspaceRootPath()+"|" + key )+"";
       }
 
