@@ -129,7 +129,11 @@ export const dbFolderDef = [{
   },
   "tests": {
     "packages": ""
-  }
+  },
+  "synonyms": {
+      "private": "",
+      "public": ""
+    },
 }];
 
 export const restFolderDef = [{
