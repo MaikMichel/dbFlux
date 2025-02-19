@@ -5,7 +5,7 @@
 <p align="center">
   <br />
   <a title="Learn more adbFlux" href="#">
-  <img src="images/dbFlux.png" alt="dbFlux Logo" width="150"/>
+  <img src="./images/dbflux.png" alt="dbFlux Logo" width="150"/>
   </a>
   <h1 align="center">dbFlux<br/><span style="font-size: medium">Easy development flow for Oracle Database and APEX applications</span></h1>
 
@@ -68,7 +68,7 @@ Using this extension enables you to develop Oracle Database and APEX application
 
 The Mode which dbFlux is using, will be display inside the statusbar with a little database icon in front. By Clicking on this item the configuration files will be opened or the configuration will be printed to the output panel when mode is dbFlux.
 
-![Toolbar show dbFlux-Mode](images/doc_toolbar_dbFlux_mode.png)
+![Toolbar show dbFlux-Mode](images/doc_toolbar_dbflux_mode.png)
 
 
 ### Project Structure  [#](#features 'Jumpt back to Features')
