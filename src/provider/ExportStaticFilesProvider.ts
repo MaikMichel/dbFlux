@@ -93,7 +93,7 @@ export class ExportStaticFilesProvider extends AbstractBashTaskProvider implemen
         await this.setInitialCompileInfo("export_static_files.sh", apexUri, runner);
       }
     } else {
-      throw "Error workspace.workspaceFolders or schemaName undefined"
+      throw new Error("Error workspace.workspaceFolders or schemaName undefined");
     }
 
     return runner;
@@ -110,7 +110,7 @@ export function registerExportStaticFilesCommand(projectInfos: IProjectInfos, co
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
         which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, true);
+          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, false);
 
           if (ExportTaskStore.getInstance().expID !== undefined) {
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportStaticFilesProvider(context)));
@@ -213,7 +213,7 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
 
 
     } else {
-      throw "Error workspace.workspaceFolders or schemaName undefined"
+      throw new Error("Error workspace.workspaceFolders or schemaName undefined");
     }
 
     return runner;

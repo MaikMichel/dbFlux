@@ -11,25 +11,26 @@ initialize_session;
 
 ######################################################
 
-echo -e "${CLR_LBLUE}Connection:${NC}    ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}Schema:${NC}        ${WHITE}${DBFLOW_SCHEMA}${NC}"
-echo -e "${CLR_LBLUE}Targetfolder:${NC}  ${WHITE}${DBFLOW_SCHEMA_NEW}${NC}"
-echo -e "${CLR_LBLUE}Type:${NC}          ${WHITE}${DBFLOW_EXP_FOLDER}${NC}"
-echo -e "${CLR_LBLUE}Object:${NC}        ${WHITE}${DBFLOW_EXP_FNAME}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}      ${WHITE}${DBFLOW_DBUSER}/${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}Schema:${NC}          ${WHITE}${DBFLOW_SCHEMA}${NC}\n"
+printf "${CLR_LBLUE}Targetfolder:${NC}    ${WHITE}${DBFLOW_SCHEMA_NEW}${NC}\n"
+printf "${CLR_LBLUE}Type:${NC}            ${WHITE}${DBFLOW_EXP_FOLDER}${NC}\n"
+printf "${CLR_LBLUE}Object:${NC}          ${WHITE}${DBFLOW_EXP_FNAME}${NC}\n"
+printf "${CLR_LBLUE}Grant w.Objects:${NC} ${WHITE}${DBFLOW_EXP_GRANTS_W_OBJ}${NC}\n"
 echo
-echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Schema ${DBFLOW_SCHEMA} to db/${DBFLOW_SCHEMA} ${NC}"
-echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}"
+printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting Schema ${DBFLOW_SCHEMA} to db/${DBFLOW_SCHEMA_NEW} ${NC}\n"
+printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> ... this may take a while ${NC}\n"
 
 ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/export_anonymous_function.sql" )
 
 # the export itself
 if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
   ## FullExport
-  PREPSTMT=":contents := to_base64(get_zip);"
+  PREPSTMT=":contents := to_base64(get_zip(p_grant_with_object => ${DBFLOW_EXP_GRANTS_W_OBJ}));"
 
   ## Or just an object
   if [[ -n ${DBFLOW_EXP_FOLDER} ]]; then
-    PREPSTMT=":contents :=  to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}'));"
+    PREPSTMT=":contents :=  to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}', p_grant_with_object => ${DBFLOW_EXP_GRANTS_W_OBJ}));"
   fi
 
   sqlplus -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF > db/"${DBFLOW_SCHEMA}".zip.base64
@@ -66,11 +67,11 @@ EOF
 
 else
   ## FullExport
-  PREPSTMT="v_content := to_base64(get_zip);"
+  PREPSTMT="v_content := to_base64(get_zip(p_grant_with_object => ${DBFLOW_EXP_GRANTS_W_OBJ})));"
 
   ## Or just an object
   if [[ -n ${DBFLOW_EXP_FNAME} ]]; then
-    PREPSTMT="v_content := to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}'));"
+    PREPSTMT="v_content := to_base64(get_zip(p_folder => '${DBFLOW_EXP_FOLDER}', p_file_name => '${DBFLOW_EXP_FNAME}', p_grant_with_object => ${DBFLOW_EXP_GRANTS_W_OBJ})));"
   fi
 
     sql -s -l ${DBFLOW_DBUSER}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF > db/"${DBFLOW_SCHEMA}".zip.base64
@@ -82,7 +83,7 @@ else
     set trimspool on
     set pagesize 0
     set linesize 5000
-    set long 100000000
+    REM set long 100000000
     set longchunksize 32767
     set serveroutput on
     whenever sqlerror exit sql.sqlcode rollback
@@ -110,14 +111,14 @@ fi
 if [[ -f "db/${DBFLOW_SCHEMA}.zip.base64" ]]; then
   # if grep -q "ORA-20001:" "db/${DBFLOW_SCHEMA}.zip.base64"; then
   if grep -q "ORA-.*:" "db/${DBFLOW_SCHEMA}.zip.base64"; then
-    echo -e "${CLR_REDBGR}Error detected on export${NC}"
+    printf "${CLR_REDBGR}Error detected on export${NC}\n"
     tput setaf 9
     cat "db/${DBFLOW_SCHEMA}.zip.base64"
     tput setaf default
 
     rm "db/${DBFLOW_SCHEMA}.zip.base64"
   else
-    echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported schema file ... ${NC}"
+    printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Decoding exported schema file ... ${NC}\n"
     base64 -d -i "db/${DBFLOW_SCHEMA}.zip.base64" > "db/${DBFLOW_SCHEMA}.zip"
 
     # remove base64 garbage
@@ -127,9 +128,9 @@ if [[ -f "db/${DBFLOW_SCHEMA}.zip.base64" ]]; then
 
   # unzip file content
   if [[ -f "db/${DBFLOW_SCHEMA}.zip" ]]; then
-    echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Unzipping exported schema file ... ${NC}"
+    printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> Unzipping exported schema file ... ${NC}\n"
     unzip -o "db/${DBFLOW_SCHEMA}.zip" -d "db/${DBFLOW_SCHEMA_NEW}"
     rm "db/${DBFLOW_SCHEMA}.zip"
-    echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}"
+    printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> export done${NC}\n"
   fi
 fi

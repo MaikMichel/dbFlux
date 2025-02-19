@@ -15,6 +15,12 @@ initialize_session;
 
 CONN_ARRY=( "$@" )
 
+# PWDs zu Array
+IFS='°'
+CONN_PASSES=($DBFLOW_DBPASSES)
+unset IFS
+
+
 basefl=$(basename -- "${DBFLOW_FILE2TEST}")
 dirfl=$(dirname -- "${DBFLOW_FILE2TEST}")
 extension="${basefl##*.}"
@@ -22,19 +28,20 @@ extension="${basefl##*.}"
 base_package=${basefl}
 base_package=${base_package/\.$extension/}
 
-echo -e "${CLR_LBLUE}Connection:${NC}   ${WHITE}${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}Schemas:${NC}      ${WHITE}${CONN_ARRY[@]}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}   ${WHITE}${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}Schemas:${NC}      ${WHITE}${CONN_ARRY[@]}${NC}\n"
 
 if [[ "${basefl}" != "" ]]; then
-echo -e "${CLR_LBLUE}File:${NC}         ${WHITE}${basefl}${NC}"
+printf "${CLR_LBLUE}File:${NC}         ${WHITE}${basefl}${NC}\n"
 fi
 if [[ "${base_package}" != "" ]]; then
-  echo -e "${CLR_LBLUE}Package:${NC}      ${WHITE}${base_package}${DBFLOW_METHOD2TEST}${NC}"
+  printf "${CLR_LBLUE}Package:${NC}      ${WHITE}${base_package}${DBFLOW_METHOD2TEST}${NC}\n"
 fi
 if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
-  echo -e "${CLR_LBLUE}Coverage:${NC}     ${WHITE}${DBFLOW_TARGET2COVER//"|"/"\n              "}${NC}"
+  target_coverage="${DBFLOW_TARGET2COVER//|/$'\n              '}"
+  printf "${CLR_LBLUE}Coverage:${NC}     ${WHITE}${target_coverage}${NC}\n"
 fi
-echo -e "${CLR_LBLUE}Format:${NC}       ${WHITE}${DBFLOW_TESTOUTPUT}${NC}"
+printf "${CLR_LBLUE}Format:${NC}       ${WHITE}${DBFLOW_TESTOUTPUT}${NC}\n"
 echo
 
 ###
@@ -51,17 +58,19 @@ fi
 if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
   ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/export_utrun.sql" )
 
-  for arg in "${CONN_ARRY[@]}"; do
-    echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${arg}${NC}"
+  for index in "${!CONN_ARRY[@]}"; do
+    l_conn=${CONN_ARRY[$index]}
+    l_pass=${CONN_PASSES[$index]}
+    printf "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${l_conn}${NC}\n"
     # prepare output file
     log_file="coverage.base64"
 
-    if [[ ${arg} == *"["* ]]; then
-      target_file="${arg#*'['}"
+    if [[ ${l_conn} == *"["* ]]; then
+      target_file="${l_conn#*'['}"
       target_file=${target_file/']'/}
       target_file="${target_file}_test"
     else
-      target_file="${arg}_test"
+      target_file="${l_conn}_test"
     fi
 
     target_file="${target_file}_${log_file}"
@@ -85,7 +94,7 @@ if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
 
     # the export itself
     if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
-      sqlplus -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+      sqlplus -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
       set verify off
       set scan off
       set feedback off
@@ -110,7 +119,7 @@ if [[ "${DBFLOW_TARGET2COVER}" != "" ]]; then
 EOF
 
     else
-      sql -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+      sql -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
         set verify off
         set scan off
         set feedback off
@@ -139,13 +148,13 @@ EOF
 
     if [[ -f "${full_log_file}" ]]; then
       if grep -q "ORA-.*:" "${full_log_file}"; then
-        echo -e "${CLR_REDBGR}Error detected on export${NC}"
+        printf "${CLR_REDBGR}Error detected on export${NC}\n"
         tput setaf 9
         cat "${full_log_file}"
         tput setaf default
       else
         base64 -d -i "${full_log_file}" > "${full_log_file/base64/html}"
-        echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}"
+        printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}\n"
       fi
     fi
 
@@ -173,18 +182,21 @@ elif [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
     array+=("exec ut.run(a_color_console => true);")
   fi
 
-  for arg in "${CONN_ARRY[@]}"; do
-    echo -e "${CLR_LBLUE}Executing tests on Connection ${arg}@${DBFLOW_DBTNS} ${NC}" | tee -a ${full_log_file}
+  for index in "${!CONN_ARRY[@]}"; do
+    l_conn=${CONN_ARRY[$index]}
+    l_pass=${CONN_PASSES[$index]}
+
+    printf "${CLR_LBLUE}Executing tests on Connection ${l_conn}@${DBFLOW_DBTNS} ${NC}\n" | tee -a ${full_log_file}
 
     # prepare output file
     log_file="console.log"
 
-    if [[ ${arg} == *"["* ]]; then
-      target_file="${arg#*'['}"
+    if [[ ${l_conn} == *"["* ]]; then
+      target_file="${l_conn#*'['}"
       target_file=${target_file/']'/}
       target_file="${target_file}_test"
     else
-      target_file="${arg}_test"
+      target_file="${l_conn}_test"
     fi
 
     target_file="${target_file}_${log_file}"
@@ -195,7 +207,7 @@ elif [[ ${DBFLOW_TESTOUTPUT} == "ANSI Console" ]]; then
     [[ -d "tests/results" ]] || mkdir -p "tests/results"
     [[ -f $full_log_file ]] && rm -f $full_log_file
 
-    ${DBFLOW_SQLCLI} -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} << EOF | tee -a ${full_log_file}
+    ${DBFLOW_SQLCLI} -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} << EOF | tee -a ${full_log_file}
     $(
         for element in "${array[@]}"
         do
@@ -212,17 +224,20 @@ EOF
 else
   ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/export_utrun.sql" )
 
-  for arg in "${CONN_ARRY[@]}"; do
-    echo -e "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${arg}${NC}"
+  for index in "${!CONN_ARRY[@]}"; do
+    l_conn=${CONN_ARRY[$index]}
+    l_pass=${CONN_PASSES[$index]}
+
+    printf "${CLR_LVIOLETE}$(date '+%d.%m.%Y %H:%M:%S') >> Running Test as ${l_conn}${NC}\n"
     # prepare output file
     log_file="junit.base64"
 
-    if [[ ${arg} == *"["* ]]; then
-      target_file="${arg#*'['}"
+    if [[ ${l_conn} == *"["* ]]; then
+      target_file="${l_conn#*'['}"
       target_file=${target_file/']'/}
       target_file="${target_file}_test"
     else
-      target_file="${arg}_test"
+      target_file="${l_conn}_test"
     fi
 
     target_file="${target_file}_${log_file}"
@@ -245,7 +260,7 @@ else
 
     # the export itself
     if [[ ${DBFLOW_SQLCLI} == "sqlplus" ]]; then
-      sqlplus -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+      sqlplus -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
       set verify off
       set scan off
       set feedback off
@@ -270,7 +285,7 @@ else
 EOF
 
     else
-      sql -s -l ${arg}/'"'"${DBFLOW_DBPASS}"'"'@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
+      sql -s -l ${l_conn}/"${l_pass}"@${DBFLOW_DBTNS} <<EOF > "${full_log_file}"
         set verify off
         set scan off
         set feedback off
@@ -299,13 +314,13 @@ EOF
 
     if [[ -f "${full_log_file}" ]]; then
       if grep -q "ORA-.*:" "${full_log_file}"; then
-        echo -e "${CLR_REDBGR}Error detected on export${NC}"
+        printf "${CLR_REDBGR}Error detected on export${NC}\n"
         tput setaf 9
         cat "${full_log_file}"
         tput setaf default
       else
         base64 -d -i "${full_log_file}" > "${full_log_file/base64/xml}"
-        echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}"
+        printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done ${NC}\n"
       fi
     fi
 

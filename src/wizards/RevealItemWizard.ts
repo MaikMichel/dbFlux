@@ -4,6 +4,7 @@ import { QuickPickItem, ExtensionContext, Uri, workspace, commands} from 'vscode
 import * as path from "path";
 import { existsSync, PathLike, readdirSync } from 'fs';
 import { MultiStepInput } from './InputFlowAction';
+import { ConfigurationManager } from '../helper/ConfigurationManager';
 
 
 export async function revealItemWizard(context: ExtensionContext) {
@@ -96,7 +97,7 @@ export async function revealItemWizard(context: ExtensionContext) {
       let folders:string[] = [];
 
       const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-      const sourceDB      = path.join(wsRoot, "db");
+      const sourceDB      = path.join(wsRoot, ConfigurationManager.getDBFolderName());
       const sourceStatic  = path.join(wsRoot, "static");
       const sourceReports = path.join(wsRoot, "reports");
       const sourceRest    = path.join(wsRoot, "rest");

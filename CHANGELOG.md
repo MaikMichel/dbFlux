@@ -1,5 +1,13 @@
 # Change Log
 
+## [5.7.0 - 2025-02-19]
+- New: Command to Set Schema Password to have a dedicated user/pass per schema
+- New: Command "Add Custom Trigger Run" so you don't have to do it manually
+- Chg: Add some grant and revoke logic when exporting schema
+- Chg: use more printf instead of echo in bash scripts
+- Fix: some typos
+- Fix: Test-Packages do not have to start with prefix "test_"
+
 ## [5.5.2 - 2024-06-29]
 - Add ask to add apexplugin.json when adding Plugin
 

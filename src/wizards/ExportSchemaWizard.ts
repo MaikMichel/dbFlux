@@ -13,7 +13,7 @@ export interface ExportSchemaWizardState {
 }
 
 export async function exportSchemaWizard(context: ExtensionContext):Promise<ExportSchemaWizardState> {
-  const title = 'dbFLux: Export Schema to Filesystem';
+  const title = 'dbFlux: Export Schema to Filesystem';
 
   async function collectInputs() {
     const state = {} as Partial<ExportSchemaWizardState>;
@@ -66,7 +66,7 @@ export async function exportSchemaWizard(context: ExtensionContext):Promise<Expo
 }
 
 export async function exportObjectWizard(context: ExtensionContext, schema:string):Promise<ExportSchemaWizardState> {
-  const title = 'dbFLux: Export Object to Filesystem';
+  const title = 'dbFlux: Export Object to Filesystem';
 
   async function collectInputs() {
     const state = {} as Partial<ExportSchemaWizardState>;

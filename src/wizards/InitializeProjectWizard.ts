@@ -15,6 +15,7 @@ import { getDBFlowMode, IProjectInfos } from '../provider/AbstractBashTaskProvid
 import { existsSync, mkdirSync, readdirSync, renameSync } from 'fs';
 import { CompileTaskStore } from '../stores/CompileTaskStore';
 import { MultiStepInput } from './InputFlowAction';
+import { ConfigurationManager } from '../helper/ConfigurationManager';
 
 
 
@@ -46,7 +47,7 @@ const getEnvValue = (file: string, key: string): string | null => {
  * @param {string} key Key to update/insert
  * @param {string} value Value to update/insert
  */
-const setEnvValue = (file: string, key: string, value: string) => {
+export const setEnvValue = (file: string, key: string, value: string) => {
   const envVars = readEnvVars(file);
   const targetLine = envVars.find((line) => line.split("=")[0] === key);
 
@@ -425,7 +426,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
       // write Summary Installation File
       {
-        fcontent.installFile = `db/_setup/install.sql`;
+        fcontent.installFile = `${ConfigurationManager.getDBFolderName()}/_setup/install.sql`;
         const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, fcontent.installFile);
 
         // create a install.sql
@@ -542,7 +543,7 @@ function writeInstallSQLFile(files:string[], userFile: string) {
 
 export function writeCreateWorkspaceAdminScript(workspaceName:string, workspaceAdminName:string, primaryWorkspaceSchema:string):string {
   {
-    const relativeFile = `db/_setup/workspaces/${workspaceName}/create_01_user_${workspaceAdminName}.sql`;
+    const relativeFile = `${ConfigurationManager.getDBFolderName()}/_setup/workspaces/${workspaceName}/create_01_user_${workspaceAdminName}.sql`;
     const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
     const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "create_workspace_user.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
     const content = {
@@ -558,7 +559,7 @@ export function writeCreateWorkspaceAdminScript(workspaceName:string, workspaceA
 }
 
 export function writeCreateWorkspaceScript(workspaceName:string, primaryWorkspaceSchema:string):string {
-  const relativePath = `db/_setup/workspaces/${workspaceName}`;
+  const relativePath = `${ConfigurationManager.getDBFolderName()}/_setup/workspaces/${workspaceName}`;
   const wsPath = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativePath);
 
   // create folder
@@ -583,7 +584,7 @@ export function writeCreateWorkspaceScript(workspaceName:string, primaryWorkspac
 }
 
 function writeProxyUserCreationScript(projectName:string, proxyPassword:string) : string {
-  const relativeFile = `db/_setup/users/00_create_${projectName}_depl.sql`;
+  const relativeFile = `${ConfigurationManager.getDBFolderName()}/_setup/users/00_create_${projectName}_depl.sql`;
   const proxyUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
   const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "user_proxy.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
   const content = {
@@ -596,7 +597,7 @@ function writeProxyUserCreationScript(projectName:string, proxyPassword:string) 
 }
 
 function writeSingleUserCreationScript(projectName:string, singlePassword:string) : string {
-  const relativeFile = `db/_setup/users/01_create_${projectName}.sql`;
+  const relativeFile = `${ConfigurationManager.getDBFolderName()}/_setup/users/01_create_${projectName}.sql`;
   const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
   const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "user_single_app.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
   const content = {
@@ -613,10 +614,10 @@ export function writeUserCreationScript(index: number, schema: string, projectNa
 
   // when addionally add schema, this will be -1
   if (index === -1) {
-    idx = fs.readdirSync(path.resolve(workspace.workspaceFolders![0].uri.fsPath, 'db/_setup/users')).length;
+    idx = fs.readdirSync(path.resolve(workspace.workspaceFolders![0].uri.fsPath, `${ConfigurationManager.getDBFolderName()}/_setup/users`)).length;
   }
 
-  const relativeFile = `db/_setup/users/0${idx}_create_${schema}.sql`;
+  const relativeFile = `${ConfigurationManager.getDBFolderName()}/_setup/users/0${idx}_create_${schema}.sql`;
   const schemaUser = path.resolve(workspace.workspaceFolders![0].uri.fsPath, relativeFile);
   const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "user_default.tmpl.sql").split(path.sep).join(path.posix.sep), "utf8"));
   const content = {
@@ -696,15 +697,15 @@ export function getFilesForInstallSQL() {
     return folders;
   };
 
-  files.push (... getFiles("db/_setup/users"));
-  files.push (... getWorkspacesFiles("db/_setup/workspaces"));
+  files.push (... getFiles(`${ConfigurationManager.getDBFolderName()}/_setup/users`));
+  files.push (... getWorkspacesFiles(`${ConfigurationManager.getDBFolderName()}/_setup/workspaces`));
 
   return files;
 }
 
 export function rewriteInstall() {
   {
-    const installFile = `db/_setup/install.sql`;
+    const installFile = `${ConfigurationManager.getDBFolderName()}/_setup/install.sql`;
     const userFile = path.resolve(workspace.workspaceFolders![0].uri.fsPath, installFile);
     if (existsSync(userFile)) {
 

@@ -33,7 +33,7 @@ function export_module() {
       # what ist the actual ID
       DBFLOW_MODULE_NAME="${d}"
 
-      echo -e "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting REST Modul ${DBFLOW_MODULE_NAME} to ${MODULE_PATH} ${NC}"
+      printf "${CLR_LBLUE}$(date '+%d.%m.%Y %H:%M:%S') >> exporting REST Modul ${DBFLOW_MODULE_NAME} to ${MODULE_PATH} ${NC}\n"
       [[ -d "${DBFLOW_MODULE_NAME}" ]] || mkdir "${DBFLOW_MODULE_NAME}"
 
 
@@ -44,7 +44,7 @@ function export_module() {
 
       CONN_DBFLOW_DBUSER=${DBFLOW_DBUSER}
       if [[ ${DBFLOW_MODE} == "FLEX" ]]; then
-        appschema=$(basename $(dirname "${APP_PATH}"))
+        appschema=$(basename $(dirname "${MODULE_PATH}"))
         CONN_DBFLOW_DBUSER=${DBFLOW_DBUSER/\*/$appschema}
       fi
 
@@ -55,7 +55,7 @@ function export_module() {
 EOF
 
       if [[ $? -ne 0 ]]; then
-        echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of REST Module ${DBFLOW_MODULE_NAME}${NC}"
+        printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of REST Module ${DBFLOW_MODULE_NAME}${NC}\n"
 
         # restore
         if [[ -f "${DBFLOW_MODULE_NAME}/${DBFLOW_MODULE_NAME}.module.sql_bck" ]]; then
@@ -64,7 +64,7 @@ EOF
 
         exit 0
       elif [[ -f "${DBFLOW_MODULE_NAME}/${DBFLOW_MODULE_NAME}.module.sql_bck" ]] && [[ ! -f "${DBFLOW_MODULE_NAME}/${DBFLOW_MODULE_NAME}.module.sql" ]]; then
-        echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of REST Module ${DBFLOW_MODULE_NAME}${NC}"
+        printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> failure during export of REST Module ${DBFLOW_MODULE_NAME}${NC}\n"
 
         # restore
         if [[ -f "${DBFLOW_MODULE_NAME}/${DBFLOW_MODULE_NAME}.module.sql_bck" ]]; then
@@ -76,7 +76,7 @@ EOF
         # remove backup
         [[ -f "${DBFLOW_MODULE_NAME}/${DBFLOW_MODULE_NAME}.module.sql_bck" ]] && rm -rf "${DBFLOW_MODULE_NAME}/${DBFLOW_MODULE_NAME}.module.sql_bck"
 
-        echo -e "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done exporting REST Module ${DBFLOW_MODULE_NAME} ${NC}"
+        printf "${CLR_GREEN}$(date '+%d.%m.%Y %H:%M:%S') >> done exporting REST Module ${DBFLOW_MODULE_NAME} ${NC}\n"
       fi
 
       # remove sqlcl history.log
@@ -87,15 +87,15 @@ EOF
     done
     cd "${basepath}"
   else
-    echo -e "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> REST Module folder ${DBFLOW_MODULEFOLDER} does not exist ${NC}"
+    printf "${CLR_REDBGR}$(date '+%d.%m.%Y %H:%M:%S') >> REST Module folder ${DBFLOW_MODULEFOLDER} does not exist ${NC}\n"
   fi
 }
 
-echo -e "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}"
-echo -e "${CLR_LBLUE}Modul:${NC}       ${WHITE}${DBFLOW_RESTMODULE}${NC}"
-echo -e "${CLR_LBLUE}Folder:${NC}      ${WHITE}${DBFLOW_MODULEFOLDER}${NC}"
-echo -e "${CLR_LBLUE}Mode:${NC}        ${WHITE}${DBFLOW_MODE}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}Schema:${NC}      ${WHITE}${DBFLOW_DBUSER}${NC}\n"
+printf "${CLR_LBLUE}Modul:${NC}       ${WHITE}${DBFLOW_RESTMODULE}${NC}\n"
+printf "${CLR_LBLUE}Folder:${NC}      ${WHITE}${DBFLOW_MODULEFOLDER}${NC}\n"
+printf "${CLR_LBLUE}Mode:${NC}        ${WHITE}${DBFLOW_MODE}${NC}\n"
 
 
 
@@ -110,6 +110,8 @@ if [[ "${DBFLOW_RESTMODULE}" == "*" ]]; then
 
   for dirname in "${items[@]}"
   do
+    # echo "Export ${dirname} ${DBFLOW_RESTMODULE}"
+    dirname="${dirname#./}"
     export_module "${dirname}" "${DBFLOW_RESTMODULE}"
   done
 else

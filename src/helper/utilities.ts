@@ -4,8 +4,12 @@ import { existsSync, mkdirSync, readdirSync} from "fs";
 import { platform } from "os";
 import { exec } from "child_process";
 import { LoggingService } from "./LoggingService";
+import { ConfigurationManager } from "./ConfigurationManager";
+import { getDBFlowMode, IProjectInfos } from "../provider/AbstractBashTaskProvider";
+import { CompileTaskStore } from "../stores/CompileTaskStore";
+import { ExtensionContext } from "vscode";
 
-const isWindows = platform() === 'win32'
+const isWindows = platform() === 'win32';
 
 export interface KeyVal {
   key: string;
@@ -57,14 +61,14 @@ export function toUpperDriverLetter(wsf: string) {
 }
 
 export function ltrim (s:string, c:string) {
-  if (c === "]") c = "\\]";
-  if (c === "^") c = "\\^";
-  if (c === "\\") c = "\\\\";
+  if (c === "]") {c = "\\]";}
+  if (c === "^") {c = "\\^";}
+  if (c === "\\") {c = "\\\\";}
   return s.replace(new RegExp("^[" + c + "]+|[" + c + "]+$", "g"), "");
 }
 
 export function rtrim (s:string, c:string) {
-  if (s === undefined) s = '\\s';
+  if (s === undefined) {s = '\\s';}
   return s.replace(new RegExp("[" + c + "]*$"), '');
 };
 
@@ -175,7 +179,7 @@ export function getSubFolders(source:string):string[] {
 
 export async function getWorkingFile(context: vscode.ExtensionContext) {
   let fileName:string = vscode.window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
-  LoggingService.logDebug(`fileName:string: ${fileName}`)
+  LoggingService.logDebug(`fileName:string: ${fileName}`);
   if (fileName === undefined) {
     LoggingService.logDebug(`call copyFilePath`);
     const tmpClipboard = await vscode.env.clipboard.readText();
@@ -198,7 +202,7 @@ export async function getWorkingFile(context: vscode.ExtensionContext) {
   } else {
     LoggingService.logDebug(`fileName: ${fileName} does not exist, reading globalState`);
     fileName = context.globalState.get("lastFileName") + "";
-    LoggingService.logDebug(`fileName:globalstate: ${fileName}`)
+    LoggingService.logDebug(`fileName:globalstate: ${fileName}`);
   }
   return toUpperDriverLetter(fileName);
 }
@@ -210,20 +214,22 @@ export function getRelativePartsFromFile(filePath:string):string[] {
   return parts;
 }
 
-export function getSchemaFromFile(filePath:string):string {
+export function getSchemaFromFile(filePath:string, isFlexMode:boolean):string {
   const parts:string[] = getRelativePartsFromFile(filePath);
 
-  if (parts[0] === "db") {
-    return parts[1]
+  if (parts[0] === ConfigurationManager.getDBFolderName() && parts[1] !== "*") {
+    return parts[1];
+  } else if (parts[0] === "apex" && isFlexMode && parts[1] !== "*") {
+    return parts[1];
   }
 
-  throw new Error("Unknown directory structur (getSchemaFromFile) first part is not 'db != '" + parts[0]);
+  throw new Error(`Unknown directory structur (getSchemaFromFile) first part is not '${ConfigurationManager.getDBFolderName()} != ${parts[0]}`);
 }
 
 export function getObjectTypePathFromFile(filePath:string):string {
   const parts:string[] = getRelativePartsFromFile(filePath);
 
-  if (parts[0] === "db") {
+  if (parts[0] === ConfigurationManager.getDBFolderName()) {
     parts.shift();
     parts.shift();
     parts.pop();
@@ -235,18 +241,18 @@ export function getObjectTypePathFromFile(filePath:string):string {
     return parts.join('/');
   }
 
-  throw new Error("Unknown directory structur (getObjectTypeFromFile) first part is not 'db != '" + parts[0]);
+  throw new Error(`Unknown directory structur (getObjectTypePathFromFile) first part is not '${ConfigurationManager.getDBFolderName()} != ${parts[0]}`);
 
 }
 
 export function getObjectNameFromFile(filePath:string):string {
   const parts:string[] = getRelativePartsFromFile(filePath);
 
-  if (parts[0] === "db") {
+  if (parts[0] === ConfigurationManager.getDBFolderName()) {
     return path.basename(filePath);
   }
-  LoggingService.logError("Unknown directory structur (getObjectNameFromFile) first part is not 'db != '" + parts[0]);
-  throw new Error("Unknown directory structur (getObjectNameFromFile) first part is not 'db != '" + parts[0]);
+  LoggingService.logError(`Unknown directory structur (getObjectNameFromFile) first part is not '${ConfigurationManager.getDBFolderName()} != ${parts[0]}`);
+  throw new Error(`Unknown directory structur (getObjectNameFromFile) first part is not '${ConfigurationManager.getDBFolderName()} != ${parts[0]}`);
 
 }
 
@@ -290,7 +296,7 @@ export const isJSON = (content: string): boolean => {
     } catch (error) {
       return false;
     }
-}
+};
 
 export const replaceKeysWithValues = (inputString: string, keyValues: KeyVal[]): string => {
   let resultString = inputString;
@@ -300,7 +306,7 @@ export const replaceKeysWithValues = (inputString: string, keyValues: KeyVal[]):
   });
 
   return resultString;
-}
+};
 
 export function toFlatPropertyMap(obj: object, keySeparator = '/') {
   const flattenRecursive = (obj: object, parentProperty?: string, propertyMap: Record<string, unknown> = {}) => {
@@ -338,3 +344,25 @@ export function showInformationProgress(msg:string, timeoutms:number = 3000) {
     return p;
   });
 }
+
+
+
+
+  export function getPassword(pInfos: IProjectInfos, pTargetUser: string, useDefaultPW: boolean, context: ExtensionContext): string {
+    let passWord =  "";
+    const dbFluxMode = getDBFlowMode(context);
+
+    if (pTargetUser === pInfos.dbAdminUser) {
+      passWord = CompileTaskStore.getInstance().adminPwd!;
+    } else if (["dbFlux", "dbFlow"].includes(dbFluxMode!) && pInfos.dbPasses?.hasOwnProperty(`dbFlux_${pTargetUser}_PWD`)){
+      passWord = pInfos.dbPasses[`dbFlux_${pTargetUser}_PWD`];
+    } else {
+      if (useDefaultPW) {
+        passWord = pInfos.dbAppPwd!;
+      } else {
+        passWord = CompileTaskStore.getInstance().appPwd!;
+      }
+    }
+
+    return passWord;
+  }

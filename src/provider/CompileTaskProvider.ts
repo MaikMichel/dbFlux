@@ -3,7 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationManager, focusProblemPanel } from "../helper/ConfigurationManager";
-import { getActiveFileUri, getApplicationIdFromApexPath, getApplicationIdFromStaticPath, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
+import { getActiveFileUri, getApplicationIdFromApexPath, getPassword, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
 import { AbstractBashTaskProvider, buildConnectionUser, getDBSchemaFolders, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { CompileTaskStore, setAdminPassword, setAdminUserName, setAppPassword } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
@@ -179,7 +179,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
     ConfigurationManager.getCustomTriggerRuns().forEach((runner)=>{
       if (compInfos.activeFile.match(runner.triggeringExpression)) {
         const obj = {
-          "connection": this.getConnection(compInfos.projectInfos, runner.runFile),
+          "connection": this.getConnection(compInfos.projectInfos, runner.runFile, true),
           "file": '@' + runner.runFile + ((runner.runFileParameters) ? " " + runner.runFileParameters.map((item)=>`"${item}"`) .join(" ") : "")
         };
         myList.push(obj);
@@ -196,7 +196,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
     ConfigurationManager.getCustomTriggerCalls().forEach((runner)=>{
       if (compInfos.activeFile.match(runner.triggeringExpression)) {
         const obj = {
-          "connection": this.getConnection(compInfos.projectInfos, runner.runMethodTargetFile),
+          "connection": this.getConnection(compInfos.projectInfos, runner.runMethodTargetFile, true),
           "method": runner.runMethod,
           "tfile": runner.runMethodTargetFile
         };
@@ -228,7 +228,7 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
           const selectedFolders  = (context.workspaceState.get("dbFlux_last_compiled_folders")!+"").split("|");
           dbSchemaFolders.forEach((v)=>{
             v.picked = selectedFolders.includes(v.description!);
-          })
+          });
 
           const items: QuickPickItem[] | undefined = await window.showQuickPick(dbSchemaFolders, {
             canPickMany: true, placeHolder: 'Choose Schema to compile'
@@ -251,7 +251,7 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
           });
 
 
-          if (compileOption != undefined) {
+          if (compileOption !== undefined) {
 
             which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
               context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileSchemasProvider(context, "compileSchemas", compileOption.label)));
@@ -286,12 +286,12 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
       LoggingService.logDebug(`Configuration is valid.`);
       // check what file has to build
       let fileName = await getWorkingFile(context);
-      const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
+      const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
       LoggingService.logDebug(`File to compile is: ${relativeFileName}`);
 
-      const insideSetup = (matchRuleShort(relativeFileName, 'db/_setup/*') || matchRuleShort(relativeFileName, 'db/.setup/*'));
-      const insideDb = !insideSetup && matchRuleShort(relativeFileName, 'db/*');
+      const insideSetup = (matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/_setup/*`) || matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/.setup/*`));
+      const insideDb = !insideSetup && matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/*`);
       const insideStatics = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'static/*/*/f*/src/*' : 'static/f*/src/*');
       const insidePlugins = matchRuleShort(relativeFileName, projectInfos.isFlexMode ? 'plugin/*/*/f*/*/src/*' : 'plugin/f*/*/src/*');
       const insideReports = matchRuleShort(relativeFileName, 'reports/*');
@@ -307,7 +307,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
         await setAdminPassword(projectInfos);
       } else {
         LoggingService.logDebug(`outside setup, check application pass`);
-        await setAppPassword(projectInfos);
+        await setAppPassword(projectInfos, context, relativeFileName);
       }
 
       if ((insideSetup
@@ -541,22 +541,23 @@ async function isfileLockedByAnotherUser(projectName: string, relativeFileName: 
 }
 
 
-export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, cli: string) {
+export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, cli: string, context: ExtensionContext) {
   return commands.registerCommand(command, async () => {
 
     const dbSchemaFolders = await getDBSchemaFolders();
     let schemaSelected: boolean = await selectSchema(dbSchemaFolders);
+    const selectedSchemas = CompileTaskStore.getInstance().selectedSchemas;
 
-    if (schemaSelected) {
-      await setAppPassword(projectInfos)
+    if (schemaSelected && selectedSchemas) {
+      const connectionUser = buildConnectionUser(projectInfos, "", undefined);
+      const schemaName = selectedSchemas[0].split("/")[1];
+      await setAppPassword(projectInfos);
+      const passWord = getPassword(projectInfos, schemaName, (CompileTaskStore.getInstance().appPwd === undefined) , context);
 
-      const compTaskStoreInstance = CompileTaskStore.getInstance();
-      if (compTaskStoreInstance.appPwd !== undefined) {
-        const userName = buildConnectionUser(projectInfos, "", undefined);
+      if (passWord !== undefined) {
         const termName = cli;
 
-
-        const term = window.createTerminal(termName, 'bash', ['-cl', cli + " " + userName + "/" + compTaskStoreInstance.appPwd + "@" + projectInfos.dbTns]);
+        const term = window.createTerminal(termName, 'bash', ['-cl', cli + " " + connectionUser + "/" + passWord + "@" + projectInfos.dbTns]);
 
           window.onDidCloseTerminal(event => {
             if (term && termName === event.name) {

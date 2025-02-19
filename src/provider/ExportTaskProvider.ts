@@ -7,6 +7,7 @@ import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractB
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
+import { LoggingService } from "../helper/LoggingService";
 
 const which = require('which');
 
@@ -142,8 +143,6 @@ export class ExportTaskPluginProvider extends AbstractBashTaskProvider implement
   }
 
   createExpTask(definition: ExportTaskDefinition): Task {
-    console.log('definition', definition);
-
     const plugFolder = ExportTaskStore.getInstance().expPlugin!;
     const pathItems = plugFolder?.split('/');
     const plugAppID = pathItems[pathItems?.length-2];
@@ -170,7 +169,6 @@ export class ExportTaskPluginProvider extends AbstractBashTaskProvider implement
     );
     _task.presentationOptions.echo = false;
 
-    console.log('_task', _task);
     return _task;
   }
 
@@ -199,22 +197,26 @@ export function registerExportAPEXCommand(projectInfos: IProjectInfos, context: 
   return commands.registerCommand("dbFlux.exportAPEX", async () => {
 
     if (projectInfos.isValid) {
-      setAppPassword(projectInfos);
 
-      if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        which('sql').then(async () => {
-          ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, true);
+      which('sql').then(async () => {
+        const hasDbPasses = projectInfos.dbPasses && Object.keys(projectInfos.dbPasses).length > 0;
+        const showWildCard = (!projectInfos.isFlexMode || !(hasDbPasses));
 
-          if (ExportTaskStore.getInstance().expID !== undefined) {
+        ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, showWildCard);
+
+        if (ExportTaskStore.getInstance().expID !== undefined) {
+          setAppPassword(projectInfos, context, ExportTaskStore.getInstance().expID);
+
+          if (CompileTaskStore.getInstance().appPwd !== undefined) {
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportTaskProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportAPEX");
-          } else {
-            window.setStatusBarMessage('dbFlux: No Application found or selected', 2000);
           }
-        }).catch(() => {
-          window.showErrorMessage('dbFlux: No executable "sql" found on path!');
-        });
-      }
+        } else {
+          window.setStatusBarMessage('dbFlux: No Application found or selected', 2000);
+        }
+      }).catch(() => {
+        window.showErrorMessage('dbFlux: No executable "sql" found on path!');
+      });
     }
   });
 };
@@ -223,28 +225,31 @@ export function registerExportAPEXPluginCommand(projectInfos: IProjectInfos, con
   return commands.registerCommand("dbFlux.exportAPEX.plugin", async () => {
 
     if (projectInfos.isValid) {
-      setAppPassword(projectInfos);
 
-      if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        which('sql').then(async () => {
-          try {
+      which('sql').then(async () => {
+        try {
 
-            ExportTaskStore.getInstance().expPlugin = await ExportTaskStore.getInstance().getAppPlugID(projectInfos, false);
+          ExportTaskStore.getInstance().expPlugin = await ExportTaskStore.getInstance().getAppPlugID(projectInfos, false);
 
-            if (ExportTaskStore.getInstance().expPlugin !== undefined) {
+          if (ExportTaskStore.getInstance().expPlugin !== undefined) {
+
+            setAppPassword(projectInfos, context, ExportTaskStore.getInstance().expPlugin);
+
+            if (CompileTaskStore.getInstance().appPwd !== undefined) {
               context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportTaskPluginProvider(context)));
               await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportAPEXPlugin");
-            } else {
-              window.setStatusBarMessage('dbFlux: No Plugin found or selected', 2000);
             }
-          } catch (err) {
-            console.log("err", err);
-            window.showErrorMessage(err+"");
+          } else {
+            window.setStatusBarMessage('dbFlux: No Plugin found or selected', 2000);
           }
-        }).catch(() => {
-          window.showErrorMessage('dbFlux: No executable "sql" found on path!');
-        });
-      }
+        } catch (err) {
+          LoggingService.logError(err+"", err);
+          window.showErrorMessage(err+"");
+        }
+      }).catch(() => {
+        window.showErrorMessage('dbFlux: No executable "sql" found on path!');
+      });
     }
+
   });
 };

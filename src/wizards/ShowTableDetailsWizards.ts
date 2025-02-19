@@ -17,7 +17,7 @@ import { DBFluxTableDetails } from '../ui/DBFluxTableDetails';
 
 
 export async function showTableDetailsWizard(context: ExtensionContext, tree: DBFluxTableDetails, guessContext: boolean) {
-  const title = 'dbFLux: Show Table Details';
+  const title = 'dbFlux: Show Table Details';
 
   interface State {
     title:               string;

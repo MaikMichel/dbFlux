@@ -1,15 +1,16 @@
 import { commands, env, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, window, workspace } from 'vscode';
 
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
+import * as jsonc from 'jsonc-parser';
 import * as path from "path";
 import { ConfigurationManager } from '../helper/ConfigurationManager';
+import { LoggingService } from '../helper/LoggingService';
 import { createDirectoryPath, getSubFolders, getWorkspaceRootPath, rtrim, showInformationProgress } from '../helper/utilities';
 import { ExportTaskStore } from '../stores/ExportTaskStore';
 import { getAvailableObjectTypes } from '../wizards/CreateObjectWizard';
 import { dbFolderDef, restFolderDef, rewriteInstall, writeCreateWorkspaceAdminScript, writeCreateWorkspaceScript, writeUserCreationScript } from '../wizards/InitializeProjectWizard';
 import { MultiStepInput } from '../wizards/InputFlowAction';
 import { getDBUserFromPath, getProjectInfos, IProjectInfos } from './AbstractBashTaskProvider';
-import { LoggingService } from '../helper/LoggingService';
 
 export async function addAPEXApp(context: ExtensionContext, folder:string) {
   interface State {
@@ -168,6 +169,88 @@ export async function addHookFile(context: ExtensionContext) {
 }
 
 
+async function getFirstValidSubfolder(context:ExtensionContext): Promise<string> {
+  const wsRoot = workspace.workspaceFolders?.[0]?.uri.fsPath;
+  if (wsRoot) {
+    const projectInfos = await getProjectInfos(context);
+
+
+    const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
+    const getSchemaFolders = (source: PathLike) => readdirSync(source, { withFileTypes: true })
+    .filter((dirent) => {
+      return dirent.isDirectory() && !["_setup", ".setup", "dist", ".hooks"].includes(dirent.name);
+    })
+    .map((dirent) => dirent.name);
+
+    if (projectInfos.isFlexMode) {
+      return getSchemaFolders(sourceDB)[0];
+    } else {
+      return projectInfos.dataSchema;
+    }
+  }
+
+  return "demo";
+}
+
+
+export async function addCustomTriggerRun(context:ExtensionContext) {
+  const workspaceFolder = workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+      window.showErrorMessage("dbFlux: No workspace opened");
+      return;
+  }
+
+  // path to settings.json
+  const settingsUri = workspaceFolder.uri.with({
+    path: workspaceFolder.uri.path + "/.vscode/settings.json"
+  });
+
+  try {
+    // Prüfen, ob settings.json existiert, ansonsten anlegen
+    let settingsDoc;
+    try {
+        settingsDoc = await workspace.fs.readFile(settingsUri);
+    } catch (err) {
+        settingsDoc = Buffer.from("{}"); // Falls nicht vorhanden, mit leerem JSON starten
+    }
+
+    // JSON-Inhalt parsen
+    let settings = jsonc.parse(settingsDoc.toString());
+
+    // Falls dbFlux.customTriggerRuns nicht existiert, initialisieren
+    if (!settings["dbFlux.customTriggerRuns"]) {
+        settings["dbFlux.customTriggerRuns"] = [];
+    }
+
+
+    const folderName = await getFirstValidSubfolder(context);
+    // Neues Element, das hinzugefügt werden soll
+    const newTrigger = {
+        "triggeringExpression": `db\\/${folderName}\\/(tables|tables/tables_ddl)\\/.+\\.sql`,
+        "runFile": `db/${folderName}/.hooks/post/010_demo.tables.sql`,
+        "runFileParameters": ["dev", "dev", "${fileBasename}"]
+    };
+
+    // Neuen Trigger hinzufügen
+    settings["dbFlux.customTriggerRuns"].push(newTrigger);
+
+    // Änderungen in settings.json speichern
+    const edits = jsonc.modify(settingsDoc.toString(), ["dbFlux.customTriggerRuns"], settings["dbFlux.customTriggerRuns"], { formattingOptions: { insertSpaces: true, tabSize: 4 } });
+    const updatedSettings = jsonc.applyEdits(settingsDoc.toString(), edits);
+
+    await workspace.fs.writeFile(settingsUri, Buffer.from(updatedSettings));
+
+    // Open the settings file in the editor
+    const document = await workspace.openTextDocument(settingsUri);
+    await window.showTextDocument(document);
+
+    window.showInformationMessage("dbFlux: New CustomTriggerRun added!\n\nYou have to edit the path and filename to make this work by your own.");
+
+  } catch (error) {
+      window.showErrorMessage("dbFlux: Error when editing settings.json: " + error);
+  }
+}
+
 async function getAvailableFolders(folderserach: string): Promise<QuickPickItem[]> {
   if (workspace.workspaceFolders !== undefined) {
     const folders = await getAvailableObjectTypes();
@@ -263,9 +346,9 @@ export function addAppPlugin(plugID: string, folder: string, targetAPPID: string
           "version" :     "0.1.0",
           "description" : "Give me a nice description",
           "keywords" :    ["KEYWORDA", "KEYWORDB"],
-          "homepage" :    "https://maybe.you.can.find.me.oon.github.com",
+          "homepage" :    "https://maybe.you.can.find.me.on.github.com",
           "bugs" : {
-            "url" :       "https://maybe.you.can.find.me.oon.github.com/issues",
+            "url" :       "https://maybe.you.can.find.me.on.github.com/issues",
             "email" :     "this.could.be.my@adress.com"
           },
           "license" :     "MIT",
@@ -276,7 +359,7 @@ export function addAppPlugin(plugID: string, folder: string, targetAPPID: string
           },
           "repository" : {
             "type" :      "git",
-            "url" :       "https://maybe.you.can.find.me.oon.github.git"
+            "url" :       "https://maybe.you.can.find.me.on.github.git"
           },
           "oracle" : {
             "versions" :  ["23.0.0"],
@@ -286,7 +369,7 @@ export function addAppPlugin(plugID: string, folder: string, targetAPPID: string
                 "internalName" : plugID,
                 "type" :         "item",
                 "demo" :         "https://apex.oracle.com/some-kind-of-demo-app",
-                "previewImage" : `https://maybe.you.can.find.me.oon.github.com/${plugFolder}/src/img/demo.png`
+                "previewImage" : `https://maybe.you.can.find.me.on.github.com/${plugFolder}/src/img/demo.png`
               }
             }
           }
@@ -401,7 +484,7 @@ export async function addRESTModule(context: ExtensionContext) {
       LoggingService.logWarning('Canceled');
     }
   } else {
-    window.showWarningMessage("dbFlux: You have to add at least one Schema-folder inside rest folder. Juse user Command dbFLux: Add Schema");
+    window.showWarningMessage("dbFlux: You have to add at least one Schema-folder inside rest folder. Juse user Command dbFlux: Add Schema");
   }
 }
 
@@ -524,7 +607,7 @@ export function addWorkspaceFolder(workspaceName: string, schema: string) {
 
   if (workspace.workspaceFolders !== undefined) {
     const wsRootPath = workspace.workspaceFolders![0];
-    [`apex/${schema}`, `static/${schema}`, `db/_setup/workspaces`].forEach(element => {
+    [`apex/${schema}`, `static/${schema}`, `${ConfigurationManager.getDBFolderName()}/_setup/workspaces`].forEach(element => {
       const dirName:string = path.join(wsRootPath.uri.fsPath, element, `/${workspaceName}`);
       if (!existsSync(dirName)){
         mkdirSync(dirName, { recursive: true });
@@ -538,7 +621,7 @@ export function addWorkspaceFolder(workspaceName: string, schema: string) {
     rewriteInstall();
 
     const openScript = 'Open Script';
-    window.showInformationMessage(`Schema: ${schema} created inside Folders: ${[`apex/${schema}`, `static/${schema}`, `db/_setup/workspaces`].join(',')}.
+    window.showInformationMessage(`Schema: ${schema} created inside Folders: ${[`apex/${schema}`, `static/${schema}`, `${ConfigurationManager.getDBFolderName()}/_setup/workspaces`].join(',')}.
     Schema creation script written to _setup schema. Open to run it.`, openScript)
     .then(selection => {
       if (selection === openScript) {
@@ -631,7 +714,7 @@ async function getMainFolders(): Promise<QuickPickItem[]> {
     const getMFolders = (source: PathLike) =>
           readdirSync(source, { withFileTypes: true })
           .filter((dirent) => {
-            return dirent.isDirectory() && ["apex", "db", "rest", "static"].includes(dirent.name);
+            return dirent.isDirectory() && ["apex", ConfigurationManager.getDBFolderName(), "rest", "static"].includes(dirent.name);
           })
           .map((dirent) => dirent.name);
 
@@ -660,7 +743,7 @@ function addMainFolders(schema: string, folders: any, projectInfos:IProjectInfos
           }
 
           // create db folder structure
-          if (wsPath.description === "db") {
+          if (wsPath.description === ConfigurationManager.getDBFolderName()) {
             createDirectoryPath(dbFolderDef, "/", dirName) ;
           }
 
@@ -687,7 +770,7 @@ function addMainFolders(schema: string, folders: any, projectInfos:IProjectInfos
         });
       }
     } else {
-      window.showWarningMessage(`dbFlux: No mainfolder selected (apex, db, rest, static)`);
+      window.showWarningMessage(`dbFlux: No mainfolder selected (apex, ${ConfigurationManager.getDBFolderName()}, rest, static)`);
     }
   }
 }
@@ -716,6 +799,13 @@ export function registerAddHookFileCommand(context: ExtensionContext) {
     addHookFile(context)
   });
 }
+
+export function registerAddCustomtriggerRunCommand(context: ExtensionContext) {
+  return commands.registerCommand("dbFlux.addCustomTriggerRun", async () => {
+    addCustomTriggerRun(context)
+  });
+}
+
 
 export function registerAddStaticApplicationFolderCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.addStaticFolder", async () => {
@@ -778,7 +868,7 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
     const fileName = window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
     const wsRoot = getWorkspaceRootPath();
     const dbUser = getDBUserFromPath(fileName, projectInfos);
-    const dirName = path.join(wsRoot, "db", dbUser);
+    const dirName = path.join(wsRoot, ConfigurationManager.getDBFolderName(), dbUser);
 
 
     const fileArray:String[] = [];
@@ -821,7 +911,7 @@ export function registerJoinFromFilesCommand(projectInfos: IProjectInfos) {
     const fileName = window.activeTextEditor?.document.fileName.split(path.sep).join(path.posix.sep)!;
     const wsRoot = getWorkspaceRootPath();
     const dbUser = getDBUserFromPath(fileName, projectInfos);
-    const dirName = path.join(wsRoot, "db", dbUser);
+    const dirName = path.join(wsRoot, ConfigurationManager.getDBFolderName(), dbUser);
     let joined = false;
 
     // read file
@@ -863,7 +953,7 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
     const wsRoot = getWorkspaceRootPath();
 
     const dbUser = getDBUserFromPath(fileName, projectInfos);
-    const dirName = path.join(wsRoot, "db", dbUser).replace(/\\/g, '/');
+    const dirName = path.join(wsRoot, ConfigurationManager.getDBFolderName(), dbUser).replace(/\\/g, '/');
     let joined = false;
 
     // loop through all constraint files with the tablename
@@ -911,35 +1001,85 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
   });
 }
 
+
+function findFileWithHighestIndex(pathToRead:string, filePrefix:string): string|undefined {
+  const files = readdirSync(pathToRead);
+
+  const matchingFiles = files.filter(file => file.startsWith(filePrefix+".") && file.endsWith('.sql'));
+
+  let maxIndex = -1;
+  let maxFile = undefined;
+
+  matchingFiles.forEach(file => {
+    // extract number between dots "a_table.3.sql" -> 3
+    const match = file.match(/a_table\.(\d+)\.sql/);
+    if (match && match[1]) {
+      const index = parseInt(match[1], 10);
+      if (index > maxIndex) {
+        maxIndex = index;
+        maxFile = file;
+      }
+    }
+  });
+
+  return maxFile;
+}
+
 export function registerOpenSpecOrBody() {
   return commands.registerCommand("dbFlux.openSpecOrBody", async () => {
+    // currentFilename
     const fileName = window.activeTextEditor?.document.fileName;
     if (fileName) {
+
+      let fileNameNew = fileName;
       const extension = path.extname(fileName);
-      if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
-        LoggingService.logInfo('fileName: ' + fileName);
-        let extensionNew = "xxx";
-        if (extension === ".pks") {
-          extensionNew = ".pkb";
-        } else if (extension === ".PKS") {
-          extensionNew = ".PKB";
-        } else if (extension === ".pkb") {
-          extensionNew = ".pks";
-        } else if (extension === ".PKB") {
-          extensionNew = ".PKS";
-        } else if (extension === ".tps") {
-          extensionNew = ".tpb";
-        } else if (extension === ".TPS") {
-          extensionNew = ".TPB";
-        } else if (extension === ".tpb") {
-          extensionNew = ".tps";
-        } else if (extension === ".TPB") {
-          extensionNew = ".TPS";
+      const pathes = fileName.split(path.sep);
+
+      // remove filename from Array (last element)
+      pathes.pop();
+
+      // dependend from last folder
+      if (pathes[pathes.length-1] == "tables") {
+        // find matching file with max index
+        pathes.push("tables_ddl");
+        pathes.push(findFileWithHighestIndex(pathes.join(path.sep)!, path.basename(fileName).split(".")[0])!);
+
+        fileNameNew = pathes.join(path.sep);
+      } else if (pathes[pathes.length-1] == "tables_ddl") {
+        // find matching file without index
+        pathes.pop();
+        pathes.push(path.basename(fileName).split(".")[0]+extension);
+
+        fileNameNew = pathes.join(path.sep);
+      } else if (pathes[pathes.length-1] == "packages") {
+        // switch based on extension
+        if ([".pks", ".pkb", ".tps", ".tpb"].includes(extension.toLowerCase())) {
+          let extensionNew = "xxx";
+          if (extension === ".pks") {
+            extensionNew = ".pkb";
+          } else if (extension === ".PKS") {
+            extensionNew = ".PKB";
+          } else if (extension === ".pkb") {
+            extensionNew = ".pks";
+          } else if (extension === ".PKB") {
+            extensionNew = ".PKS";
+          } else if (extension === ".tps") {
+            extensionNew = ".tpb";
+          } else if (extension === ".TPS") {
+            extensionNew = ".TPB";
+          } else if (extension === ".tpb") {
+            extensionNew = ".tps";
+          } else if (extension === ".TPB") {
+            extensionNew = ".TPS";
+          }
+
+          fileNameNew = fileName.replace(extension, extensionNew);
         }
+      }
 
-        const fileNameNew = fileName.replace(extension, extensionNew);
-
-        if (existsSync(fileNameNew)) {
+      if (existsSync(fileNameNew)) {
+        if (fileName != fileNameNew) {
+          LoggingService.logInfo('Switch to file: ' + workspace.asRelativePath(fileNameNew));
           workspace.openTextDocument(Uri.file(fileNameNew)).then(doc => {
             window.showTextDocument(doc, {preview: false});
           });
@@ -990,7 +1130,7 @@ function addHookFileToPath(folder: string, filename: string) {
   const baseF    = rtrim(path.basename(filename), ".sql");
   const fullFile = dirName + '/' + baseF + ".sql";
 
-  const tmplFileName = (folder.startsWith(".hooks") || folder.startsWith("db/.hooks")) ? "globalhook.tmpl.sql" : "hook.tmpl.sql"
+  const tmplFileName = (folder.startsWith(".hooks") || folder.startsWith("${ConfigurationManager.getDBFolderName()}/.hooks")) ? "globalhook.tmpl.sql" : "hook.tmpl.sql"
   const template = readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", tmplFileName).split(path.sep).join(path.posix.sep), "utf8");
 
   if (!existsSync(dirName)) {

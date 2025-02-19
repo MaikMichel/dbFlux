@@ -15,7 +15,7 @@ import { LoggingService } from '../helper/LoggingService';
 const COLUMN_SNIPPET_SCOPE = "dbflux.column_context";
 
 export async function chooseSnippetWizard() {
-  const title = 'dbFLux: Create ObjectType Snippet';
+  const title = 'dbFlux: Create ObjectType Snippet';
 
   interface State {
     title:               string;

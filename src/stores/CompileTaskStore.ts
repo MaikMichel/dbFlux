@@ -1,5 +1,6 @@
-import { window } from "vscode";
-import { IProjectInfos } from "../provider/AbstractBashTaskProvider";
+import { ExtensionContext, window } from "vscode";
+import { getDBFlowMode, IProjectInfos } from "../provider/AbstractBashTaskProvider";
+import { getSchemaFromFile, getWorkspaceRootPath } from "../helper/utilities";
 
 
 
@@ -98,17 +99,35 @@ export async function setAdminPassword(projectInfosReloaded: IProjectInfos) {
   }
 }
 
-export async function setAppPassword(projectInfosReloaded: IProjectInfos) {
+export async function setAppPassword(projectInfosReloaded: IProjectInfos, context: ExtensionContext | undefined = undefined, relativeFileName: string | undefined = undefined) {
   const compTaskStoreInstance = CompileTaskStore.getInstance();
-  if (!projectInfosReloaded.dbAppPwd) {
-    if (!compTaskStoreInstance.appPwd) {
-      compTaskStoreInstance.appPwd = await window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfosReloaded.dbAppUser}@${projectInfosReloaded.dbTns}`, placeHolder: "Password", password: true });
-    } else {
-      if (compTaskStoreInstance.appPwd?.length === 0) {
-        compTaskStoreInstance.appPwd = undefined;
+  let schemaPWD:string|undefined = undefined;
+  if (relativeFileName) {
+     let schemaName = "";
+     try {
+      schemaName = getSchemaFromFile(relativeFileName, projectInfosReloaded.isFlexMode);
+      if (getDBFlowMode(context!) === "dbFlux") {
+        schemaPWD = await context?.secrets.get(getWorkspaceRootPath() + `|dbFlux_${schemaName}_PWD`)
       }
-    }
+     } catch (e) {
+
+     }
+  }
+
+  if (schemaPWD) {
+    compTaskStoreInstance.appPwd = schemaPWD;
   } else {
-    compTaskStoreInstance.appPwd = projectInfosReloaded.dbAppPwd;
+
+    if (!projectInfosReloaded.dbAppPwd) {
+      if (!compTaskStoreInstance.appPwd) {
+        compTaskStoreInstance.appPwd = await window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfosReloaded.dbAppUser}@${projectInfosReloaded.dbTns}`, placeHolder: "Password", password: true });
+      } else {
+        if (compTaskStoreInstance.appPwd?.length === 0) {
+          compTaskStoreInstance.appPwd = undefined;
+        }
+      }
+    } else {
+      compTaskStoreInstance.appPwd = projectInfosReloaded.dbAppPwd;
+    }
   }
 }

@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as dotenv from "dotenv";
 import { chmodSync, existsSync, PathLike, readdirSync, readFileSync } from "fs";
-import { getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
+import { getPassword, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import * as yaml from 'yaml';
 import { CompileTaskStore } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, Uri, window, workspace } from "vscode";
@@ -32,13 +32,16 @@ export interface IProjectInfos {
   isValid: boolean;
   isFlexMode: boolean;
   workspace: string|undefined;
+  dbPasses: any|undefined;
 }
 
 export abstract class AbstractBashTaskProvider {
   context: ExtensionContext;
+  dbFluxMode: string;
 
   constructor(context: ExtensionContext) {
     this.context = context;
+    this.dbFluxMode = getDBFlowMode(context)!;
   }
 
   static dbFluxType: string = "dbFlux";
@@ -83,14 +86,18 @@ export abstract class AbstractBashTaskProvider {
 
 
 
-  getConnection(projectInfos: IProjectInfos, currentPath: string): string {
-    return this.buildConnectionUser(projectInfos, currentPath) + `/"${projectInfos.dbAppPwd}"@${projectInfos.dbTns}`;
+  getConnection(projectInfos: IProjectInfos, currentPath: string, useDefaultPW: boolean ): string {
+    const connUser = this.buildConnectionUser(projectInfos, currentPath);
+    const connPass = getPassword(projectInfos, connUser, useDefaultPW, this.context);
+    return connUser + `/"${connPass}"@${projectInfos.dbTns}`;
   }
+
 
 
    async setInitialCompileInfo(execFileName:string, fileUri: Uri, runnerInfo:IBashInfos):Promise<void> {
     let projectInfos: IProjectInfos = await getProjectInfos(this.context);
     const activeFile = fileUri.fsPath.split(path.sep).join(path.posix.sep);
+
 
     runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", "shell", execFileName).split(path.sep).join(path.posix.sep);
     if (existsSync(runnerInfo.runFile)) {
@@ -100,9 +107,9 @@ export abstract class AbstractBashTaskProvider {
 
     runnerInfo.connectionTns  = projectInfos.dbTns;
     runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd, fileUri.path);
-    runnerInfo.connectionPass = runnerInfo.connectionUser === projectInfos.dbAdminUser ? CompileTaskStore.getInstance().adminPwd! : CompileTaskStore.getInstance().appPwd!;
-    runnerInfo.projectInfos   = projectInfos;
+    runnerInfo.connectionPass = getPassword(projectInfos, runnerInfo.connectionUser, false, this.context);
 
+    runnerInfo.projectInfos   = projectInfos;
     runnerInfo.coloredOutput  = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
 
     if (matchRuleShort(runnerInfo.connectionPass, "${*}") ||
@@ -121,10 +128,16 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
   if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
     return projectInfos.dbAdminUser+"".toLowerCase();
   } else {
-    if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath.toLowerCase()) {
-      return `${projectInfos.dbAppUser}`;
+    // check if there is a var with pattern: dbFlux_..._PWD,
+    if (projectInfos.dbPasses?.hasOwnProperty(`dbFlux_${dbUserFromPath}_PWD`)) {
+      return `${dbUserFromPath}`;
     } else {
-      return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
+      // otherwise as usual
+      if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath.toLowerCase()) {
+        return `${projectInfos.dbAppUser}`;
+      } else {
+        return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
+      }
     }
   }
 }
@@ -134,7 +147,7 @@ export async function getProjectInfos(context: ExtensionContext) {
   if (getDBFlowMode(context) === "dbFlux") {
     projectInfos = await getProjectInfosFromDBFlux(context);
   } else if (getDBFlowMode(context) === "dbFlow") {
-    projectInfos = getProjectInfosFromDBFlow();
+    projectInfos = await getProjectInfosFromDBFlow(context);
   } else if (getDBFlowMode(context) === "xcl") {
     projectInfos = getProjectInfosFromXCL();
   }
@@ -170,13 +183,15 @@ export function applyFileExists(pMode:string) {
 }
 
 
-function getProjectInfosFromDBFlow():IProjectInfos {
+async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IProjectInfos> {
   const projectInfos: IProjectInfos = {} as IProjectInfos;
+
   if (workspace.workspaceFolders !== undefined) {
     const f = workspace.workspaceFolders[0].uri.fsPath;
 
     const applyEnv = dotenv.config({ path: path.join(f, "apply.env")});
     const buildEnv = dotenv.config({ path: path.join(f, "build.env")});
+
 
     if (applyEnv.parsed) {
       projectInfos.dbAppUser   = applyEnv.parsed.DB_APP_USER;
@@ -192,6 +207,15 @@ function getProjectInfosFromDBFlow():IProjectInfos {
       // decode when starting with an !
       if (projectInfos.dbAdminPwd && projectInfos.dbAdminPwd.startsWith("!")) {
         projectInfos.dbAdminPwd = Buffer.from(projectInfos.dbAdminPwd.substring(1), 'base64').toString('utf8').replace("\n", "");
+      }
+
+      // get all keys with pattern dbFlux_..._PWD and store them in array
+      const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD")); // dbFlux as prefix because this is a dbFlux feature (not dbFlow)
+
+      for (const key of filteredKeys) {
+        LoggingService.logInfo('Custom Schemapassword found: ' + key);
+        projectInfos.dbPasses = projectInfos.dbPasses || {};
+        projectInfos.dbPasses[key]    = await context.secrets.get(getWorkspaceRootPath()+"|" + key )+"";
       }
     }
 
@@ -232,6 +256,15 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
       projectInfos.projectName  = context.workspaceState.get("dbFlux_PROJECT");
       projectInfos.projectMode  = context.workspaceState.get("dbFlux_PROJECT_MODE");
       projectInfos.workspace    = context.workspaceState.get("dbFlux_WORKSPACE");
+
+      // get all keys with pattern dbFlux_..._PWD and store them in array
+      const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD"));
+
+      for (const key of filteredKeys) {
+        LoggingService.logInfo('Custom Schemapassword found: ' + key);
+        projectInfos.dbPasses = projectInfos.dbPasses || {};
+        projectInfos.dbPasses[key]    = await context.secrets.get(getWorkspaceRootPath()+"|" + key )+"";
+      }
 
   }
 
@@ -300,7 +333,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
 
   if (!projectInfos.isFlexMode) {
 
-    if ((projectInfos.projectMode == "MULTI") && (
+    if ((projectInfos.projectMode === "MULTI") && (
           (projectInfos.appSchema === undefined || !projectInfos.appSchema || projectInfos.appSchema.length === 0) ||
           (projectInfos.logicSchema === undefined || !projectInfos.logicSchema || projectInfos.logicSchema.length === 0) ||
           (projectInfos.dataSchema === undefined || !projectInfos.dataSchema || projectInfos.dataSchema.length === 0)
@@ -309,7 +342,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
           (DATA: ${projectInfos.dataSchema},
           LOGIC: ${projectInfos.logicSchema},
           APP: ${projectInfos.appSchema})`;
-    } else if ((projectInfos.projectMode == "SINGLE") && (
+    } else if ((projectInfos.projectMode === "SINGLE") && (
       (projectInfos.appSchema === undefined || !projectInfos.appSchema || projectInfos.appSchema.length === 0)
     )) {
       schemaMsg = `dbFlux: Schema configuration incomplete! Please check your configuration!
@@ -353,16 +386,12 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
   const lowerPathName = (pathName+"/").toLowerCase().replace(wsRoot, "");
   const lowerPathParts = lowerPathName.split(path.posix.sep);
 
-  LoggingService.logDebug(`get DB User from Path`, {
-    "lowerPathName": lowerPathName,
-    "lowerPathParts": lowerPathParts,
-    "currentFilePath": currentFilePath
-  });
+  LoggingService.logDebug(`get DB User from Path`);
 
-  if (currentFilePath !== undefined &&(lowerPathParts[0] === ".hooks" || (lowerPathParts[0] === "db" && lowerPathParts[1] === ".hooks"))) {
+  if (currentFilePath !== undefined &&(lowerPathParts[0] === ".hooks" || (lowerPathParts[0] === ConfigurationManager.getDBFolderName() && lowerPathParts[1] === ".hooks"))) {
     const lastElement = currentFilePath.split("/").pop();
     // check if any db schema folder is inside this file
-    getSchemaFolders(path.join(wsRoot, "db")).forEach((val)=>{
+    getSchemaFolders(path.join(wsRoot, ConfigurationManager.getDBFolderName())).forEach((val)=>{
       if (lastElement!.indexOf(val) > 0) {
         returnDBUser = val;
       }
@@ -374,16 +403,16 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
         returnDBUser = CompileTaskStore.getInstance().selectedSchemas![0].split('/')[1]; // db/dings
         window.showWarningMessage("You are compiling a hook-file. Keep in mind that the target schema-name must be a part of the filename. Otherwise dbFlow won't run this file!");
       } else {
-        const errorMessage = "dbFLux: Unknown schema, please use *_schema_name_*.sql to execute a hook file";
+        const errorMessage = "dbFlux: Unknown schema, please use *_schema_name_*.sql to execute a hook file";
         LoggingService.logError(errorMessage);
         window.showErrorMessage(errorMessage);
       }
 
     }
 
-  } else if (lowerPathParts[0] === "db" && (lowerPathParts[1] === "_setup" || lowerPathParts[1] === ".setup")) {
+  } else if (lowerPathParts[0] === ConfigurationManager.getDBFolderName() && (lowerPathParts[1] === "_setup" || lowerPathParts[1] === ".setup")) {
     returnDBUser = projectInfos.dbAdminUser!;
-  } else if (lowerPathParts[0] === "db") {
+  } else if (lowerPathParts[0] === ConfigurationManager.getDBFolderName()) {
     returnDBUser = lowerPathParts[1];
   } else if (["apex", "rest", "static", "plugin"].includes(lowerPathParts[0])) {
     if (projectInfos.isFlexMode) {
@@ -419,9 +448,9 @@ readdirSync(source, { withFileTypes: true })
 export async function getDBSchemaFolders():Promise<QuickPickItem[]> {
   if (workspace.workspaceFolders){
       const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-      const sourceDB = path.join(wsRoot, "db");
+      const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
 
-      return getSchemaFolders(sourceDB).map(function(element){return {"label":element, "description":"db/"+element , "alwaysShow": true};});
+      return getSchemaFolders(sourceDB).map(function(element){return {"label":element, "description":ConfigurationManager.getDBFolderName()+"/"+element , "alwaysShow": true};});
 
   }
   return [{label: "", description:""}];

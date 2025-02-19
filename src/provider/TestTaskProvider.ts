@@ -3,7 +3,7 @@
 import { commands, ExtensionContext, QuickPickItem, QuickPickItemKind, Range, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, ViewColumn, window, workspace } from "vscode";
 import * as path from "path";
 import * as Handlebars from "handlebars";
-import { getWorkingFile, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
+import { getPassword, getWorkingFile, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import { AbstractBashTaskProvider, getDBSchemaFolders, getDBUserFromPath, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { TestTaskStore } from "../stores/TestTaskStore";
@@ -23,6 +23,7 @@ interface TestTaskDefinition extends TaskDefinition {
 
 interface ISQLTestInfos extends IBashInfos {
   connectionArray:    string[];
+  connectionPasses:   string[];
   executableCli:      string;
   fileToTest:         string;
   methodToTest:       string;
@@ -74,6 +75,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
           DBFLOW_SQLCLI:     definition.runner.executableCli,
           DBFLOW_DBTNS:      definition.runner.connectionTns,
           DBFLOW_DBPASS:     definition.runner.connectionPass,
+          DBFLOW_DBPASSES:   definition.runner.connectionPasses.join("°"),
           DBFLOW_FILE2TEST:  this.mode === "executeTests" ? "" : definition.runner.fileToTest,
           DBFLOW_METHOD2TEST: this.mode === "executeTests" || this.mode === "executeTestPackageWithCodeCoverage" ? "" : definition.runner.methodToTest.length > 0 ? "."+definition.runner.methodToTest : "",
           DBFLOW_TARGET2COVER: this.mode === "executeTests" || this.mode !== "executeTestPackageWithCodeCoverage" ? "" : definition.runner.targetToCover.length > 0 ? definition.runner.targetToCover : "",
@@ -101,6 +103,9 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
         if (TestTaskStore.getInstance().selectedSchemas) {
           runner.connectionArray = TestTaskStore.getInstance().selectedSchemas!.map((element) =>{
             return '"' + this.buildConnectionUser(projectInfos, element) +'"';
+          });
+          runner.connectionPasses = TestTaskStore.getInstance().selectedSchemas!.map((element) =>{
+            return '"' + getPassword(projectInfos, this.buildConnectionUser(projectInfos, element), false, this.context) +'"';
           });
         };
 
@@ -145,15 +150,14 @@ export function registerExecuteTestPackageCommand(projectInfos: IProjectInfos, c
 
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        // const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
-        const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
+        const insideTests = matchRuleShort(fileName, `*/${ConfigurationManager.getDBFolderName()}/*/tests/packages/*`);
         const fileExtension: string = "" + fileName.split('.').pop();
         const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
 
 
         if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideTests)) {
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            TestTaskStore.getInstance().selectedSchemas = ["db/" + getDBUserFromPath(fileName, projectInfos)];
+            TestTaskStore.getInstance().selectedSchemas = [ConfigurationManager.getDBFolderName() + "/" + getDBUserFromPath(fileName, projectInfos)];
             TestTaskStore.getInstance().fileName = fileName;
             TestTaskStore.getInstance().selectedMethod = methodName;
 
@@ -182,15 +186,14 @@ export function registerExecuteTestPackageCommandWithCodeCoverage(projectInfos: 
       setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        // const insidePackages = matchRuleShort(fileName, '*/db/*/sources/packages/*');
-        const insideTests = matchRuleShort(fileName, '*/db/*/tests/packages/*');
+        const insideTests = matchRuleShort(fileName, `*/${ConfigurationManager.getDBFolderName()}/*/tests/packages/*`);
         const fileExtension: string = "" + fileName.split('.').pop();
         const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
 
 
         if (extensionAllowed.map(ext => ext.toLowerCase()).includes(fileExtension.toLowerCase()) && (insideTests)) {
           which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-            TestTaskStore.getInstance().selectedSchemas = ["db/" + getDBUserFromPath(fileName, projectInfos)];
+            TestTaskStore.getInstance().selectedSchemas = [ConfigurationManager.getDBFolderName() + "/" + getDBUserFromPath(fileName, projectInfos)];
             TestTaskStore.getInstance().fileName = fileName;
             TestTaskStore.getInstance().selectedMethod = "";
             TestTaskStore.getInstance().targetPackage = (await getTargetPackages())?.join('|');
@@ -199,8 +202,8 @@ export function registerExecuteTestPackageCommandWithCodeCoverage(projectInfos: 
               context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new TestTaskProvider(context, "executeTestPackageWithCodeCoverage")));
               commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: executeTestPackageWithCodeCoverage");
             }
-          }).catch(() => {
-            window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path!`);
+          }).catch((e:any) => {
+            window.showErrorMessage(`dbFlux: No executable ${ConfigurationManager.getCliToUseForCompilation()} found on path! ${e}`);
           });
         } else {
           window.showWarningMessage('Current filetype is not supported by dbFlux ...');
@@ -226,7 +229,7 @@ export function registerExecuteTestsTaskCommand(projectInfos: IProjectInfos, con
           const selectedFolders  = (context.workspaceState.get("dbFlux_last_tested_folders")!+"").split("|");
           dbSchemaFolders.forEach((v)=>{
             v.picked = selectedFolders.includes(v.description!);
-          })
+          });
 
           const items: QuickPickItem[] | undefined = await window.showQuickPick(dbSchemaFolders, {
             canPickMany: true, placeHolder: 'Choose Schema to run your tests'
@@ -267,7 +270,7 @@ async function testDashBoard(wsRoot:string, projectInfos: IProjectInfos, schemaN
 
     writeFileSync(junitJsonFilePath, JSON.stringify(result, null, 2));
 
-    const templateSource = readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "junitreporter.tmpl.html").split(path.sep).join('/'), "utf8")
+    const templateSource = readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", "junitreporter.tmpl.html").split(path.sep).join('/'), "utf8");
 
     Handlebars.registerHelper('json', function(context) {
         return JSON.stringify(context);
@@ -287,21 +290,21 @@ async function testDashBoard(wsRoot:string, projectInfos: IProjectInfos, schemaN
 
     Handlebars.registerHelper('resultClassName', function(error, failure) {
       if (error > 0 ) {
-        return "Error"
+        return "Error";
       } else if (failure > 0 ) {
-        return "Failure"
+        return "Failure";
       } else {
-        return "pass"
+        return "pass";
       };
     });
 
     Handlebars.registerHelper('resultName', function(error, failure) {
       if (error > 0 ) {
-        return "Error"
+        return "Error";
       } else if (failure > 0 ) {
-        return "Failure"
+        return "Failure";
       } else {
-        return "Success"
+        return "Success";
       };
     });
 
@@ -339,8 +342,8 @@ async function getAnsiHtmlFile(wsRoot:string, projectInfos: IProjectInfos, schem
 
     // const htmlContent = convert.toHtml(logContent);
 
-    const termToHtml = require('term-to-html')
-    const htmlContent = termToHtml.strings(logContent, termToHtml.themes.dark.name)
+    const termToHtml = require('term-to-html');
+    const htmlContent = termToHtml.strings(logContent, termToHtml.themes.dark.name);
 
     writeFileSync(htmlFile, htmlContent);
   }
@@ -367,7 +370,7 @@ export async function openTestResult(context: ExtensionContext){
     if ( existsSync(htmlFile)) {
       // Create and show panel
       const webViewTestPanel = window.createWebviewPanel(
-        'dbFLux',
+        'dbFlux',
         'utPLSQL Output - ' + schemaName,
         ViewColumn.Beside,
         {}
@@ -390,7 +393,7 @@ export async function openCoverageResult(context: ExtensionContext){
     if ( existsSync(htmlFile)) {
       // Create and show panel
       const webViewTestPanel = window.createWebviewPanel(
-        'dbFLux',
+        'dbFlux',
         'utPLSQL Output - ' + schemaName,
         ViewColumn.Beside,
         {enableScripts:true} // utPLSQL is referencing some js, css and images //FIXME: later
@@ -407,12 +410,11 @@ async function getTargetPackages(): Promise<string[] | undefined> {
   const dbSchemaFolders = await getDBSchemaFolders();
   const packages:QuickPickItem[] = [];
   for (const schema of dbSchemaFolders ) {
-    const packageFiles = readdirSync(path.join(getWorkspaceRootPath(), "db", schema.label, "sources", "packages"));
-    // console.log('packageFiles', packageFiles.filter((pckName) => pckName.endsWith(".pkb")));
+    const packageFiles = readdirSync(path.join(getWorkspaceRootPath(), ConfigurationManager.getDBFolderName(), schema.label, "sources", "packages"));
+
     packages.push(...packageFiles
                           .filter((pckName) => pckName.endsWith(".pkb"))
-                          .map(function(elem){return {"label": elem, "description": schema.label}})
-    );
+                          .map(function(elem){return {"label": elem, "description": schema.label};}));
   }
   const selectedPackages: QuickPickItem[] | undefined = await window.showQuickPick(packages, {
     title: 'Package(s) to measure coverage',
@@ -421,7 +423,7 @@ async function getTargetPackages(): Promise<string[] | undefined> {
   });
 
   const selectedPakagesWithSchemaeName = selectedPackages?.map(function(elem) {
-    return elem.description+"."+elem.label.toLowerCase().replace(".pkb", "")
+    return elem.description+"."+elem.label.toLowerCase().replace(".pkb", "");
   });
 
   return selectedPakagesWithSchemaeName;

@@ -14,7 +14,7 @@ import { toFlatPropertyMap } from '../helper/utilities';
 
 
 export async function createObjectTypeSnippetWizard(context: ExtensionContext) {
-  const title = 'dbFLux: Create ObjectType Snippet';
+  const title = 'dbFlux: Create ObjectType Snippet';
 
   interface State {
     title:               string;

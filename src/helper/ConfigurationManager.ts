@@ -19,10 +19,12 @@ export class ConfigurationManager {
 
   static dbFlux:string = "dbFlux";
   static fileSeparation:string = "-- File: ";
+  static folderName:string = ConfigurationManager.getDBFolderName();
 
   static get<T>(confPath:string):T {
     const myValue:T | undefined = workspace.getConfiguration(ConfigurationManager.dbFlux).get(confPath);
     const myDefault = workspace.getConfiguration(ConfigurationManager.dbFlux).inspect(confPath)?.defaultValue;
+
     return (myValue === undefined ? <T>myDefault : myValue);
   }
 
@@ -99,6 +101,14 @@ export class ConfigurationManager {
   static getAppExportOptions(): string {
     return this.get<string>("exportApplications.AppendFollowingOptionString")
   }
+
+  static getDBFolderName(): string {
+    return this.get<string>("mapping.dbFolder")
+  }
+
+  static getGrantsOfViewsAndSourcesAtObject(): string {
+    return this.get<string>("exportSchema.grantsOfViewsAndSourcesAtObject")
+  }
 }
 
 export function showConfig(applyFileName:string, buildFileName:string){
@@ -129,6 +139,11 @@ export async function showDBFluxConfig(context:ExtensionContext){
     LoggingService.logInfo("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
   } else if (context.workspaceState.get("dbFlux_PROJECT_MODE") === "SINGLE") {
     LoggingService.logInfo("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
+  }
+
+  const otherPWDs = context.workspaceState.keys().filter(key => key.endsWith("_PWD") && key !== "dbFlux_DB_APP_PWD");
+  for (const key of otherPWDs) {
+    LoggingService.logInfo(key + ": " + await context.secrets.get(getWorkspaceRootPath() +`|${key}`));
   }
 
   LoggingService.logInfo("WORKSPACE: " + context.workspaceState.get("dbFlux_WORKSPACE"));
@@ -164,7 +179,7 @@ export async function rmDBFluxConfig(context:ExtensionContext) {
   context.workspaceState.update("dbFlux_DATA_SCHEMA", undefined);
   context.workspaceState.update("dbFlux_LOGIC_SCHEMA", undefined);
   context.workspaceState.update("dbFlux_APP_SCHEMA", undefined);
-
+  // FIXME: Hier müssen auch die anderen PWDs raus
   await commands.executeCommand("dbFlux.reloadExtension");
 }
 

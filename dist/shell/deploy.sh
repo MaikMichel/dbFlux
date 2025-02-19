@@ -16,9 +16,9 @@ basepath=$(pwd)
 extension="${basefl##*.}"
 MDATE=`date +%d.%m.%y_%H:%M:%S,%5N`
 
-echo -e "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBUSER}@${DBFLOW_DBTNS}${NC}"
-echo -e "${CLR_LBLUE}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC} ${CLR_LBLUE}(Trigger only:${NC} ${WHITE}${DBFLOW_TRIGGER_ONLY}${NC}${BYELLOW})${NC}"
-echo -e "${CLR_LBLUE}OS-Time:${NC}     ${WHITE}${MDATE}${NC}"
+printf "${CLR_LBLUE}Connection:${NC}  ${WHITE}${DBFLOW_DBUSER}@${DBFLOW_DBTNS}${NC}\n"
+printf "${CLR_LBLUE}Sourcefile:${NC}  ${WHITE}${DBFLOW_WSPACE}${NC} ${CLR_LBLUE}(Trigger only:${NC} ${WHITE}${DBFLOW_TRIGGER_ONLY}${NC}${BYELLOW})${NC}\n"
+printf "${CLR_LBLUE}OS-Time:${NC}     ${WHITE}${MDATE}${NC}\n"
 
 # define settings array
 settings=()
@@ -87,12 +87,12 @@ if [[ ${DBFLOW_TARGET_APP_ID:-0} -gt 0 ]]; then
       ORIGINAL_APP_ID=$(grep -oP 'p_default_application_id=>\K\d+' "application/set_environment.sql")
     fi
   else
-    echo -e "${CLR_REDBGR}Error: Not a valid export folder ${DBFLOW_FILE_PATH} ${NC}"
+    printf "${CLR_REDBGR}Error: Not a valid export folder ${DBFLOW_FILE_PATH} ${NC}\n"
     exit 1
   fi
 
-  echo -e "${CLR_LBLUE}> APP-ID:${NC}    ${WHITE}${DBFLOW_TARGET_APP_ID}${NC}"
-  echo -e "${CLR_LBLUE}> Workspace:${NC} ${WHITE}${DBFLOW_TARGET_WORKSP}${NC}"
+  printf "${CLR_LBLUE}> APP-ID:${NC}    ${WHITE}${DBFLOW_TARGET_APP_ID}${NC}\n"
+  printf "${CLR_LBLUE}> Workspace:${NC} ${WHITE}${DBFLOW_TARGET_WORKSP}${NC}\n"
   install_apex+=( "begin" )
   install_apex+=( " apex_application_install.set_workspace('${DBFLOW_TARGET_WORKSP}');" )
   install_apex+=( " apex_application_install.set_application_id(${DBFLOW_TARGET_APP_ID});" )
@@ -220,7 +220,7 @@ fi
 
 if [ $? -ne 0 ]
 then
-  echo -e "${CLR_REDBGR}Error when executing ${DBFLOW_FILE} ${NC}"
+  printf "${CLR_REDBGR}Error when executing ${DBFLOW_FILE} ${NC}\n"
   echo
 else
 
@@ -238,14 +238,14 @@ else
   if [[ -n ${DBFLOW_CONN_CALLS} ]]; then
     ANOFUNCTIONS=$( cat "${SCRIPT_DIR}/../sql/call_methods_function.sql" )
     echo
-    echo -e "${CLR_LBLUE}Calling additional methods ... ${NC}"
+    printf "${CLR_LBLUE}Calling additional methods ... ${NC}\n"
 
     IFS='°' read -r -a connection <<< "${DBFLOW_CONN_CALLS}"
     IFS='°' read -r -a methods <<< "${DBFLOW_METHOD_CALLS}"
     IFS='°' read -r -a tfiles <<< "${DBFLOW_METHOD_TFILES}"
 
     for i in "${!connection[@]}"; do
-      echo -e "${CLR_LBLUE}Write Method: ${methods[$i]} to File: ${tfiles[$i]}${NC}"
+      printf "${CLR_LBLUE}Write Method: ${methods[$i]} to File: ${tfiles[$i]}${NC}\n"
       ${DBFLOW_SQLCLI} -s -l ${connection[$i]} << EOF > "${tfiles[$i]}"
       $(
         for call_setting in "${call_settings[@]}"
@@ -283,7 +283,7 @@ EOF
       sed -i~ -e '2,$b' -e '/^$/d;' ${tfiles[$i]}
 
       # run file
-      echo -e "${CLR_LBLUE}Running File: ${tfiles[$i]}${NC}"
+      printf "${CLR_LBLUE}Running File: ${tfiles[$i]}${NC}\n"
       ${DBFLOW_SQLCLI} -s -l ${connection[$i]} << EOF
       $(
         for element in "${settings[@]}"
@@ -303,12 +303,13 @@ EOF
 
   if [[ -n ${DBFLOW_CONN_RUNS} ]]; then
     echo
-    echo -e "${CLR_LBLUE}Running additional files ... ${NC}"
+    printf "${CLR_LBLUE}Running additional files ... ${NC}\n"
 
     IFS=',' read -r -a connection <<< "${DBFLOW_CONN_RUNS}"
     IFS=',' read -r -a files <<< "${DBFLOW_FILE_RUNS}"
 
     for i in "${!connection[@]}"; do
+      # echo "Conn $i: ${connection[$i]}}"
       ${DBFLOW_SQLCLI} -s -l ${connection[$i]} << EOF
       $(
         for element in "${settings[@]}"
@@ -328,7 +329,7 @@ EOF
   fi
 
   if [[ -n $DBFLOW_ADDITIONAL_OUTPUT ]]; then
-    echo -e ${CLR_LBLUE}${DBFLOW_ADDITIONAL_OUTPUT}${NC}
+    printf "${CLR_LBLUE}${DBFLOW_ADDITIONAL_OUTPUT}${NC}\n"
   fi
   echo
 fi

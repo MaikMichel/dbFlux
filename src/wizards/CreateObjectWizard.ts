@@ -12,11 +12,12 @@ import { MultiStepInput } from './InputFlowAction';
 import { dbFolderDef } from './InitializeProjectWizard';
 import { execSync } from 'child_process';
 import { LoggingService } from '../helper/LoggingService';
+import { ConfigurationManager } from '../helper/ConfigurationManager';
 
 
 
 export async function createObjectWizard(context: ExtensionContext) {
-  const title = 'dbFLux: Create Object';
+  const title = 'dbFlux: Create Object';
 
   interface State {
     title: string;
@@ -143,7 +144,7 @@ export async function getAvailableObjectTypes(): Promise<QuickPickItem[]> {
     let folders:string[] = [];
 
     const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-    const sourceDB = path.join(wsRoot, "db");
+    const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
     const sourceStatic = path.join(wsRoot, "static");
     const originalPath = Object.keys(toFlatPropertyMap(dbFolderDef[0]));
 
@@ -184,8 +185,8 @@ export async function getAvailableObjectTypes(): Promise<QuickPickItem[]> {
 
     folders.push(".hooks/pre");
     folders.push(".hooks/post");
-    folders.push("db/.hooks/pre");
-    folders.push("db/.hooks/post");
+    folders.push(ConfigurationManager.getDBFolderName() + "/.hooks/pre");
+    folders.push(ConfigurationManager.getDBFolderName() + "/.hooks/post");
 
     const uniqueFolders = [...new Set(folders)];
     const folderNames = uniqueFolders.map(function(element){return {"label":element, "description": path.parse(element).name, "alwaysShow": false};});
@@ -267,7 +268,7 @@ export async function createTableDDL(context: ExtensionContext) {
     return state as State;
   }
 
-  const title = 'dbFLux: Create TableDDL File';
+  const title = 'dbFlux: Create TableDDL File';
 
 
 
@@ -323,7 +324,7 @@ export async function createTableDDL(context: ExtensionContext) {
     let nextNum = 0;
 
 
-    const tableDDLFolder = path.join(workspace.workspaceFolders[0].uri.fsPath, "db", folderParts.join("/"));
+    const tableDDLFolder = path.join(workspace.workspaceFolders[0].uri.fsPath, ConfigurationManager.getDBFolderName(), folderParts.join("/"));
 
     // document.write(matches);
     if (existsSync(tableDDLFolder)) {
@@ -350,7 +351,7 @@ export async function createTableDDL(context: ExtensionContext) {
 
     // if git folder exists then try to get git diff
     if (existsSync(path.join(ws, ".git"))) {
-      const gitCommand = 'git diff --unified=0 ' + path.join("db", state.objectType.label); // + " | grep -Po '(?<=^\+)(?!\+\+).*'";
+      const gitCommand = 'git diff --unified=0 ' + path.join(ConfigurationManager.getDBFolderName(), state.objectType.label); // + " | grep -Po '(?<=^\+)(?!\+\+).*'";
       output = execSync(gitCommand, { cwd:ws }).toString().split("\n").filter((line) => {
         return line.match(/(?<=^[\+-])(?![(\+\+)(--)]).*/)
       });
@@ -399,7 +400,7 @@ export async function getAllTableFiles(): Promise<QuickPickItem[]> {
     let folders:string[] = [];
 
     const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
-    const sourceDB = path.join(wsRoot, "db");
+    const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
 
     const getSchemaFolders = (source: PathLike) =>
         readdirSync(source, { withFileTypes: true })

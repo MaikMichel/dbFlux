@@ -12,7 +12,7 @@ interface State {
 }
 
 async function addColumnSnippetWizard() {
-  const title = 'dbFLux: Create ObjectType Snippet';
+  const title = 'dbFlux: Create ObjectType Snippet';
 
 
 
