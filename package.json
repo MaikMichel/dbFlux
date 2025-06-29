@@ -193,7 +193,8 @@
 			},
 			{
 				"view": "dbflux.dblock.treeview",
-				"contents": "No locked files have been found. [learn more](https://github.com/MaikMichel/dbFlux#lock-and-unlock-files).\n[Lock current file](command:dbFlux.lockCurrentFile)"
+				"contents": "No locked files have been found. [learn more](https://github.com/MaikMichel/dbFlux#lock-and-unlock-files).\n[Lock current file](command:dbFlux.lockCurrentFile)",
+				"enablement": "!dbLockEnabled"
 			}
 		],
 		"views": {
@@ -550,13 +551,13 @@
 				"command": "dbFlux.lockCurrentFile",
 				"title": "Lock current File",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && dbLockEnabled && resourceDirname =~ /^.*(\\\\|\\/)(db|static)(\\\\|\\/).*$/"
+				"enablement": "inDbFlowProject && dbLockEnabled && (resourceDirname =~ /^.*(\\\\|\\/)db(\\\\|\\/).+$/ || resourceDirname =~ /^.*(\\\\|\\/)static(\\\\|\\/).+$/)"
 			},
 			{
 				"command": "dbFlux.unlockCurrentFile",
 				"title": "Unlock current File",
 				"category": "dbFlux",
-				"enablement": "inDbFlowProject && dbLockEnabled && resourceDirname =~ /^.*(\\\\|\\/)(db|static)(\\\\|\\/).*$/"
+				"enablement": "inDbFlowProject && dbLockEnabled && (resourceDirname =~ /^.*(\\\\|\\/)db(\\\\|\\/).+$/ || resourceDirname =~ /^.*(\\\\|\\/)static(\\\\|\\/).+$/)"
 			},
 			{
 				"command": "dbFlux.refreshLockedFiles",
