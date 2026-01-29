@@ -28,7 +28,7 @@ export async function syncFeatureSet(context: ExtensionContext, featurFolder: st
   }
 
   async function pickFeatureFromList(input: MultiStepInput, state: Partial<State>) {
-    const schemaFolders = (await getFeatureFolders(featurFolder))
+    const schemaFolders = (await getFeatureFolders(featurFolder));
     state.featureFolder = await input.showQuickPick({
       title,
       step: 1,

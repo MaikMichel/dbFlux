@@ -61,14 +61,14 @@ class TableColumnItem extends TreeItem {
     }
   }
 
-  public add_child (child : TableColumnItem) {
+  public addChild(child: TableColumnItem) {
       this.collapsibleState = TreeItemCollapsibleState.Expanded;
       child.parentTableItem = ""+this.label?.toString();
       this.children.push(child);
 
   }
 
-  public remove_childs(){
+  public removeChilds(){
     this.children = [];
   }
 }
@@ -85,10 +85,10 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
     private treeContext:ExtensionContext;
 
     // with the EventEmitter we can refresh our  tree view
-    private m_onDidChangeTreeData: EventEmitter<TableColumnItem | undefined> = new EventEmitter<TableColumnItem | undefined>();
+    private mOnDidChangeTreeData: EventEmitter<TableColumnItem | undefined> = new EventEmitter<TableColumnItem | undefined>();
 
     // and vscode will access the event by using a readonly onDidChangeTreeData (this member has to be named like here, otherwise vscode doesnt update our treeview.
-    readonly onDidChangeTreeData ? : Event<TableColumnItem | undefined> = this.m_onDidChangeTreeData.event;
+    readonly onDidChangeTreeData ? : Event<TableColumnItem | undefined> = this.mOnDidChangeTreeData.event;
 
 
     constructor(context:ExtensionContext){
@@ -102,7 +102,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
 
       context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.clear_items',  () => this.clear()));
       context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.refresh_items',  () => this.refresh()));
-      context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.clear_item', (selectedItem) => this.clear_item(selectedItem)));
+      context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.clear_item', (selectedItem) => this.clearItem(selectedItem)));
 
       context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.copy_selection_with_comma',  () => this.copySelectionToClipboard(", ")));
       context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.copy_selection_with_semicomma',  () => this.copySelectionToClipboard(";\n")));
@@ -201,7 +201,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
               labels.push({
                 table:  "" + childElement.label?.toString(),
                 column: "" + childElement.label?.toString()});
-            })
+            });
           } else {
             labels.push({
               table:  "" + element.parentTableItem,
@@ -263,15 +263,15 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
       this.treeContext.workspaceState.update(workspaceStateKey, undefined);
 
       // call to let VSCode refresh the tree
-      this.m_onDidChangeTreeData.fire(undefined);
+      this.mOnDidChangeTreeData.fire(undefined);
     }
 
     /**
      * clear only table with dependend columns
      * @param selectedItem table
      */
-    private clear_item(selectedItem:TableColumnItem) {
-      LoggingService.logInfo(`removing table ${selectedItem.label} from view`)
+    private clearItem(selectedItem:TableColumnItem) {
+      LoggingService.logInfo(`removing table ${selectedItem.label} from view`);
 
       // assign new filteres treeitems (without the selected one)
       this.treedata = this.treedata.filter(treeItem => (selectedItem?.description !== treeItem.description));
@@ -295,7 +295,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
       }
 
       // call to let VSCode refresh the tree
-      this.m_onDidChangeTreeData.fire(undefined);
+      this.mOnDidChangeTreeData.fire(undefined);
     }
 
 
@@ -322,13 +322,13 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
 
           if (existsSync(tableFile)) {
             this.buildAndParsChildColumns(tableFile, tableItem);
-            this.treeContext.workspaceState.update(workspaceStateKey, this.treeContext.workspaceState.get(workspaceStateKey) + '|' + tableItem.description!)
+            this.treeContext.workspaceState.update(workspaceStateKey, this.treeContext.workspaceState.get(workspaceStateKey) + '|' + tableItem.description!);
           } else {
-            this.clear_item(tableItem);
+            this.clearItem(tableItem);
           }
         }
 
-        this.m_onDidChangeTreeData.fire(undefined);
+        this.mOnDidChangeTreeData.fire(undefined);
       }
 
       commands.executeCommand("dbflux.showTableDetails.treeview.focus");
@@ -347,12 +347,12 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
           this.buildAndParsChildColumns(tableFile, tableItem);
 
           if (saveState) {
-            this.treeContext.workspaceState.update(workspaceStateKey, this.treeContext.workspaceState.get(workspaceStateKey) + '|' + fileName)
+            this.treeContext.workspaceState.update(workspaceStateKey, this.treeContext.workspaceState.get(workspaceStateKey) + '|' + fileName);
           }
         }
 
         this.treedata.push(tableItem);
-        this.m_onDidChangeTreeData.fire(undefined);
+        this.mOnDidChangeTreeData.fire(undefined);
       }
 
       commands.executeCommand("dbflux.showTableDetails.treeview.focus");
@@ -362,14 +362,14 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
       const fileContent = readFileSync(tableFile).toString();
       const columnMap = this.parseCreateTableScript(fileContent);
 
-      tableItem.remove_childs();
+      tableItem.removeChilds();
       columnMap.forEach((columnProp) => {
-        tableItem.add_child(new TableColumnItem(columnProp, undefined));
+        tableItem.addChild(new TableColumnItem(columnProp, undefined));
       });
     }
 
     findClosingBracketMatchIndex(str:string, pos:number) {
-      if (str[pos] != '(') {
+      if (str[pos] !== '(') {
         throw new Error("No '(' at index " + pos);
       }
       let depth = 1;
@@ -379,7 +379,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
             depth++;
             break;
           case ')':
-            if (--depth == 0) {
+            if (--depth === 0) {
               return i;
             }
             break;
@@ -396,7 +396,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
      */
     private parseCreateTableScript(script: string): Map<string, ColumnProps> {
       const columnMap              = new Map<string, ColumnProps>();
-      const closingBrack           = this.findClosingBracketMatchIndex(script, script.indexOf("("))
+      const closingBrack           = this.findClosingBracketMatchIndex(script, script.indexOf("("));
       const columnDefinitionsLines = script.substring(script.indexOf("(")+1, closingBrack).replaceAll("\r", "").split("\n");
       const columnRegex            =  /(\w+)\s+(\w+)(?:\(([^\)]+)\))?(.*)/;
 

@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 import { commands, env, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, window, workspace } from 'vscode';
 
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
@@ -331,11 +332,11 @@ export function addAppPlugin(plugID: string, folder: string, targetAPPID: string
     }
 
     const pluginJSONFile:string = path.join(workspace.workspaceFolders[0].uri.fsPath, `apexplugin.json`);
-    let answers:string[] = []
-    let optQuest:string = ""
+    let answers:string[] = [];
+    let optQuest:string = "";
     if (!existsSync(pluginJSONFile)) {
-      answers = ["Yes", "No"]
-      optQuest = "Create file apexplugin.json?"
+      answers = ["Yes", "No"];
+      optQuest = "Create file apexplugin.json?";
     }
 
     window.showInformationMessage(`Folder: ${plugFolder} created. Have fun, developing your plugin. ${optQuest}`, ... answers)
@@ -796,13 +797,13 @@ export function registerAddReportTypeFolderCommand() {
 
 export function registerAddHookFileCommand(context: ExtensionContext) {
   return commands.registerCommand("dbFlux.addHookFile", async () => {
-    addHookFile(context)
+    addHookFile(context);
   });
 }
 
 export function registerAddCustomtriggerRunCommand(context: ExtensionContext) {
   return commands.registerCommand("dbFlux.addCustomTriggerRun", async () => {
-    addCustomTriggerRun(context)
+    addCustomTriggerRun(context);
   });
 }
 
@@ -962,10 +963,10 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
     const readFiles = (directory: string) => {
       readdirSync(directory).forEach(file => {
         const absolutFileName = path.join(directory, file);
-        if (statSync(absolutFileName).isDirectory()) return readFiles(absolutFileName);
-          else return files.push(absolutFileName);
+        if (statSync(absolutFileName).isDirectory()) {return readFiles(absolutFileName);}
+          else {return files.push(absolutFileName);}
       });
-    }
+    };
 
     readFiles(path.join(dirName, 'indexes/primaries'));
     readFiles(path.join(dirName, 'indexes/uniques'));
@@ -1039,7 +1040,7 @@ export function registerOpenSpecOrBody() {
       pathes.pop();
 
       // dependend from last folder
-      if (pathes[pathes.length-1] == "tables") {
+      if (pathes[pathes.length-1] === "tables") {
         // find matching file with max index
         pathes.push("tables_ddl");
         pathes.push(findFileWithHighestIndex(pathes.join(path.sep)!, path.basename(fileName).split(".")[0])!);
@@ -1130,7 +1131,7 @@ function addHookFileToPath(folder: string, filename: string) {
   const baseF    = rtrim(path.basename(filename), ".sql");
   const fullFile = dirName + '/' + baseF + ".sql";
 
-  const tmplFileName = (folder.startsWith(".hooks") || folder.startsWith("${ConfigurationManager.getDBFolderName()}/.hooks")) ? "globalhook.tmpl.sql" : "hook.tmpl.sql"
+  const tmplFileName = (folder.startsWith(".hooks") || folder.startsWith("${ConfigurationManager.getDBFolderName()}/.hooks")) ? "globalhook.tmpl.sql" : "hook.tmpl.sql";
   const template = readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", tmplFileName).split(path.sep).join(path.posix.sep), "utf8");
 
   if (!existsSync(dirName)) {
@@ -1145,5 +1146,5 @@ function addHookFileToPath(folder: string, filename: string) {
   }
 }
 function isTableFile(filename: string):boolean {
-  return filename.includes(path.sep + 'tables' + path.sep)
+  return filename.includes(path.sep + 'tables' + path.sep);
 }

@@ -85,7 +85,7 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
     let runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders && schemaName !== undefined) {
-      const connectionUri = Uri.file(path.join(workspace.workspaceFolders[0].uri.path, ConfigurationManager.getDBFolderName(), schemaName, "tables", "egal.sql"))
+      const connectionUri = Uri.file(path.join(workspace.workspaceFolders[0].uri.path, ConfigurationManager.getDBFolderName(), schemaName, "tables", "egal.sql"));
       runner.schemaName = schemaName;
       runner.schemaNameNew = schemaNameNew;
       runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
@@ -95,7 +95,7 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
         await this.setInitialCompileInfo("export_schema.sh", connectionUri, runner);
       // }
     } else {
-      throw "Error workspace.workspaceFolders or schemaName undefined"
+      throw new Error("Missing required workspace folders or schema name");
     }
 
     return runner;
@@ -210,7 +210,7 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
       await this.setInitialCompileInfo("export_schema.sh", connectionUri!, runner);
 
     } else {
-      throw "Error workspace.workspaceFolders or schemaName undefined"
+      throw new Error("Missing required workspace folders or schema name");
     }
 
     return runner;
@@ -223,7 +223,7 @@ export function registerExportDBObjectCommand(projectInfos: IProjectInfos, conte
   return commands.registerCommand("dbFlux.exportObject", async () => {
     // check what file has to build
     let fileName = await getWorkingFile(context);
-    const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
+    const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
 
     const insideSetup = (matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/_setup/*`) || matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/.setup/*`) || matchRuleShort(relativeFileName, `${ConfigurationManager.getDBFolderName()}/.hooks/*`));

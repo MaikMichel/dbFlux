@@ -111,7 +111,7 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
 
 
     } else {
-      throw "Error workspace.workspaceFolders or schemaName undefined"
+      throw new Error("workspace.workspaceFolders or schemaName is undefined");
     }
 
     return runner;
@@ -124,7 +124,7 @@ export function registerRemoveCurrentStaticFileCommand(projectInfos: IProjectInf
   return commands.registerCommand("dbFlux.removeCurrentStaticFile", async () => {
     // check what file has to build
     let fileName = await getWorkingFile(context);
-    const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
+    const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
 
     const insideStatic = matchRuleShort(relativeFileName, 'static/*/src/*');

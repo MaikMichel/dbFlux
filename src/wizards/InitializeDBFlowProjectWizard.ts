@@ -56,7 +56,7 @@ export async function initializeDBFlowProjectWizard(context: ExtensionContext) :
   async function pickProjectType(input: MultiStepInput, state: Partial<State>) {
     const projectTypes = await getAvailableProjectTypes();
     const currentProject = projectTypes.filter(value => {
-      return state.projectType ? value.label.charAt(0).toUpperCase() === state.projectType.charAt(0).toUpperCase() : true
+      return state.projectType ? value.label.charAt(0).toUpperCase() === state.projectType.charAt(0).toUpperCase() : true;
     })[0];
 
     state.projectType = await input.showQuickPick({
@@ -108,7 +108,7 @@ export async function initializeDBFlowProjectWizard(context: ExtensionContext) :
         await inputChangelogSchemaMulti(input, state);
       } else {
         state.totalSteps!++;
-        await inputChangelogSchema(input, state)
+        await inputChangelogSchema(input, state);
       }
     }
 
@@ -310,11 +310,11 @@ export async function initializeDBFlowProjectWizard(context: ExtensionContext) :
   }
 
   async function validateValueIsRequiered(name: string) {
-    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
+    return (name === undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 
   async function validateRequiredValueOnlyNumbersAlphaUScore(name: string) {
-    return (name == undefined || name.length === 0) ? 'Value is required' : (!name.toLowerCase().match(/^[0-9a-z_]+$/)) ? 'Value not a valid schema name' : undefined;
+    return (name === undefined || name.length === 0) ? 'Value is required' : (!name.toLowerCase().match(/^[0-9a-z_]+$/)) ? 'Value not a valid schema name' : undefined;
   }
 
   async function validateValueNotRequiered(name: string) {

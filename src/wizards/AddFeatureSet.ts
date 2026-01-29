@@ -29,7 +29,7 @@ export async function addFeatureSet(context: ExtensionContext) {
   }
 
   async function validateValueIsRequieredAndURL(name: string) {
-    return (name == undefined || name.length === 0) ? 'Value is required' : await isURL(name) ? undefined:'Value must be an URL';
+    return (name === undefined || name.length === 0) ? 'Value is required' : await isURL(name) ? undefined:'Value must be an URL';
   }
 
   async function collectInputs() {

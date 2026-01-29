@@ -112,20 +112,20 @@ export async function createObjectTypeSnippetWizard(context: ExtensionContext) {
     state.content = content?.text;
 
     // check to overwrite existing snippet
-    if (targetSnippetContent[snippetKey] != undefined) {
+    if (targetSnippetContent[snippetKey] !== undefined) {
       await window.showWarningMessage(`Existing ObjectType: "${snippetKey}" found, process to overwrite?`, "Process", "No")
       .then(answer => {
         if (answer === "No") {
           // Run function
           return;
         }
-      })
+      });
     }
 
     // include snippet in file
     targetSnippetContent[snippetKey] = {
       "body" : state.content?.replaceAll("\r\n", "\n").split("\n")
-    }
+    };
     writeFileSync(snippetFile, JSON.stringify(targetSnippetContent, null, 2));
 
     // open snippet file
@@ -140,11 +140,11 @@ export async function createObjectTypeSnippetWizard(context: ExtensionContext) {
 
         editor.selection = new Selection(startPos, endPos);
         editor.revealRange(editor.selection);
-      })
+      });
     });
 
     // just confirm finished
-    await window.showInformationMessage(`ObjectType "${snippetKey}" Snippet added to snippet file: .vscode/dbflux.code-snippets`)
+    await window.showInformationMessage(`ObjectType "${snippetKey}" Snippet added to snippet file: .vscode/dbflux.code-snippets`);
   }
 
 }
@@ -200,7 +200,7 @@ async function getSnippText(snippetKey:string) {
       targetSnippetContent = JSON.parse(readFileSync(extentionSnippetFile).toString());
 
       // try to find then key
-      if (targetSnippetContent["dbflux-" + snippetKey] != undefined) {
+      if (targetSnippetContent["dbflux-" + snippetKey] !== undefined) {
         const snippet = targetSnippetContent["dbflux-" + snippetKey];
         text = snippet.body.join("\n");
       }

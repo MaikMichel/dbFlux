@@ -37,7 +37,7 @@ async function addColumnSnippetWizard() {
   }
 
   async function validateRequiredValueOnlyNumbersAlphaUScore(name: string) {
-    return (name == undefined || name.length === 0) ? 'Value is required' : (!name.toLowerCase().match(/^[0-9a-z_ ]+$/)) ? 'Value not a valid snippet name' : undefined;
+    return (name === undefined || name.length === 0) ? 'Value is required' : (!name.toLowerCase().match(/^[0-9a-z_ ]+$/)) ? 'Value not a valid snippet name' : undefined;
   }
 
   function shouldResume() {
@@ -73,14 +73,14 @@ export async function addColumnSnippet(context: ExtensionContext) {
 
 
     // check to overwrite existing snippet
-    if (targetSnippetContent[snippetKey] != undefined) {
+    if (targetSnippetContent[snippetKey] !== undefined) {
       await window.showWarningMessage(`Existing ObjectType: "${snippetKey}" found, process to overwrite?`, "Process", "No")
       .then(answer => {
         if (answer === "No") {
           // Run function
           return;
         }
-      })
+      });
     }
 
     // include snippet in file
@@ -89,7 +89,7 @@ export async function addColumnSnippet(context: ExtensionContext) {
       "body" : content?.replaceAll("\r\n", "\n").split("\n"),
       "description": "dbFlux will replace the placeholders (§DBFLUX_COLUMN, §{DBFLUX_COLUMN}, §dbflux_column, §{dbflux_column}, "+
                                                            "§DBFLUX_TABLE, §{DBFLUX_TABLE}, §dbflux_table, §{dbflux_table}). YOU HAVE TO USE: '§'!"
-    }
+    };
     writeFileSync(snippetFile, JSON.stringify(targetSnippetContent, null, 2));
 
     // open snippet file
@@ -104,11 +104,11 @@ export async function addColumnSnippet(context: ExtensionContext) {
 
         editor.selection = new Selection(startPos, endPos);
         editor.revealRange(editor.selection);
-      })
+      });
     });
 
     // just confirm finished
-    await window.showInformationMessage(`ObjectType "${snippetKey}" Snippet added to snippet file: .vscode/dbflux.code-snippets`)
+    await window.showInformationMessage(`ObjectType "${snippetKey}" Snippet added to snippet file: .vscode/dbflux.code-snippets`);
   }
 }
 
@@ -126,7 +126,7 @@ async function getSnippText() {
       targetSnippetContent = JSON.parse(readFileSync(extentionSnippetFile).toString());
 
       // try to find then key
-      if (targetSnippetContent["dbflux-column-output"] != undefined) {
+      if (targetSnippetContent["dbflux-column-output"] !== undefined) {
         const snippet = targetSnippetContent["dbflux-column-output"];
         text = snippet.body.join("\n");
       }

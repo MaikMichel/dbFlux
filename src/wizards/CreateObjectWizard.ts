@@ -353,7 +353,7 @@ export async function createTableDDL(context: ExtensionContext) {
     if (existsSync(path.join(ws, ".git"))) {
       const gitCommand = 'git diff --unified=0 ' + path.join(ConfigurationManager.getDBFolderName(), state.objectType.label); // + " | grep -Po '(?<=^\+)(?!\+\+).*'";
       output = execSync(gitCommand, { cwd:ws }).toString().split("\n").filter((line) => {
-        return line.match(/(?<=^[\+-])(?![(\+\+)(--)]).*/)
+        return line.match(/(?<=^[\+-])(?![(\+\+)(--)]).*/);
       });
       writeFileSync(newDDLFileName, "/** \n  modified lines in " + state.objectType.description + ".sql\n" + "    " + output.join('\n    ') + "\n**/");
     } else {
@@ -433,11 +433,11 @@ export async function getAllTableFiles(): Promise<QuickPickItem[]> {
 
 export async function getQuickPickFromCurrentFile(quickPicks:QuickPickItem[]):Promise<QuickPickItem | undefined> {
   let item:QuickPickItem|undefined = undefined;
-  if (window.activeTextEditor != undefined) {
+  if (window.activeTextEditor !== undefined) {
     const relativeFile = workspace.asRelativePath(window.activeTextEditor.document.uri);
     const pathBlocks = relativeFile.split(path.posix.sep);
     if (pathBlocks[pathBlocks.length-2] === 'tables') {
-      const tempItem = quickPicks.find(quickPick => (relativeFile.includes(quickPick.label)))
+      const tempItem = quickPicks.find(quickPick => (relativeFile.includes(quickPick.label)));
       item = tempItem?tempItem:item;
     }
   }
@@ -448,12 +448,12 @@ export async function getQuickPickFromCurrentFile(quickPicks:QuickPickItem[]):Pr
 export async function getQuickPickFromCurrentSelection(quickPicks:QuickPickItem[]):Promise<QuickPickItem|undefined> {
   let item:QuickPickItem|undefined = undefined;
 
-  if (window.activeTextEditor != undefined) {
+  if (window.activeTextEditor !== undefined) {
     const editor = window.activeTextEditor;
     const text = editor?.document.getText(editor.selection);
 
     if (text) {
-      const tempItem = quickPicks.find(quickPick => text.includes(quickPick.description!))
+      const tempItem = quickPicks.find(quickPick => text.includes(quickPick.description!));
       item = tempItem?tempItem:item;
     }
   }

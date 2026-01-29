@@ -171,7 +171,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
   async function collectInputs() {
     const state = {} as Partial<State>;
-    state.projectName = ""
+    state.projectName = "";
     if (workspace.workspaceFolders) {
       state.projectName = context.workspaceState.get("dbFlux_PROJECT") || "";
       state.dbConnection = context.workspaceState.get("dbFlux_DB_TNS") || "";
@@ -303,11 +303,11 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   }
 
   async function validateValueIsRequiered(name: string) {
-    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
+    return (name === undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 
   async function validateRequiredValueOnlyNumbersAlphaUScore(name: string) {
-    return (name == undefined || name.length === 0) ? 'Value is required' : (!name.toLowerCase().match(/^[0-9a-z_]+$/)) ? 'Value not a valid schema name' : undefined;
+    return (name === undefined || name.length === 0) ? 'Value is required' : (!name.toLowerCase().match(/^[0-9a-z_]+$/)) ? 'Value not a valid schema name' : undefined;
   }
 
   async function validateValueNotRequiered(name: string) {

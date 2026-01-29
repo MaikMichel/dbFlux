@@ -37,7 +37,7 @@ export class PlsqlCompletionItemProvider implements CompletionItemProvider {
             Object.keys(tempData[packageName]).forEach((methodName)=>{
               const methodDetails:ApiDetails = tempData[packageName][methodName] as ApiDetails;
 
-              tempMap.set(methodName, methodDetails)
+              tempMap.set(methodName, methodDetails);
             });
 
             this.dictionary.set(packageName, tempMap);
@@ -45,7 +45,7 @@ export class PlsqlCompletionItemProvider implements CompletionItemProvider {
 
           console.log('API dictionary successfully loaded.');
 
-     })
+     });
 
     }
 

@@ -1,7 +1,7 @@
 import { join, posix } from "path";
 import { commands, extensions, Uri, window, workspace } from "vscode";
 
-const DBFLUX_EXT_ID = "MaikMichel.dbFlow"
+const DBFLUX_EXT_ID = "MaikMichel.dbFlow";
 const USER_CONFIG_FILE_NAME = 'user.dbFlux.config.json';
 
 
@@ -94,8 +94,8 @@ class UpdateInfoProvider implements IUpdateInfoProvider {
   }
 
   showChangeLog():void {
-    let uri = Uri.file(join(__dirname, '..', '..', 'CHANGELOG.md'))
-    commands.executeCommand('markdown.showPreview', uri)
+    let uri = Uri.file(join(__dirname, '..', '..', 'CHANGELOG.md'));
+    commands.executeCommand('markdown.showPreview', uri);
   }
 }
 

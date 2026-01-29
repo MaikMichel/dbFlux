@@ -147,5 +147,5 @@ export function registerCreateDBFlowProject(command: string, context: ExtensionC
      context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new GenerateDPFlowProjectProvider(context, state)));
 
      await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: createDBFlow");
-  })
+  });
 }

@@ -30,7 +30,7 @@ export async function exportSchemaWizard(context: ExtensionContext):Promise<Expo
   }
 
   async function pickSchemaFromList(input: MultiStepInput, state: Partial<ExportSchemaWizardState>) {
-    const schemaFolders = (await getDBSchemaFolders())
+    const schemaFolders = (await getDBSchemaFolders());
     state.schemaName = await input.showQuickPick({
       title,
       step: 1,

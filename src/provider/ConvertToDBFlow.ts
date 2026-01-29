@@ -109,15 +109,15 @@ export function registerConvert2dbFLow(projectInfos: IProjectInfos, command: str
           .split('\n')
           .filter((val, idx) => !lines.includes(val))
           .join('\n');
-    }
+    };
 
     fs.readFile(buildFile, 'utf8', (err, data) => {
-        if (err) throw err;
+        if (err) {throw err;}
 
         fs.writeFile(buildFile, removeLines(data, ["LOGIC_SCHEMA=", "DATA_SCHEMA="]), 'utf8', function(err) {
-            if (err) throw err;
+            if (err) {throw err;}
         });
-    })
+    });
 
     // initialize dbFlow as submodule
     context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ConvertToDBFlowProvider(context)));

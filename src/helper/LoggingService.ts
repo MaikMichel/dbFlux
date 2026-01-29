@@ -45,7 +45,7 @@ type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR" | "NONE";
 export abstract class LoggingService {
   private static outputChannel = window.createOutputChannel("dbFlux", "log");
 
-  private static logLevel: LogLevel = workspace.getConfiguration("dbFlux").get("loggingMode") || "INFO"
+  private static logLevel: LogLevel = workspace.getConfiguration("dbFlux").get("loggingMode") || "INFO";
 
   public setOutputLevel(newLogLevel: LogLevel) {
     LoggingService.logLevel = newLogLevel;
@@ -66,7 +66,7 @@ export abstract class LoggingService {
       return;
     }
 
-    const myCaller = (new Error()).stack?.split("\n")[2].trim().split(" ")[1]
+    const myCaller = (new Error()).stack?.split("\n")[2].trim().split(" ")[1];
     const arr = myCaller?.split(path.sep);
     if (arr?.length && arr.length-1 ) {
       LoggingService.logMessage("<"+arr[arr.length-1] +"> " + message, "DEBUG");
@@ -97,7 +97,7 @@ export abstract class LoggingService {
     if (data) {
       LoggingService.logObject(data);
     }
-    mprogress?.report({ message: message})
+    mprogress?.report({ message: message});
   }
 
   /**
@@ -153,7 +153,7 @@ export abstract class LoggingService {
    */
   private static logMessage(message: string, logLevel: LogLevel): void {
     const now       = new Date();
-    const timestamp = new Date((now).getTime() - now.getTimezoneOffset() * 60000).toISOString().replace(/(.*)T(.*)\..*/,'$1 $2')
+    const timestamp = new Date((now).getTime() - now.getTimezoneOffset() * 60000).toISOString().replace(/(.*)T(.*)\..*/,'$1 $2');
 
     LoggingService.outputChannel.appendLine(`${timestamp} - [${logLevel.padEnd(6, " ")}] > ${message}`);
   }

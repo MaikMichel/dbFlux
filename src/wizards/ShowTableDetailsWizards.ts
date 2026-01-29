@@ -141,7 +141,7 @@ async function getSnippText(snippetKey:string) {
       targetSnippetContent = JSON.parse(readFileSync(extentionSnippetFile).toString());
 
       // try to find then key
-      if (targetSnippetContent["dbflux-" + snippetKey] != undefined) {
+      if (targetSnippetContent["dbflux-" + snippetKey] !== undefined) {
         const snippet = targetSnippetContent["dbflux-" + snippetKey];
         text = snippet.body.join("\n");
       }

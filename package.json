@@ -202,11 +202,13 @@
 				{
 					"id": "dbflux.dblock.treeview",
 					"name": "dbLock - locked files by user",
-					"when": "dbLockEnabled"
+					"when": "dbLockEnabled",
+					"icon": "$(lock)"
 				},
 				{
 					"id": "dbflux.showTableDetails.treeview",
-					"name": "dbStruct - column viewer"
+					"name": "dbStruct - column viewer",
+					"icon": "$(table)"
 				}
 			]
 		},

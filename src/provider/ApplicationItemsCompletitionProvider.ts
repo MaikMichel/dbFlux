@@ -4,8 +4,8 @@ import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKin
 import { getWorkspaceRootPath } from '../helper/utilities';
 
 interface APIdetails {
-  item_name: string,
-  item_desc: string
+  itemName: string,
+  itemDesc: string
 }
 
 /*
@@ -42,7 +42,7 @@ export class ApplicationItemsCompletitionProvider implements CompletionItemProvi
             const tempMap = new Map<string, APIdetails>();
             Object.keys(tempData[appID]).forEach((itemName)=>{
                const methodDetails:APIdetails = tempData[appID][itemName] as APIdetails;
-               tempMap.set(itemName, methodDetails)
+               tempMap.set(itemName, methodDetails);
             });
 
             this.dictionary.set(appID, tempMap);
@@ -50,7 +50,7 @@ export class ApplicationItemsCompletitionProvider implements CompletionItemProvi
 
           console.log('API dictionary successfully loaded.');
 
-     })
+     });
 
     }
 
@@ -62,7 +62,7 @@ export class ApplicationItemsCompletitionProvider implements CompletionItemProvi
       const currentWord = wordsOfLine[wordsOfLine.length-1].split(".");
 
       if (currentWord.length === 1 && currentWord[0].toUpperCase().replaceAll("'", '').startsWith("P")) {
-        completionItems = this.findPageItemsByName("F200", currentWord[0])
+        completionItems = this.findPageItemsByName("F200", currentWord[0]);
       }
 
       return completionItems.length>0?completionItems:undefined;
@@ -74,11 +74,11 @@ export class ApplicationItemsCompletitionProvider implements CompletionItemProvi
       const results: CompletionItem[] = [];
 
       this.dictionary.get(applicationID)?.forEach((itemDetails) => {
-        if (itemDetails.item_name.startsWith(searchString.toUpperCase())) {
-        const completionItem = new CompletionItem(itemDetails.item_name, CompletionItemKind.Constant);
+        if (itemDetails.itemName.startsWith(searchString.toUpperCase())) {
+        const completionItem = new CompletionItem(itemDetails.itemName, CompletionItemKind.Constant);
 
-        completionItem.detail        = itemDetails.item_desc;
-        // completionItem.documentation = itemDetails.item_desc;
+        completionItem.detail        = itemDetails.itemDesc;
+        // completionItem.documentation = itemDetails.itemDesc;
         completionItem.preselect     =true;
         completionItem.insertText    = new SnippetString(completionItem.label+"");
 

@@ -1,4 +1,4 @@
-import { commands, Event, EventEmitter, ProviderResult, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, window, workspace } from 'vscode'
+import { commands, Event, EventEmitter, ProviderResult, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, window, workspace } from 'vscode';
 import { ViewFileDecorationProvider } from '../provider/ViewFileDecorationProvider';
 import { getWorkspaceRootPath } from '../helper/utilities';
 import { homedir } from 'os';
@@ -21,7 +21,7 @@ class DBLockTreeItem extends TreeItem
       }
     }
 
-    public add_child (child : DBLockTreeItem) {
+    public addChild(child: DBLockTreeItem) {
         this.collapsibleState = TreeItemCollapsibleState.Expanded;
         this.children.push(child);
     }
@@ -33,16 +33,16 @@ export class DBLockTreeView implements TreeDataProvider<DBLockTreeItem>
     static osUser:string = process.env.username?process.env.username:basename(homedir());
     private treeView : TreeView<DBLockTreeItem>;
 
-    private m_data : DBLockTreeItem [] = [];
+    private mData : DBLockTreeItem [] = [];
 
     // with the EventEmitter we can refresh our  tree view
-    private m_onDidChangeTreeData: EventEmitter<DBLockTreeItem | undefined> = new EventEmitter<DBLockTreeItem | undefined>();
+    private mOnDidChangeTreeData: EventEmitter<DBLockTreeItem | undefined> = new EventEmitter<DBLockTreeItem | undefined>();
     // and vscode will access the event by using a readonly onDidChangeTreeData (this member has to be named like here, otherwise vscode doesnt update our treeview.
-    readonly onDidChangeTreeData ? : Event<DBLockTreeItem | undefined> = this.m_onDidChangeTreeData.event;
+    readonly onDidChangeTreeData ? : Event<DBLockTreeItem | undefined> = this.mOnDidChangeTreeData.event;
 
     // cause our decowriter holds the logic to fetch, we use this here
     // ToDo: this should be refactored
-    private m_deco_provider:ViewFileDecorationProvider;
+    private mDecoProvider:ViewFileDecorationProvider;
 
     public constructor(decoProvider: ViewFileDecorationProvider)  {
 
@@ -52,8 +52,8 @@ export class DBLockTreeView implements TreeDataProvider<DBLockTreeItem>
 
       decoProvider.context.subscriptions.push(this.treeView );
 
-      this.m_deco_provider = decoProvider;
-      commands.registerCommand('dbflux.dblock.treeview.item_clicked', r => this.item_clicked(r));
+      this.mDecoProvider = decoProvider;
+      commands.registerCommand('dbflux.dblock.treeview.item_clicked', r => this.itemClicked(r));
       commands.registerCommand('dbflux.dblock.treeview.view_refresh', () => this.refresh());
     }
 
@@ -70,13 +70,13 @@ export class DBLockTreeView implements TreeDataProvider<DBLockTreeItem>
 
     public getChildren(element : DBLockTreeItem | undefined): ProviderResult<DBLockTreeItem[]> {
         if (element === undefined) {
-            return this.m_data;
+            return this.mData;
         } else {
             return element.children;
         }
     }
 
-    public item_clicked(item: DBLockTreeItem) {
+    public itemClicked(item: DBLockTreeItem) {
 
       if (item.file !== undefined) {
         workspace.openTextDocument(getWorkspaceRootPath() + '/' + item.file).then(doc => {
@@ -87,27 +87,27 @@ export class DBLockTreeView implements TreeDataProvider<DBLockTreeItem>
 
     // this is called whenever we refresh the tree view
     public async refresh() {
-      this.m_data = [];
+      this.mData = [];
       const users:any = {};
 
       // call provider to refresh cache
-      await this.m_deco_provider.refreshCache();
+      await this.mDecoProvider.refreshCache();
 
       // get only the distinct users involved
-      const uniqueUsers = [...new Set(this.m_deco_provider.getCachedUsers())];
+      const uniqueUsers = [...new Set(this.mDecoProvider.getCachedUsers())];
       uniqueUsers.forEach(element => {
         users[element] = new DBLockTreeItem(element, undefined, element);
-        this.m_data.push(users[element]);
+        this.mData.push(users[element]);
       });
 
       // now get all files and place them underneath users
-      const files:string[] = this.m_deco_provider.getCachedFiles();
+      const files:string[] = this.mDecoProvider.getCachedFiles();
       for (let i = 0; i<files.length; i++) {
-        (users[this.m_deco_provider.getCachedUsers()[i]] as DBLockTreeItem).add_child(new DBLockTreeItem(files[i], files[i], undefined))
+        (users[this.mDecoProvider.getCachedUsers()[i]] as DBLockTreeItem).addChild(new DBLockTreeItem(files[i], files[i], undefined));
       }
 
       // call to let VSCode refresh the tree
-      this.m_onDidChangeTreeData.fire(undefined);
+      this.mOnDidChangeTreeData.fire(undefined);
     }
 
 }

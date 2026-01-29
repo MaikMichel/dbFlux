@@ -55,10 +55,10 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
         const response = await fetch(urlToFetch, options);
         const data = await response.json();
         this.cachedFiles = data.items.map(function (elem:any) {
-          return elem.lfs_name
+          return elem.lfs_name;
         });
         this.cachedUsers = data.items.map(function (elem:any) {
-          return elem.lfs_user
+          return elem.lfs_user;
         });
 
         this.updateDecorations();
@@ -110,7 +110,7 @@ export function registerLockCurrentFileCommand(projectInfos: IProjectInfos, deco
   return commands.registerCommand("dbFlux.lockCurrentFile", async () => {
 
 
-    if (window.activeTextEditor != undefined) {
+    if (window.activeTextEditor !== undefined) {
 
       const relativeFile = workspace.asRelativePath(window.activeTextEditor.document.uri);
       LoggingService.logInfo(`locking file ${relativeFile}`);
@@ -137,7 +137,7 @@ export function registerLockCurrentFileCommand(projectInfos: IProjectInfos, deco
           if (response.ok) {
             const data = await response.json();
 
-            window.showInformationMessage(`${data.message}`)
+            window.showInformationMessage(`${data.message}`);
             decoProvider.refreshCache();
             await commands.executeCommand('dbflux.dblock.treeview.view_refresh');
           } else {
@@ -153,7 +153,7 @@ export function registerLockCurrentFileCommand(projectInfos: IProjectInfos, deco
       }
     }
   }
-)};
+);};
 
 
 export function registerUnLockCurrentFileCommand(projectInfos: IProjectInfos, decoProvider: ViewFileDecorationProvider) {
@@ -180,7 +180,7 @@ export function registerUnLockCurrentFileCommand(projectInfos: IProjectInfos, de
           if (response.ok) {
             const data = await response.json();
 
-            window.showInformationMessage(`${data.message}`)
+            window.showInformationMessage(`${data.message}`);
             decoProvider.refreshCache();
             await commands.executeCommand('dbflux.dblock.treeview.view_refresh');
           } else {

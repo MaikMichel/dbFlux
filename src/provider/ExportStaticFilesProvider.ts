@@ -226,7 +226,7 @@ export function registerExportCurrentStaticFileCommand(projectInfos: IProjectInf
   return commands.registerCommand("dbFlux.exportCurrentStaticFile", async () => {
     // check what file has to build
     let fileName = await getWorkingFile(context);
-    const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "")
+    const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
 
     const insideStatic = matchRuleShort(relativeFileName, 'static/*/src/*');
