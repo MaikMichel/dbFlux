@@ -14,7 +14,7 @@ initialize_session;
 basefl=$(basename -- "${DBFLOW_FILE}")
 basepath=$(pwd)
 extension="${basefl##*.}"
-MDATE=`date +%d.%m.%y_%H:%M:%S,%5N`
+MDATE=`date +%Y-%m-%dT%H:%M:%S%z`
 
 REST_SQL_URL="${DBFLOW_REST_SQL_URL}"
 REST_OAUTH_TOKEN_URL="${DBFLOW_REST_OAUTH_TOKEN_URL}"
@@ -37,6 +37,49 @@ function print_rest_success_message() {
   printf "%bSuccessful%b   %b%s%b\n" \
     "${color_greenb}" "${color_off}" \
     "${color_green}" "$(date +%Y-%m-%dT%H:%M:%S%z)" "${color_off}"
+}
+
+function print_rest_log_results_table() {
+  local json_response="$1"
+
+  # Optional output only: if jq is missing we skip table rendering silently.
+  if ! command -v jq >/dev/null 2>&1; then
+    return 0
+  fi
+
+  # Print only if log_results exists and has more than one entry.
+  local has_log_results
+  has_log_results=$(jq -r 'if ((.log_results? | type) == "array") and ((.log_results | length) > 1) then "true" else "false" end' <<< "${json_response}" 2>/dev/null)
+  if [[ "${has_log_results}" != "true" ]]; then
+    return 0
+  fi
+
+  print_rest_status_message "info" "Log" "log_results"
+  printf "%-4s %-18s %-10s %-12s %s\n" "#" "statement_type" "status" "duration_ms" "error_message"
+  printf "%-4s %-18s %-10s %-12s %s\n" "----" "------------------" "----------" "------------" "-------------"
+
+  local parsed_rows
+  parsed_rows=$(jq -r '
+      .log_results
+      | to_entries[]
+      | [
+          ((.key + 1) | tostring),
+          ((.value.statement_type // "-") | tostring),
+          ((.value.status // "-") | tostring),
+          ((.value.duration_ms // "-") | tostring),
+          ((.value.error_message // "-") | tostring | gsub("[\\r\\n\\t]+"; " "))
+        ]
+      | @tsv
+    ' <<< "${json_response}" 2>/dev/null)
+
+  if [[ -z "${parsed_rows}" ]]; then
+    return 0
+  fi
+
+  while IFS=$'\t' read -r idx statement_type status duration_ms error_message; do
+    [[ -n "${idx}" ]] || continue
+    printf "%-4s %-18s %-10s %-12s %s\n" "${idx}" "${statement_type}" "${status}" "${duration_ms}" "${error_message}"
+  done <<< "${parsed_rows}"
 }
 
 
@@ -267,11 +310,15 @@ function run_sql_file_rest() {
 
   # Print response only when it is not JSON or JSON.success != true
   if [[ "${curl_response}" =~ ^[[:space:]]*\{ ]]; then
+    echo
     local compact_response
     compact_response=$(echo "${curl_response}" | tr -d '\r\n')
     if [[ ! "${compact_response}" =~ \"success\"[[:space:]]*:[[:space:]]*true ]]; then
       print_rest_response_as_problem_lines "${curl_response}"
+      echo
     fi
+
+    print_rest_log_results_table "${curl_response}"
   else
     [[ -z "${curl_response}" ]] || echo "${curl_response}"
   fi
@@ -286,6 +333,7 @@ print_rest_status_message "info" "OS-Time" "${MDATE}"
 run_sql_file_rest "${REST_APP_SCHEMA}" "${DBFLOW_WSPACE}" false
 if [[ $? -eq 0 ]]; then
   if [[ ${REST_ERRORS_FOUND} -eq 0 ]]; then
+    echo
     print_rest_success_message
   fi
 fi
