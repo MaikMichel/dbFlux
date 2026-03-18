@@ -204,7 +204,7 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
       projectInfos.dbConnMode  = applyEnv.parsed.CONN_MODE ?? "SQLNET";
 
       projectInfos.dbAppUser   = applyEnv.parsed.DB_APP_USER;
-      projectInfos.dbAppPwd    = projectInfos.dbConnMode === "SQLNET" ? applyEnv.parsed.DB_APP_PWD : `${applyEnv.parsed.REST_OAUTH_CLIENT_ID}:${applyEnv.parsed.REST_OAUTH_CLIENT_SECRET}`;
+      projectInfos.dbAppPwd    = projectInfos.dbConnMode === "SQLNET" ? applyEnv.parsed.DB_APP_PWD : `${applyEnv.parsed.REST_OAUTH_BASIC_B64}`;
       projectInfos.dbAdminUser = applyEnv.parsed.DB_ADMIN_USER;
       projectInfos.dbAdminPwd  = applyEnv.parsed.DB_ADMIN_PWD;
       projectInfos.dbTns       = applyEnv.parsed.DB_TNS;
@@ -224,8 +224,6 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
       projectInfos.restAppSchema         = applyEnv.parsed.REST_APP_SCHEMA;
       projectInfos.restWorkspace         = applyEnv.parsed.REST_WORKSPACE;
       projectInfos.restOauthTokenUrl     = applyEnv.parsed.REST_OAUTH_TOKEN_URL;
-      // projectInfos.restOauthClientId     = applyEnv.parsed.REST_OAUTH_CLIENT_ID;
-      // projectInfos.restOauthClientSecret = applyEnv.parsed.REST_OAUTH_CLIENT_SECRET;
 
       // get all keys with pattern dbFlux_..._PWD and store them in array
       const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD")); // dbFlux as prefix because this is a dbFlux feature (not dbFlow)

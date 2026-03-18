@@ -150,13 +150,13 @@ function ensure_rest_access_token() {
 
   local token_response
   token_response=$(curl -sS \
-    --user "${DBFLOW_DBPASS}" \
+    --header "Authorization: Basic ${DBFLOW_DBPASS}" \
     --data "grant_type=client_credentials" \
     "${REST_OAUTH_TOKEN_URL}")
   local token_rc=$?
 
   if [[ ${token_rc} -ne 0 ]]; then
-    [[ -z "${token_response}" ]] || echo_error "${token_response}"
+    [[ -z "${token_response}" ]] || print_rest_status_message "error" "Error" "${token_response}"
     print_rest_status_message "error" "Error" "Failed to get OAuth access token from ${REST_OAUTH_TOKEN_URL}"
     return ${token_rc}
   fi
@@ -167,7 +167,7 @@ function ensure_rest_access_token() {
   expires_in=$(jq -r '.expires_in // 3600' <<< "${token_response}" 2>/dev/null)
 
   if [[ -z "${access_token}" ]]; then
-    [[ -z "${token_response}" ]] || echo_error "${token_response}"
+    [[ -z "${token_response}" ]] || print_rest_status_message "error" "Error" "${token_response}"
     print_rest_status_message "error" "Error" "OAuth token response did not contain access_token"
     return 1
   fi

@@ -123,8 +123,6 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
 
           DBFLOW_REST_SQL_URL:              definition.runner.restSqlUrl,
           DBFLOW_REST_OAUTH_TOKEN_URL:      definition.runner.restOauthTokenUrl,
-          // DBFLOW_REST_OAUTH_CLIENT_ID:      definition.runner.restOauthClientId,
-          // DBFLOW_REST_OAUTH_CLIENT_SECRET:  definition.runner.restOauthClientSecret,
           DBFLOW_REST_APP_SCHEMA:           definition.runner.restAppSchema,
           DBFLOW_REST_WORKSPACE:            definition.runner.restWorkspace,
         },
