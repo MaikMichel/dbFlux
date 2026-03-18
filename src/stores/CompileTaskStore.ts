@@ -107,7 +107,7 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
      try {
       schemaName = getSchemaFromFile(relativeFileName, projectInfosReloaded.isFlexMode);
       if (getDBFlowMode(context!) === "dbFlux") {
-        schemaPWD = await context?.secrets.get(getWorkspaceRootPath() + `|dbFlux_${schemaName}_PWD`)
+        schemaPWD = await context?.secrets.get(getWorkspaceRootPath() + `|dbFlux_${schemaName}_PWD`);
       }
      } catch (e) {
 
@@ -118,15 +118,21 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
     compTaskStoreInstance.appPwd = schemaPWD;
   } else {
 
+    // if connConnMode is REST we look for an API key instead of a password
+    const prompt = projectInfosReloaded.dbConnMode === "REST" ?
+      `dbFlux: Enter API Key for connection ${projectInfosReloaded.restSqlUrl}` :
+      `dbFlux: Enter Password for connection ${projectInfosReloaded.dbAdminUser}@${projectInfosReloaded.dbTns}`;
+
     if (!projectInfosReloaded.dbAppPwd) {
       if (!compTaskStoreInstance.appPwd) {
-        compTaskStoreInstance.appPwd = await window.showInputBox({ prompt: `dbFlux: Enter Password for connection ${projectInfosReloaded.dbAppUser}@${projectInfosReloaded.dbTns}`, placeHolder: "Password", password: true });
+        compTaskStoreInstance.appPwd = await window.showInputBox({ prompt, placeHolder: projectInfosReloaded.dbConnMode === "REST" ? "API-Key" : "Password", password: true });
       } else {
         if (compTaskStoreInstance.appPwd?.length === 0) {
           compTaskStoreInstance.appPwd = undefined;
         }
       }
     } else {
+      // FIXME: if connMode is REST. we assgin the API key to appPwd
       compTaskStoreInstance.appPwd = projectInfosReloaded.dbAppPwd;
     }
   }

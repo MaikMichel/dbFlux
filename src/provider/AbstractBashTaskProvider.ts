@@ -33,6 +33,13 @@ export interface IProjectInfos {
   isFlexMode: boolean;
   workspace: string|undefined;
   dbPasses: any|undefined;
+  dbConnMode: string|undefined;
+  restOauthTokenUrl: string|undefined;
+  // restOauthClientId: string|undefined;
+  // restOauthClientSecret: string|undefined;
+  restSqlUrl: string|undefined;
+  restAppSchema: string|undefined;
+  restWorkspace: string|undefined;
 }
 
 export abstract class AbstractBashTaskProvider {
@@ -105,8 +112,10 @@ export abstract class AbstractBashTaskProvider {
     }
     runnerInfo.cwd      = path.dirname(activeFile);
 
-    runnerInfo.connectionTns  = projectInfos.dbTns;
-    runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd, fileUri.path);
+    if (projectInfos.dbConnMode !== "REST") {
+      runnerInfo.connectionTns  = projectInfos.dbTns;
+      runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd, fileUri.path);
+    }
     runnerInfo.connectionPass = getPassword(projectInfos, runnerInfo.connectionUser, false, this.context);
 
     runnerInfo.projectInfos   = projectInfos;
@@ -148,8 +157,6 @@ export async function getProjectInfos(context: ExtensionContext) {
     projectInfos = await getProjectInfosFromDBFlux(context);
   } else if (getDBFlowMode(context) === "dbFlow") {
     projectInfos = await getProjectInfosFromDBFlow(context);
-  } else if (getDBFlowMode(context) === "xcl") {
-    projectInfos = getProjectInfosFromXCL();
   }
   return projectInfos;
 }
@@ -194,8 +201,10 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
 
 
     if (applyEnv.parsed) {
+      projectInfos.dbConnMode  = applyEnv.parsed.CONN_MODE ?? "SQLNET";
+
       projectInfos.dbAppUser   = applyEnv.parsed.DB_APP_USER;
-      projectInfos.dbAppPwd    = applyEnv.parsed.DB_APP_PWD;
+      projectInfos.dbAppPwd    = projectInfos.dbConnMode === "SQLNET" ? applyEnv.parsed.DB_APP_PWD : `${applyEnv.parsed.REST_OAUTH_CLIENT_ID}:${applyEnv.parsed.REST_OAUTH_CLIENT_SECRET}`;
       projectInfos.dbAdminUser = applyEnv.parsed.DB_ADMIN_USER;
       projectInfos.dbAdminPwd  = applyEnv.parsed.DB_ADMIN_PWD;
       projectInfos.dbTns       = applyEnv.parsed.DB_TNS;
@@ -208,6 +217,15 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
       if (projectInfos.dbAdminPwd && projectInfos.dbAdminPwd.startsWith("!")) {
         projectInfos.dbAdminPwd = Buffer.from(projectInfos.dbAdminPwd.substring(1), 'base64').toString('utf8').replace("\n", "");
       }
+
+      // check restCompile
+
+      projectInfos.restSqlUrl            = applyEnv.parsed.REST_SQL_URL;
+      projectInfos.restAppSchema         = applyEnv.parsed.REST_APP_SCHEMA;
+      projectInfos.restWorkspace         = applyEnv.parsed.REST_WORKSPACE;
+      projectInfos.restOauthTokenUrl     = applyEnv.parsed.REST_OAUTH_TOKEN_URL;
+      // projectInfos.restOauthClientId     = applyEnv.parsed.REST_OAUTH_CLIENT_ID;
+      // projectInfos.restOauthClientSecret = applyEnv.parsed.REST_OAUTH_CLIENT_SECRET;
 
       // get all keys with pattern dbFlux_..._PWD and store them in array
       const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD")); // dbFlux as prefix because this is a dbFlux feature (not dbFlow)
@@ -273,51 +291,27 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
   return projectInfos;
 }
 
-function getProjectInfosFromXCL():IProjectInfos {
-  const projectInfos: IProjectInfos = {} as IProjectInfos;
-  if (workspace.workspaceFolders !== undefined) {
-    const f = workspace.workspaceFolders[0].uri.fsPath;
-
-    const buildYml = yaml.parse(readFileSync(path.join(f, "xcl.yml")).toString());
-
-    if (buildYml) {
-      projectInfos.appSchema    = buildYml.xcl.users.schema_app;
-      projectInfos.logicSchema  = buildYml.xcl.users.schema_logic?buildYml.xcl.users.schema_logic:projectInfos.appSchema;
-      projectInfos.dataSchema   = buildYml.xcl.users.schema_data?buildYml.xcl.users.schema_data:projectInfos.appSchema;
-
-      projectInfos.isFlexMode   = (buildYml.xcl.users.flex_mod === true);
-      projectInfos.projectName  = buildYml.xcl.project;
-    }
-
-    if (existsSync(path.join(f, `.xcl/env.yml`))) {
-      const applyYml = yaml.parse(readFileSync(path.join(f, `.xcl/env.yml`)).toString());
-
-      if (applyYml) {
-        projectInfos.dbAppUser = buildYml.xcl.users.user_deployment;
-        projectInfos.dbTns     = applyYml.connection;
-        projectInfos.dbAppPwd  = applyYml.password;
-      }
-    } else {
-      LoggingService.logWarning('.xcl/env.yml not found');
-    }
-  }
-
-  validateProjectInfos(projectInfos);
-
-  return projectInfos;
-}
-
 async function validateProjectInfos(projectInfos: IProjectInfos) {
   let dbConnMsg = "";
   let schemaMsg = "";
 
   if (
-      (projectInfos.dbAppUser === undefined || !projectInfos.dbAppUser || projectInfos.dbAppUser.length === 0) ||
-      (projectInfos.dbTns === undefined || !projectInfos.dbTns || projectInfos.dbTns?.length === 0)
-  ) {
+      ( projectInfos.dbConnMode === "SQLNET"
+        && (
+                (projectInfos.dbAppUser === undefined || !projectInfos.dbAppUser || projectInfos.dbAppUser.length === 0)
+            ||  (projectInfos.dbTns === undefined || !projectInfos.dbTns || projectInfos.dbTns?.length === 0))
+
+      )
+      ||
+      ( projectInfos.dbConnMode === "REST"
+        && (
+                 (projectInfos.restSqlUrl === undefined || !projectInfos.restSqlUrl || projectInfos.restSqlUrl.length === 0)
+             ||  (projectInfos.restOauthTokenUrl === undefined || !projectInfos.restOauthTokenUrl || projectInfos.restOauthTokenUrl.length === 0)
+            )
+      )
+    ) {
     dbConnMsg = `dbFlux: Connection configuration incomplete! Please check your configuration!
-    (User: ${projectInfos.dbAppUser},
-    Connection: ${projectInfos.dbTns})
+    (User: ${projectInfos.dbAppUser}, Connection: ${projectInfos.dbTns}, ConnMode: ${projectInfos.dbConnMode}${projectInfos.dbConnMode === "REST" ? `, REST URL: ${projectInfos.restSqlUrl}, TOKEN URL: ${projectInfos.restOauthTokenUrl}` : ""})
     `;
     window.setStatusBarMessage("$(testing-error-icon) dbFlux > Connection configuration incomplete!");
     setTimeout(function(){

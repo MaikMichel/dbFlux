@@ -363,6 +363,6 @@ export function showInformationProgress(msg:string, timeoutms:number = 3000) {
         passWord = CompileTaskStore.getInstance().appPwd!;
       }
     }
-
+    passWord = pInfos.dbConnMode !== "REST" ? passWord : pInfos.dbAppPwd!;
     return passWord;
   }

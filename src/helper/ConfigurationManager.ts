@@ -91,23 +91,23 @@ export class ConfigurationManager {
   }
 
   static getTestOutputFormat(): string {
-    return this.get<string>("test.Output.Format")
+    return this.get<string>("test.Output.Format");
   }
 
   static getDragSelectionWith(): string {
-    return this.get<string>("showTableDetails.DragSelectionWith")
+    return this.get<string>("showTableDetails.DragSelectionWith");
   }
 
   static getAppExportOptions(): string {
-    return this.get<string>("exportApplications.AppendFollowingOptionString")
+    return this.get<string>("exportApplications.AppendFollowingOptionString");
   }
 
   static getDBFolderName(): string {
-    return this.get<string>("mapping.dbFolder")
+    return this.get<string>("mapping.dbFolder");
   }
 
   static getGrantsOfViewsAndSourcesAtObject(): string {
-    return this.get<string>("exportSchema.grantsOfViewsAndSourcesAtObject")
+    return this.get<string>("exportSchema.grantsOfViewsAndSourcesAtObject");
   }
 }
 

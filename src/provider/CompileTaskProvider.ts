@@ -4,7 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { ConfigurationManager, focusProblemPanel } from "../helper/ConfigurationManager";
 import { getActiveFileUri, getApplicationIdFromApexPath, getPassword, getStaticReference, getWorkingFile, getWorkspaceRootPath, matchRuleShort, rtrim } from "../helper/utilities";
-import { AbstractBashTaskProvider, buildConnectionUser, getDBSchemaFolders, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, buildConnectionUser, getDBSchemaFolders, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { CompileTaskStore, setAdminPassword, setAdminUserName, setAppPassword } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { Terserer } from "../templaters/Terserer";
@@ -44,6 +44,12 @@ interface ICompileInfos extends IBashInfos {
   additionalOutput:   string;
   onlyTriggerRun:     string;
   useSQLErrorLog:     string;
+  restSqlUrl:         string;
+  restAppSchema:      string;
+  restWorkspace:      string;
+  restOauthTokenUrl:  string;
+  // restOauthClientId:     string;
+  // restOauthClientSecret: string;
 }
 
 
@@ -113,7 +119,14 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
           DBFLOW_USE_SLOG:          definition.runner.useSQLErrorLog,
 
           DBFLOW_TARGET_APP_ID:    CompileTaskStore.getInstance().targetApplicationID + "",
-          DBFLOW_TARGET_WORKSP:    CompileTaskStore.getInstance().targetWorkspace + ""
+          DBFLOW_TARGET_WORKSP:    CompileTaskStore.getInstance().targetWorkspace + "",
+
+          DBFLOW_REST_SQL_URL:              definition.runner.restSqlUrl,
+          DBFLOW_REST_OAUTH_TOKEN_URL:      definition.runner.restOauthTokenUrl,
+          // DBFLOW_REST_OAUTH_CLIENT_ID:      definition.runner.restOauthClientId,
+          // DBFLOW_REST_OAUTH_CLIENT_SECRET:  definition.runner.restOauthClientSecret,
+          DBFLOW_REST_APP_SCHEMA:           definition.runner.restAppSchema,
+          DBFLOW_REST_WORKSPACE:            definition.runner.restWorkspace,
         },
       }),
       ["$dbflux-plsql"]
@@ -127,16 +140,23 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
   async prepCompInfos(): Promise<ICompileInfos> {
     let runner: ICompileInfos = {} as ICompileInfos;
     let fileUri:Uri|undefined = await getActiveFileUri(this.context);
+    const pInfo = await getProjectInfos(this.context);
 
     if (fileUri !== undefined) {
-      await this.setInitialCompileInfo("deploy.sh", fileUri, runner);
+      await this.setInitialCompileInfo(pInfo.dbConnMode === "REST" ? "rest_compile.sh" : "deploy.sh", fileUri, runner);
 
 
-      runner.activeFile         = fileUri.fsPath.split(path.sep).join(path.posix.sep);
-      runner.relativeWSPath     = workspace.asRelativePath(runner.activeFile);
-      runner.executableCli      = ConfigurationManager.getCliToUseForCompilation();
-      runner.useSQLErrorLog     = ConfigurationManager.getUseSQLplusSPERRORLOGTable()?"YES":"NO";
-      runner.moveYesNo          = "NO";
+      runner.activeFile             = fileUri.fsPath.split(path.sep).join(path.posix.sep);
+      runner.relativeWSPath         = workspace.asRelativePath(runner.activeFile);
+      runner.executableCli          = ConfigurationManager.getCliToUseForCompilation();
+      runner.useSQLErrorLog         = ConfigurationManager.getUseSQLplusSPERRORLOGTable()?"YES":"NO";
+      runner.moveYesNo              = "NO";
+      runner.restSqlUrl             = runner.projectInfos.restSqlUrl + "";
+      runner.restOauthTokenUrl      = runner.projectInfos.restOauthTokenUrl + "";
+      // runner.restOauthClientId      = runner.projectInfos.restOauthClientId + "";
+      // runner.restOauthClientSecret  = runner.projectInfos.restOauthClientSecret + "";
+      runner.restAppSchema          = runner.projectInfos.restAppSchema + "";
+      runner.restWorkspace          = runner.projectInfos.restWorkspace + "";
 
 
       if (ConfigurationManager.getShowWarningMessages()) {
@@ -299,6 +319,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
       const insideREST = matchRuleShort(relativeFileName, 'rest/*');
       const fileExtension: string = "" + relativeFileName.split('.').pop();
       const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
+      const isConnModeRest = projectInfos.dbConnMode === "REST";
 
       // Set password and userinfo to taskStore
       if (insideSetup) {
