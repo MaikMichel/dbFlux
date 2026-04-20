@@ -272,13 +272,38 @@ function run_sql_file_rest() {
     return 0
   fi
 
+  if ! command -v zip >/dev/null 2>&1; then
+    timelog "REST execution failed: zip command is required for REST compile payloads" "${failure}"
+    return 1
+  fi
 
+  abs_file="$(realpath "$sql_file")"
+  rel_file="${abs_file#"$basepath"/}"
+
+  local payload_dir
+  local payload_file
+  payload_dir="$(mktemp -d "${TMPDIR:-/tmp}/dbflux-rest-compile.XXXXXX")"
+  payload_file="${payload_dir}/payload.zip"
+
+  mkdir -p "${payload_dir}/$(dirname "${rel_file}")"
+  cp "${sql_file}" "${payload_dir}/${rel_file}"
+
+  (
+    cd "${payload_dir}" && zip -q "${payload_file}" "${rel_file}"
+  )
+  local zip_rc=$?
+
+  if [[ ${zip_rc} -ne 0 ]]; then
+    rm -rf "${payload_dir}"
+    timelog "REST execution failed: could not create ZIP payload for ${rel_file}" "${failure}"
+    return ${zip_rc}
+  fi
 
   local -a curl_args
   curl_args=(
     -sS
     -X POST
-    --header "Content-Type:text/plain"
+    --header "Content-Type:application/zip"
     --header "file_name:${sql_file}"
   )
 
@@ -292,6 +317,7 @@ function run_sql_file_rest() {
 
   ensure_rest_access_token
   if [[ $? -ne 0 ]]; then
+    rm -rf "${payload_dir}"
     return 1
   fi
   curl_args+=( --header "Authorization: Bearer ${REST_ACCESS_TOKEN}" )
@@ -300,8 +326,10 @@ function run_sql_file_rest() {
   print_rest_status_message "info" "...  on" "${REST_SQL_URL}/compile"
 
   local curl_response
-  curl_response=$(curl "${curl_args[@]}" --data-binary @"${sql_file}" "${REST_SQL_URL}/compile")
+  curl_response=$(curl "${curl_args[@]}" --data-binary @"${payload_file}" "${REST_SQL_URL}/compile")
   local curl_rc=$?
+
+  rm -rf "${payload_dir}"
 
   if [[ ${curl_rc} -ne 0 ]]; then
     [[ -z "${curl_response}" ]] || echo "${curl_response}"
