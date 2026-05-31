@@ -317,7 +317,6 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
       const insideREST = matchRuleShort(relativeFileName, 'rest/*');
       const fileExtension: string = "" + relativeFileName.split('.').pop();
       const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
-      const isConnModeRest = projectInfos.dbConnMode === "REST";
 
       // Set password and userinfo to taskStore
       if (insideSetup) {

@@ -185,10 +185,9 @@ async function getSnippText(snippetKey:string) {
     // read snippet file from extension itself
     const extentionSnippetFile = path.resolve(__dirname, "..", "..", "snippets", "snippets.json").split(path.sep).join(path.posix.sep);
 
-    let targetSnippetContent:any = {};
     if (existsSync(extentionSnippetFile)) {
       // parse it
-      targetSnippetContent = JSON.parse(readFileSync(extentionSnippetFile).toString());
+      const targetSnippetContent = JSON.parse(readFileSync(extentionSnippetFile).toString());
 
       // try to find then key
       if (targetSnippetContent["dbflux-" + snippetKey] !== undefined) {

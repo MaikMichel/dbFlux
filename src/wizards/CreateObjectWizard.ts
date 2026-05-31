@@ -117,7 +117,7 @@ export async function createObjectWizard() {
       window.showTextDocument(doc, {preview: false});
     });
 
-    let file2:string|undefined = undefined;
+    let file2:string|undefined;
     if (extension === ".pks") {
       file2 = path.join(workspace.workspaceFolders[0].uri.fsPath , state.objectType.label, baseF + ".pkb");
       writeFileSync(file2, "");
@@ -329,12 +329,11 @@ export async function createTableDDL() {
     const newDDLFileName = path.join(tableDDLFolder, state.objectType.description! + "." + (nextNum + 1) + ".sql");
 
     const ws:string = workspace.workspaceFolders[0].uri.fsPath;
-    let output = ["-- " + newDDLFileName];
 
     // if git folder exists then try to get git diff
     if (existsSync(path.join(ws, ".git"))) {
       const gitCommand = 'git diff --unified=0 ' + path.join(ConfigurationManager.getDBFolderName(), state.objectType.label); // + " | grep -Po '(?<=^\+)(?!\+\+).*'";
-      output = execSync(gitCommand, { cwd:ws }).toString().split("\n").filter((line) => {
+      const output = execSync(gitCommand, { cwd:ws }).toString().split("\n").filter((line) => {
         return line.match(/(?<=^[+-])(?![(++)(--)]).*/);
       });
       writeFileSync(newDDLFileName, "/** \n  modified lines in " + state.objectType.description + ".sql\n" + "    " + output.join('\n    ') + "\n**/");

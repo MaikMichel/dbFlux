@@ -1,8 +1,7 @@
 import * as path from "path";
 import * as dotenv from "dotenv";
-import { chmodSync, existsSync, PathLike, readdirSync, readFileSync } from "fs";
+import { chmodSync, existsSync, PathLike, readdirSync } from "fs";
 import { getPassword, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
-import * as yaml from 'yaml';
 import { CompileTaskStore } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, Uri, window, workspace } from "vscode";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
@@ -52,11 +51,11 @@ export abstract class AbstractBashTaskProvider {
   }
 
   static dbFluxType: string = "dbFlux";
-   
+
   static CONN_DATA:  string = "DATA";
   static CONN_LOGIC: string = "LOGIC";
   static CONN_APP:   string = "APP";
-   
+
 
   findClosestEnvFile(pathname: string, filename: string): string | undefined {
     let file = path.join(pathname, filename);

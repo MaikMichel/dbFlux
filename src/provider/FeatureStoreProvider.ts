@@ -196,7 +196,7 @@ const showFinishMessage = async (featureSet: FeatureSet) => {
     });
 };
 
-export function registerAddFeatureSet(command: string, context: ExtensionContext) {
+export function registerAddFeatureSet(command: string, _context: ExtensionContext) {
   informWhenNewVersionExists();
 
   return commands.registerCommand(command, async () => {

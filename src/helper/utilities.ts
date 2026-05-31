@@ -349,7 +349,7 @@ export function showInformationProgress(msg:string, timeoutms:number = 3000) {
 
 
   export function getPassword(pInfos: IProjectInfos, pTargetUser: string, useDefaultPW: boolean, context: ExtensionContext): string {
-    let passWord =  "";
+    let passWord;
     const dbFluxMode = getDBFlowMode(context);
 
     if (pTargetUser === pInfos.dbAdminUser) {

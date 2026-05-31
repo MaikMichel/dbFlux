@@ -103,7 +103,7 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
   const compTaskStoreInstance = CompileTaskStore.getInstance();
   let schemaPWD:string|undefined = undefined;
   if (relativeFileName) {
-     let schemaName = "";
+     let schemaName;
      try {
       schemaName = getSchemaFromFile(relativeFileName, projectInfosReloaded.isFlexMode);
       if (getDBFlowMode(context!) === "dbFlux") {
