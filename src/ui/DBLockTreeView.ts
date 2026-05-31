@@ -1,4 +1,4 @@
-import { commands, Event, EventEmitter, ProviderResult, ThemeIcon, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, window, workspace } from 'vscode';
+import { commands, Event, EventEmitter, ProviderResult, TreeDataProvider, TreeItem, TreeItemCollapsibleState, TreeView, window, workspace } from 'vscode';
 import { ViewFileDecorationProvider } from '../provider/ViewFileDecorationProvider';
 import { getWorkspaceRootPath } from '../helper/utilities';
 import { homedir } from 'os';

@@ -1,12 +1,5 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
-import { existsSync, readFileSync } from 'fs';
 import * as path from "path";
-import { ExtensionContext, QuickPickItem, window, workspace } from 'vscode';
+import { ExtensionContext, QuickPickItem, workspace } from 'vscode';
 import { toFlatPropertyMap } from '../helper/utilities';
 import { getAllTableFiles, getQuickPickFromCurrentFile, getQuickPickFromCurrentSelection } from './CreateObjectWizard';
 import { dbFolderDef } from './InitializeProjectWizard';
@@ -69,19 +62,9 @@ export async function showTableDetailsWizard(context: ExtensionContext, tree: DB
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
-  }
-
-  async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
-    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
-  }
-
-  async function validateValueNotRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
-    return undefined;
   }
 
   const state = await collectInputs();
@@ -124,31 +107,4 @@ export async function getAvailableObjectTypeExtensions(objectTypePath:string): P
   }
 
   return [{label: ""}];
-}
-
-
-async function getSnippText(snippetKey:string) {
-  const editor = window.activeTextEditor;
-  let text = editor?.document.getText(editor.selection);
-
-  if (text?.length === 0) {
-    // read snippet file from extension itself
-    const extentionSnippetFile = path.resolve(__dirname, "..", "..", "snippets", "snippets.json").split(path.sep).join(path.posix.sep);
-
-    let targetSnippetContent:any = {};
-    if (existsSync(extentionSnippetFile)) {
-      // parse it
-      targetSnippetContent = JSON.parse(readFileSync(extentionSnippetFile).toString());
-
-      // try to find then key
-      if (targetSnippetContent["dbflux-" + snippetKey] !== undefined) {
-        const snippet = targetSnippetContent["dbflux-" + snippetKey];
-        text = snippet.body.join("\n");
-      }
-    }
-  }
-
-
-
-  return { text, type: editor?.document.languageId };
 }

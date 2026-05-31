@@ -1,13 +1,11 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-
-import { QuickPickItem, ExtensionContext, Uri, workspace, commands} from 'vscode';
+import { QuickPickItem, Uri, workspace, commands} from 'vscode';
 import * as path from "path";
 import { existsSync, PathLike, readdirSync } from 'fs';
 import { MultiStepInput } from './InputFlowAction';
 import { ConfigurationManager } from '../helper/ConfigurationManager';
 
 
-export async function revealItemWizard(context: ExtensionContext) {
+export async function revealItemWizard() {
 
   interface State {
     title: string;
@@ -46,7 +44,7 @@ export async function revealItemWizard(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
@@ -77,24 +75,9 @@ export async function revealItemWizard(context: ExtensionContext) {
     }
   }
 
-  function toFlatPropertyMap(obj: object, keySeparator = '/') {
-    const flattenRecursive = (obj: object, parentProperty?: string, propertyMap: Record<string, unknown> = {}) => {
-      for(const [key, value] of Object.entries(obj)){
-        const property = parentProperty ? `${parentProperty}${keySeparator}${key}` : key;
-        if(value && typeof value === 'object'){
-          flattenRecursive(value, property, propertyMap);
-        } else {
-          propertyMap[property] = value;
-        }
-      }
-      return propertyMap;
-    };
-    return flattenRecursive(obj);
-  }
-
   async function getAvailableObjectTypes(): Promise<QuickPickItem[]> {
     if (workspace.workspaceFolders){
-      let folders:string[] = [];
+      const folders:string[] = [];
 
       const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
       const sourceDB      = path.join(wsRoot, ConfigurationManager.getDBFolderName());
@@ -110,9 +93,9 @@ export async function revealItemWizard(context: ExtensionContext) {
           })
           .map((dirent) => path.join(source.toString(), dirent.name));
 
-      for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
+      for (const schemaPath of [ ... getSchemaFolders(sourceDB)]) {
         // real file path
-        for (let folderItem of walkSync(schemaPath)) {
+        for (const folderItem of walkSync(schemaPath)) {
           const folderString = (folderItem as string);
           if (folderString.includes("tables" + path.sep + "tables_ddl")) {
             folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/').replace("tables/tables_ddl", "tables"));
@@ -122,8 +105,8 @@ export async function revealItemWizard(context: ExtensionContext) {
       }
 
       if (existsSync(sourceStatic)) {
-        for (let schemaPath of [ ... getSchemaFolders(sourceStatic)]) {
-          for (let folderItem of walkSync(schemaPath)) {
+        for (const schemaPath of [ ... getSchemaFolders(sourceStatic)]) {
+          for (const folderItem of walkSync(schemaPath)) {
             folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
           }
         }
@@ -131,19 +114,19 @@ export async function revealItemWizard(context: ExtensionContext) {
 
 
       if (existsSync(sourceReports)) {
-        for (let folderItem of walkSync(sourceReports)) {
+        for (const folderItem of walkSync(sourceReports)) {
           folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
         }
       }
 
       if (existsSync(sourceApex)) {
-        for (let folderItem of walkSync(sourceApex)) {
+        for (const folderItem of walkSync(sourceApex)) {
           folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
         }
       }
 
       if (existsSync(sourceRest)) {
-        for (let folderItem of walkSync(sourceRest)) {
+        for (const folderItem of walkSync(sourceRest)) {
           folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
         }
       }

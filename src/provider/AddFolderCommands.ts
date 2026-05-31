@@ -1,4 +1,4 @@
-/* eslint-disable eqeqeq */
+
 import { commands, env, ExtensionContext, QuickPickItem, Range, Uri, ViewColumn, window, workspace } from 'vscode';
 
 import { appendFileSync, existsSync, mkdirSync, PathLike, readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
@@ -63,13 +63,13 @@ export async function addAPEXApp(context: ExtensionContext, folder:string) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
 
   async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+
     return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 
@@ -95,7 +95,7 @@ export async function addAPEXApp(context: ExtensionContext, folder:string) {
 }
 
 
-export async function addHookFile(context: ExtensionContext) {
+export async function addHookFile() {
   interface State {
     title:      string;
     step:       number;
@@ -144,13 +144,13 @@ export async function addHookFile(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
 
   async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+
     return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 
@@ -216,7 +216,7 @@ export async function addCustomTriggerRun(context:ExtensionContext) {
     }
 
     // JSON-Inhalt parsen
-    let settings = jsonc.parse(settingsDoc.toString());
+    const settings = jsonc.parse(settingsDoc.toString());
 
     // Falls dbFlux.customTriggerRuns nicht existiert, initialisieren
     if (!settings["dbFlux.customTriggerRuns"]) {
@@ -415,7 +415,7 @@ export async function getNewAppPlugin(): Promise<string> {
   return value ? value : "";
 }
 
-export async function addRESTModule(context: ExtensionContext) {
+export async function addRESTModule() {
   interface State {
     title: string;
     step: number;
@@ -462,13 +462,13 @@ export async function addRESTModule(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
 
   async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+
     return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 
@@ -530,7 +530,7 @@ export async function getNewRestModule(): Promise<string> {
    return value ? value : "";
 }
 
-export async function addWorkspace(context: ExtensionContext) {
+export async function addWorkspace() {
   interface State {
     title: string;
     step: number;
@@ -578,13 +578,13 @@ export async function addWorkspace(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
 
   async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+
     return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 
@@ -689,13 +689,13 @@ export async function addSchema(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
 
   async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+
     return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 
@@ -731,7 +731,7 @@ function addMainFolders(schema: string, folders: any, projectInfos:IProjectInfos
   if (workspace.workspaceFolders !== undefined) {
     const wsRootPath = workspace.workspaceFolders[0].uri.fsPath;
     if (folders.length && folders.length > 0) {
-      let foldersCreated : string[] = [];
+      const foldersCreated : string[] = [];
       folders.forEach((wsPath: any) => {
         if (wsPath.description) {
           const dirName:string = path.join(wsRootPath, `${wsPath.description}/${schema}`);
@@ -777,11 +777,11 @@ function addMainFolders(schema: string, folders: any, projectInfos:IProjectInfos
 }
 
 
-export function registerAddRESTModuleCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
+export function registerAddRESTModuleCommand(projectInfos: IProjectInfos) {
   return commands.registerCommand("dbFlux.addREST", async () => {
 
     if (projectInfos.isFlexMode) {
-      addRESTModule(context);
+      addRESTModule();
     } else {
       addRestModul(await getNewRestModule(), "rest");
     }
@@ -795,9 +795,9 @@ export function registerAddReportTypeFolderCommand() {
   });
 }
 
-export function registerAddHookFileCommand(context: ExtensionContext) {
+export function registerAddHookFileCommand() {
   return commands.registerCommand("dbFlux.addHookFile", async () => {
-    addHookFile(context);
+    addHookFile();
   });
 }
 
@@ -829,10 +829,10 @@ export function registerAddSchemaCommand(projectInfos: IProjectInfos, context: E
   });
 }
 
-export function registerAddWorkspaceCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
+export function registerAddWorkspaceCommand(projectInfos: IProjectInfos) {
   return commands.registerCommand("dbFlux.addWorkspace", async () => {
     if (projectInfos.isFlexMode) {
-      addWorkspace(context);
+      addWorkspace();
     } else {
       window.showWarningMessage('dbFlux: You have to set Project Mode to "FLEX" to add a Workspace');
     }
@@ -851,7 +851,7 @@ export function registerAddApplicationCommand(projectInfos: IProjectInfos, conte
   });
 }
 
-export function registerAddApplicationPluginCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
+export function registerAddApplicationPluginCommand(projectInfos: IProjectInfos) {
   return commands.registerCommand("dbFlux.addAPP.plugin", async () => {
     // choose APP Folder
     const targetAPPID = await ExportTaskStore.getInstance().getAppID(projectInfos, false);
@@ -872,7 +872,7 @@ export function registerSplitToFilesCommand(projectInfos: IProjectInfos) {
     const dirName = path.join(wsRoot, ConfigurationManager.getDBFolderName(), dbUser);
 
 
-    const fileArray:String[] = [];
+    const fileArray:string[] = [];
     let splitted = false;
 
     // read file
@@ -955,7 +955,6 @@ export function registerReverseBuildFromFilesCommand(projectInfos: IProjectInfos
 
     const dbUser = getDBUserFromPath(fileName, projectInfos);
     const dirName = path.join(wsRoot, ConfigurationManager.getDBFolderName(), dbUser).replace(/\\/g, '/');
-    let joined = false;
 
     // loop through all constraint files with the tablename
     let files:any  = [];

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 import * as path from "path";
 
 import { AbstractBashTaskProvider, getDBFlowMode, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
@@ -10,6 +10,7 @@ import { getActiveFileUri, getObjectNameFromFile, getObjectTypePathFromFile, get
 import { existsSync } from "fs";
 import { exportObjectWizard, exportSchemaWizard, ExportSchemaWizardState } from "../wizards/ExportSchemaWizard";
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
 
 interface ExportTaskDefinition extends TaskDefinition {
@@ -58,7 +59,7 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
   }
 
   createExpTask(definition: ExportTaskDefinition): Task {
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -82,7 +83,7 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
   }
 
   async prepExportInfos(schemaName:string|undefined, schemaNameNew:string|undefined): Promise<ISQLExportInfos> {
-    let runner: ISQLExportInfos = {} as ISQLExportInfos;
+    const runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders && schemaName !== undefined) {
       const connectionUri = Uri.file(path.join(workspace.workspaceFolders[0].uri.path, ConfigurationManager.getDBFolderName(), schemaName, "tables", "egal.sql"));
@@ -112,7 +113,7 @@ export function registerExportDBSchemaCommand(projectInfos: IProjectInfos, conte
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
         which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
-          const state:ExportSchemaWizardState = await exportSchemaWizard(context);
+          const state:ExportSchemaWizardState = await exportSchemaWizard();
 
           ExportDBSchemaStore.getInstance().schemaName = state.schemaName.label;
           ExportDBSchemaStore.getInstance().schemaNameNew = state.newSchemaName;
@@ -160,7 +161,7 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
   }
 
   createExpTask(definition: ExportTaskDefinition): Task {
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -186,7 +187,7 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
   }
 
   async prepExportInfos(schemaName:string|undefined, schemaNameNew:string|undefined): Promise<ISQLExportInfos> {
-    let runner: ISQLExportInfos = {} as ISQLExportInfos;
+    const runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders) {
       const connectionUri = await getActiveFileUri(this.context);
@@ -222,7 +223,7 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
 export function registerExportDBObjectCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportObject", async () => {
     // check what file has to build
-    let fileName = await getWorkingFile(context);
+    const fileName = await getWorkingFile(context);
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
 

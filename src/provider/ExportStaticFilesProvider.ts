@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 import * as path from "path";
 
 import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
@@ -9,6 +9,7 @@ import { getActiveFileUri, getRelativePartsFromFile, getWorkingFile, getWorkspac
 import { existsSync } from "fs";
 import { ExportTaskStore } from "../stores/ExportTaskStore";
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
 
 interface ExportTaskDefinition extends TaskDefinition {
@@ -55,7 +56,7 @@ export class ExportStaticFilesProvider extends AbstractBashTaskProvider implemen
   }
 
   createExpTask(definition: ExportTaskDefinition): Task {
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -79,11 +80,11 @@ export class ExportStaticFilesProvider extends AbstractBashTaskProvider implemen
   }
 
   async prepExportInfos(appFolder:string|undefined): Promise<ISQLExportInfos> {
-    let runner: ISQLExportInfos = {} as ISQLExportInfos;
+    const runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders && appFolder) {
-      let fileUri:Uri = workspace.workspaceFolders[0].uri;
-      let apexUri:Uri = Uri.file(path.join(fileUri.fsPath, appFolder + '/install.sql'));
+      const fileUri:Uri = workspace.workspaceFolders[0].uri;
+      const apexUri:Uri = Uri.file(path.join(fileUri.fsPath, appFolder + '/install.sql'));
 
       runner.exportAppPath  = appFolder.replace("apex/", "static/") + "/src";
       runner.exportAppID    = appFolder.split("/").pop()?.replace("f", "");
@@ -162,7 +163,7 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
   }
 
   createExpTask(definition: ExportTaskDefinition): Task {
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -186,7 +187,7 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
   }
 
   async prepExportInfos(): Promise<ISQLExportInfos> {
-    let runner: ISQLExportInfos = {} as ISQLExportInfos;
+    const runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders) {
       const connectionUri = await getActiveFileUri(this.context);
@@ -225,7 +226,7 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
 export function registerExportCurrentStaticFileCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportCurrentStaticFile", async () => {
     // check what file has to build
-    let fileName = await getWorkingFile(context);
+    const fileName = await getWorkingFile(context);
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
 

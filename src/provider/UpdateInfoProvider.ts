@@ -84,7 +84,9 @@ class UpdateInfoProvider implements IUpdateInfoProvider {
       const configBuffer = await workspace.fs.readFile(this.userConfigFileUri);
       const configContent = Buffer.from(configBuffer).toString('utf8');
       return JSON.parse(configContent) as VersionConfig;
-    } catch {}
+    } catch {
+      // File does not exist
+    }
   }
 
   async askShowChangelog(): Promise<boolean> {
@@ -94,7 +96,7 @@ class UpdateInfoProvider implements IUpdateInfoProvider {
   }
 
   showChangeLog():void {
-    let uri = Uri.file(join(__dirname, '..', '..', 'CHANGELOG.md'));
+    const uri = Uri.file(join(__dirname, '..', '..', 'CHANGELOG.md'));
     commands.executeCommand('markdown.showPreview', uri);
   }
 }

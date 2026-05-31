@@ -12,7 +12,7 @@ export interface ExportSchemaWizardState {
   newSchemaName:string;
 }
 
-export async function exportSchemaWizard(context: ExtensionContext):Promise<ExportSchemaWizardState> {
+export async function exportSchemaWizard():Promise<ExportSchemaWizardState> {
   const title = 'dbFlux: Export Schema to Filesystem';
 
   async function collectInputs() {
@@ -24,7 +24,7 @@ export async function exportSchemaWizard(context: ExtensionContext):Promise<Expo
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
@@ -58,7 +58,7 @@ export async function exportSchemaWizard(context: ExtensionContext):Promise<Expo
   }
 
   async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+
     return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 
@@ -78,7 +78,7 @@ export async function exportObjectWizard(context: ExtensionContext, schema:strin
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
@@ -96,7 +96,7 @@ export async function exportObjectWizard(context: ExtensionContext, schema:strin
   }
 
   async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+
     return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 

@@ -1,7 +1,6 @@
-import { ExtensionContext } from "vscode";
 import { MultiStepInput } from "./InputFlowAction";
 
-export async function addFeatureSet(context: ExtensionContext) {
+export async function addFeatureSet() {
   const title = 'Add FeatureSet to Project';
 
   interface State {
@@ -14,7 +13,7 @@ export async function addFeatureSet(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }

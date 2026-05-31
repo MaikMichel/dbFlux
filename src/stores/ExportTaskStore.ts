@@ -212,7 +212,7 @@ export class ExportTaskStore {
 
         copyFileSync(path.resolve(__dirname, "..", "..", "dist", "templates",  "template.sql"), path.resolve(dirName+'/template.sql'));
 
-        let openPath = Uri.file(dirName+'/template.sql');
+        const openPath = Uri.file(dirName+'/template.sql');
         workspace.openTextDocument(openPath).then(doc => {
           window.showTextDocument(doc);
         });

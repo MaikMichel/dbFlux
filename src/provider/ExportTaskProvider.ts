@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 import * as path from "path";
 
 import { getAllFoldersButNotTheLastFolder, getLastFolderFromFolderPath } from "../helper/utilities";
@@ -9,6 +9,7 @@ import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { LoggingService } from "../helper/LoggingService";
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
 
 interface ExportTaskDefinition extends TaskDefinition {
@@ -67,7 +68,7 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
     const appID = appFolder?appFolder.substring(1):"";
     const folder = getAllFoldersButNotTheLastFolder(definition.runner.appID);
 
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -92,11 +93,11 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
   }
 
   async prepExportInfos(appFolder:string|undefined): Promise<ISQLExportInfos> {
-    let runner: ISQLExportInfos = {} as ISQLExportInfos;
+    const runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders) {
-      let fileUri:Uri = workspace.workspaceFolders[0].uri;
-      let apexUri:Uri = Uri.file(path.join(fileUri.fsPath, appFolder + '/install.sql'));
+      const fileUri:Uri = workspace.workspaceFolders[0].uri;
+      const apexUri:Uri = Uri.file(path.join(fileUri.fsPath, appFolder + '/install.sql'));
 
       runner.appID = appFolder;
 
@@ -148,7 +149,7 @@ export class ExportTaskPluginProvider extends AbstractBashTaskProvider implement
     const plugAppID = pathItems[pathItems?.length-2];
     const plugID = pathItems[pathItems?.length-1];
 
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -173,11 +174,11 @@ export class ExportTaskPluginProvider extends AbstractBashTaskProvider implement
   }
 
   async prepExportInfos(pluginFolder:string|undefined): Promise<ISQLExportPlugingInfos> {
-    let runner: ISQLExportPlugingInfos = {} as ISQLExportPlugingInfos;
+    const runner: ISQLExportPlugingInfos = {} as ISQLExportPlugingInfos;
 
     if (workspace.workspaceFolders) {
-      let fileUri:Uri = workspace.workspaceFolders[0].uri;
-      let apexUri:Uri = Uri.file(path.join(fileUri.fsPath, pluginFolder + '/install.sql'));
+      const fileUri:Uri = workspace.workspaceFolders[0].uri;
+      const apexUri:Uri = Uri.file(path.join(fileUri.fsPath, pluginFolder + '/install.sql'));
 
       runner.pluginID = pluginFolder;
 

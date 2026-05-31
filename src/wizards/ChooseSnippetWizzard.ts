@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -64,18 +64,6 @@ export async function chooseSnippetWizard() {
     });
   }
 
-  async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
-    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
-  }
-
-  async function validateValueNotRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
-    return undefined;
-  }
-
-
-
   return collectInputs();
 
 }
@@ -93,7 +81,7 @@ async function getScoppedContent(targetSnippetContent: any, scopeWith:string) {
   const result: any = {};
 
   for (const key in targetSnippetContent) {
-    if (targetSnippetContent.hasOwnProperty(key) && typeof targetSnippetContent[key] === 'object' && targetSnippetContent[key]?.scope === scopeWith) {
+    if (Object.prototype.hasOwnProperty.call(targetSnippetContent, key) && typeof targetSnippetContent[key] === 'object' && targetSnippetContent[key]?.scope === scopeWith) {
       result[key] = targetSnippetContent[key];
     }
   }

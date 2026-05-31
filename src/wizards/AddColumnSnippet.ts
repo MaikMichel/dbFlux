@@ -1,4 +1,4 @@
-import { ExtensionContext, Selection, Uri, window, workspace } from "vscode";
+import { Selection, Uri, window, workspace } from "vscode";
 import { MultiStepInput } from "./InputFlowAction";
 import * as path from "path";
 import { existsSync, readFileSync, writeFileSync } from 'fs';
@@ -42,7 +42,7 @@ async function addColumnSnippetWizard() {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
@@ -50,7 +50,7 @@ async function addColumnSnippetWizard() {
   return await collectInputs();
 }
 
-export async function addColumnSnippet(context: ExtensionContext) {
+export async function addColumnSnippet() {
   const state = await addColumnSnippetWizard();
 
   if (workspace.workspaceFolders){

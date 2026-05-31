@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+ 
 import * as vscode from "vscode";
 import * as path from "path";
 
@@ -56,7 +56,7 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
   }
 
   createCompileSchemaTask(definition: CompileSchemaTaskDefinition): vscode.Task {
-    let _task = new vscode.Task(
+    const _task = new vscode.Task(
       definition,
       vscode.TaskScope.Workspace,
       definition.name,
@@ -84,11 +84,11 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
   }
 
   async prepTestInfos(): Promise<ISQLCompileInfos> {
-    let runner: ISQLCompileInfos = {} as ISQLCompileInfos;
+    const runner: ISQLCompileInfos = {} as ISQLCompileInfos;
 
     if (vscode.workspace.workspaceFolders) {
-      let fileUri:vscode.Uri = vscode.workspace.workspaceFolders[0].uri;
-      let apexUri:vscode.Uri = vscode.Uri.file(path.join(fileUri.fsPath, 'apex/f0000/install.sql'));
+      const fileUri:vscode.Uri = vscode.workspace.workspaceFolders[0].uri;
+      const apexUri:vscode.Uri = vscode.Uri.file(path.join(fileUri.fsPath, 'apex/f0000/install.sql'));
 
       if (apexUri !== undefined) {
         await this.setInitialCompileInfo("compile.sh", apexUri, runner);

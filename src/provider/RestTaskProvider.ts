@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 import * as path from "path";
 
 import { getAllFoldersButNotTheLastFolder, getLastFolderFromFolderPath } from "../helper/utilities";
@@ -7,6 +7,7 @@ import { RestTaskStore } from "../stores/RestTaskStore";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
 
 interface RestTaskDefinition extends TaskDefinition {
@@ -53,7 +54,7 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
     const module = getLastFolderFromFolderPath(definition.runner.restModule);
     const folder = getAllFoldersButNotTheLastFolder(definition.runner.restModule);
 
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -77,11 +78,11 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
   }
 
   async prepExportInfos(moduleFolder:string|undefined): Promise<IRESTExportInfos> {
-    let runner: IRESTExportInfos = {} as IRESTExportInfos;
+    const runner: IRESTExportInfos = {} as IRESTExportInfos;
 
     if (workspace.workspaceFolders) {
-      let fileUri:Uri = workspace.workspaceFolders[0].uri;
-      let restUri:Uri = Uri.file(path.join(fileUri.fsPath, moduleFolder + '/0000.sql'));
+      const fileUri:Uri = workspace.workspaceFolders[0].uri;
+      const restUri:Uri = Uri.file(path.join(fileUri.fsPath, moduleFolder + '/0000.sql'));
 
       runner.restModule = moduleFolder;
 

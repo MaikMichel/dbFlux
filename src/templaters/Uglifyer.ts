@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const uglifycss = require("uglifycss");
 import * as fs from "fs";
 import * as path from "path";
@@ -17,7 +18,7 @@ export class Uglifyer {
   async genFile(pPlugin: boolean = false) {
     const uploadSQLFile = this.sourceFile + '.sql';
     const inAppID = pPlugin?getApplicationIdFromPluginPath(this.sourceFile, this.isFlexMode):getApplicationIdFromStaticPath(this.sourceFile, this.isFlexMode);
-    const pluginID = pPlugin?getPluginIDFromPath(inAppID, this.sourceFile, this.isFlexMode):undefined;
+    const pluginID = pPlugin?getPluginIDFromPath(inAppID, this.sourceFile):undefined;
     const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile, pluginID);
 
 
@@ -33,7 +34,7 @@ export class Uglifyer {
 
     if (ConfigurationManager.getCreateAndUploadCSSMinifiedVersion()) {
 
-      var result = await uglifycss.processString(this.sourceContent, {  });
+      const result = await uglifycss.processString(this.sourceContent, {  });
 
       if (result !== undefined) {
         const inFileNameMin = changeExtension(inFileName, 'min.css');

@@ -15,7 +15,7 @@ export class SimpleUploader {
     const uploadSQLFile = sourceFile + '.sql';
 
     const inAppID = pPlugin?getApplicationIdFromPluginPath(sourceFile, this.isFlexMode):getApplicationIdFromStaticPath(sourceFile, this.isFlexMode);
-    const pluginID = pPlugin?getPluginIDFromPath(inAppID, sourceFile, this.isFlexMode):undefined;
+    const pluginID = pPlugin?getPluginIDFromPath(inAppID, sourceFile):undefined;
     const inFileName = getTargetPathFromFileName(inAppID, sourceFile, pluginID);
 
 

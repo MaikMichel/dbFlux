@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -6,14 +6,14 @@
 
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import * as path from "path";
-import { ExtensionContext, QuickPickItem, Selection, Uri, window, workspace } from 'vscode';
+import { QuickPickItem, Selection, Uri, window, workspace } from 'vscode';
 import { dbFolderDef } from './InitializeProjectWizard';
 import { MultiStepInput } from './InputFlowAction';
 import { toFlatPropertyMap } from '../helper/utilities';
 
 
 
-export async function createObjectTypeSnippetWizard(context: ExtensionContext) {
+export async function createObjectTypeSnippetWizard() {
   const title = 'dbFlux: Create ObjectType Snippet';
 
   interface State {
@@ -74,20 +74,11 @@ export async function createObjectTypeSnippetWizard(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
 
-  async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
-    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
-  }
-
-  async function validateValueNotRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
-    return undefined;
-  }
 
   const state = await collectInputs();
 

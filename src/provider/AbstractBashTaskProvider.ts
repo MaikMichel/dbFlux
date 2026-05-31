@@ -52,11 +52,11 @@ export abstract class AbstractBashTaskProvider {
   }
 
   static dbFluxType: string = "dbFlux";
-  /* eslint-disable */
+   
   static CONN_DATA:  string = "DATA";
   static CONN_LOGIC: string = "LOGIC";
   static CONN_APP:   string = "APP";
-  /* eslint-enable  */
+   
 
   findClosestEnvFile(pathname: string, filename: string): string | undefined {
     let file = path.join(pathname, filename);
@@ -102,7 +102,7 @@ export abstract class AbstractBashTaskProvider {
 
 
    async setInitialCompileInfo(execFileName:string, fileUri: Uri, runnerInfo:IBashInfos):Promise<void> {
-    let projectInfos: IProjectInfos = await getProjectInfos(this.context);
+    const projectInfos: IProjectInfos = await getProjectInfos(this.context);
     const activeFile = fileUri.fsPath.split(path.sep).join(path.posix.sep);
 
 
@@ -132,7 +132,7 @@ export abstract class AbstractBashTaskProvider {
 }
 
 export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: string, currentFilePath: string | undefined = undefined): string {
-  let dbUserFromPath = getDBUserFromPath(currentPath, projectInfos, currentFilePath);
+  const dbUserFromPath = getDBUserFromPath(currentPath, projectInfos, currentFilePath);
 
   if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
     return projectInfos.dbAdminUser+"".toLowerCase();
@@ -167,7 +167,7 @@ export function getDBFlowMode(context: ExtensionContext):string | undefined {
     const workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
     const knownBuildFiles = ["xcl.yml", "build.env"];
 
-    for (let buildFileName of knownBuildFiles) {
+    for (const buildFileName of knownBuildFiles) {
       const buildFile = path.join(workspaceFolder, buildFileName);
       if (existsSync(buildFile)) {
         retValue = buildFileName === "build.env" ? "dbFlow" : "xcl";
@@ -368,7 +368,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
 }
 
 function isNumeric(str:string):boolean {
-  let check = !isNaN(+str);
+  const check = !isNaN(+str);
   return check;
 }
 

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 
 import * as fs from "fs";
 import * as path from "path";
@@ -17,7 +17,7 @@ import { CompileSchemasProvider } from "./CompileSchemasProvider";
 import { homedir } from "os";
 import { LoggingService } from "../helper/LoggingService";
 
-
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
 
 interface OraTaskDefinition extends TaskDefinition {
@@ -90,7 +90,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
   }
 
   createOraTask(definition: OraTaskDefinition): Task {
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -136,8 +136,8 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
 
 
   async prepCompInfos(): Promise<ICompileInfos> {
-    let runner: ICompileInfos = {} as ICompileInfos;
-    let fileUri:Uri|undefined = await getActiveFileUri(this.context);
+    const runner: ICompileInfos = {} as ICompileInfos;
+    const fileUri:Uri|undefined = await getActiveFileUri(this.context);
     const pInfo = await getProjectInfos(this.context);
 
     if (fileUri !== undefined) {
@@ -192,7 +192,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
   }
 
   setCustomTriggerRuns(compInfos: ICompileInfos): void {
-    let myList:any[] = [];
+    const myList:any[] = [];
 
     ConfigurationManager.getCustomTriggerRuns().forEach((runner)=>{
       if (compInfos.activeFile.match(runner.triggeringExpression)) {
@@ -209,7 +209,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
   }
 
   setCustomTriggerCalls(compInfos: ICompileInfos): void {
-    let myList:any[] = [];
+    const myList:any[] = [];
 
     ConfigurationManager.getCustomTriggerCalls().forEach((runner)=>{
       if (compInfos.activeFile.match(runner.triggeringExpression)) {
@@ -290,7 +290,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
   return commands.registerCommand(commandKey, async () => {
     LoggingService.logDebug(`Enter commandKey`);
 
-    let fileUri:Uri|undefined = window.activeTextEditor?.document.uri;
+    const fileUri:Uri|undefined = window.activeTextEditor?.document.uri;
     if (fileUri !== undefined) {
       LoggingService.logInfo(`saving file`);
       await window.activeTextEditor?.document.save();
@@ -303,7 +303,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
     if (projectInfos.isValid) {
       LoggingService.logDebug(`Configuration is valid.`);
       // check what file has to build
-      let fileName = await getWorkingFile(context);
+      const fileName = await getWorkingFile(context);
       const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
       LoggingService.logDebug(`File to compile is: ${relativeFileName}`);
@@ -474,10 +474,10 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
               // check if folder contains dbSchemaFolder
               const folderParts = relativeFileName.split("/");
               let scheme:string|undefined = undefined;
-              for (let part of folderParts) {
+              for (const part of folderParts) {
                 if (scheme === undefined) {
 
-                  for(let schema of dbSchemaFolders) {
+                  for(const schema of dbSchemaFolders) {
                     scheme = part.includes(schema.label)?schema.label:scheme;
                     CompileTaskStore.getInstance().selectedSchemas = [schema?.description!];
                   };
@@ -486,7 +486,7 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
               };
 
               // scheme, when schema include as file name, otherwise selected on
-              let schemaSelected: boolean = (scheme !== undefined) || await selectSchema(dbSchemaFolders);
+              const schemaSelected: boolean = (scheme !== undefined) || await selectSchema(dbSchemaFolders);
               if (schemaSelected) {
                 LoggingService.logDebug(`call the compile Task itself: "dbFlux: compileFile" to run selected file`);
                 commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileFile");
@@ -528,7 +528,7 @@ export async function selectSchema(dbSchemaFolders: QuickPickItem[]) {
 }
 
 async function isfileLockedByAnotherUser(projectName: string, relativeFileName: string):Promise<ILockedFile> {
-  let element:ILockedFile = {isLocked:false, user:""};
+  const element:ILockedFile = {isLocked:false, user:""};
   const urlEncodedFile = encodeURIComponent(relativeFileName!);
   const urlFromSettings = rtrim(ConfigurationManager.getDBLockRESTUrl(), "/");
   const url = `${urlFromSettings}/dblock/v1/file/${projectName.toLowerCase()}?filename=${urlEncodedFile}`;
@@ -564,7 +564,7 @@ export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, 
   return commands.registerCommand(command, async () => {
 
     const dbSchemaFolders = await getDBSchemaFolders();
-    let schemaSelected: boolean = await selectSchema(dbSchemaFolders);
+    const schemaSelected: boolean = await selectSchema(dbSchemaFolders);
     const selectedSchemas = CompileTaskStore.getInstance().selectedSchemas;
 
     if (schemaSelected && selectedSchemas) {

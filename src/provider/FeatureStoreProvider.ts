@@ -187,10 +187,10 @@ const showFinishMessage = async (featureSet: FeatureSet) => {
   window.showInformationMessage("FeatureSet written to your project",
     showChangeLog, showReadme).then(selection => {
       if (selection === "Show Changelog?") {
-        let uri = Uri.file(chlgFile);
+        const uri = Uri.file(chlgFile);
         commands.executeCommand('markdown.showPreview', uri);
       } else if (selection === "Show Readme?") {
-        let uri = Uri.file(readmeFile);
+        const uri = Uri.file(readmeFile);
         commands.executeCommand('markdown.showPreview', uri);
       }
     });
@@ -201,7 +201,7 @@ export function registerAddFeatureSet(command: string, context: ExtensionContext
 
   return commands.registerCommand(command, async () => {
     // let user enter URL
-    const state = await addFeatureSet(context);
+    const state = await addFeatureSet();
     if (!state)
     {
       return;
@@ -291,13 +291,12 @@ export function registerSyncFeatureSet(command: string, context: ExtensionContex
     },
       async (progress) => {
         // progress.report({ message: "Defining targetFolder"});
-        if (!folderName)
-        {
-          return;
-        }
+
         // get FolderName (param or ask for it)
         const folderName = fFolder ? dbFlowModuleFolder + "/" + fFolder : (await syncFeatureSet(context, dbFlowModuleFolder))?.featureFolder.description;
-        if (!folderName) {return;}
+        if (!folderName) {
+          return;
+        }
 
         // read or create Catalog
         LoggingService.logInfo("Reading Catalog", null, progress);

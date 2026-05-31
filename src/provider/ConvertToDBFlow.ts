@@ -1,10 +1,9 @@
-import { execSync } from "child_process";
 import * as fs from "fs";
 import { chmodSync, existsSync } from "fs";
 import * as Handlebars from "handlebars";
 import * as path from "path";
-import { commands, ExtensionContext, QuickPickItem, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
-import { ConfigurationManager, rmDBFluxConfig } from "../helper/ConfigurationManager";
+import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope } from "vscode";
+import { ConfigurationManager} from "../helper/ConfigurationManager";
 import { getWorkspaceRootPath } from "../helper/utilities";
 import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 
@@ -47,7 +46,7 @@ export class ConvertToDBFlowProvider extends AbstractBashTaskProvider implements
 
   createConverTask(definition: ConvertTaskDefinition): Task {
 
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -68,9 +67,9 @@ export class ConvertToDBFlowProvider extends AbstractBashTaskProvider implements
   }
 
   async prepExportInfos(): Promise<IBashInfos> {
-    let runnerInfo: IBashInfos = {} as IBashInfos;
+    const runnerInfo: IBashInfos = {} as IBashInfos;
 
-    let projectInfos: IProjectInfos = await getProjectInfos(this.context);
+    const projectInfos: IProjectInfos = await getProjectInfos(this.context);
 
     runnerInfo.runFile  = path.resolve(__dirname, "..", "..", "dist", "shell", "gen_dbflow.sh").split(path.sep).join(path.posix.sep);
     if (existsSync(runnerInfo.runFile)) {
@@ -107,7 +106,7 @@ export function registerConvert2dbFLow(projectInfos: IProjectInfos, command: str
     const removeLines = (data: string, lines:string[] = []) => {
       return data
           .split('\n')
-          .filter((val, idx) => !lines.includes(val))
+          .filter((val) => !lines.includes(val))
           .join('\n');
     };
 

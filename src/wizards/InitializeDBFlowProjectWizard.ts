@@ -1,14 +1,14 @@
 
-import { ExtensionContext, workspace } from "vscode";
+import { workspace } from "vscode";
 import { getWorkspaceRootPath } from "../helper/utilities";
-import { State } from "../provider/GenerateDPFlowProjectProvider";
+import { State } from "../provider/GenerateDBFlowProjectProvider";
 import { getAvailableProjectTypes } from "./InitializeProjectWizard";
 import { MultiStepInput } from "./InputFlowAction";
 import * as path from "path";
 import * as dotenv from "dotenv";
 
 
-export async function initializeDBFlowProjectWizard(context: ExtensionContext) : Promise<State> {
+export async function initializeDBFlowProjectWizard() : Promise<State> {
 
   const ws = getWorkspaceRootPath();
 
@@ -304,7 +304,7 @@ export async function initializeDBFlowProjectWizard(context: ExtensionContext) :
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       return true;
     });
   }
@@ -317,8 +317,8 @@ export async function initializeDBFlowProjectWizard(context: ExtensionContext) :
     return (name === undefined || name.length === 0) ? 'Value is required' : (!name.toLowerCase().match(/^[0-9a-z_]+$/)) ? 'Value not a valid schema name' : undefined;
   }
 
-  async function validateValueNotRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+  async function validateValueNotRequiered() {
+
     return undefined;
   }
 

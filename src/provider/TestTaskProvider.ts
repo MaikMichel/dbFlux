@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 
-import { commands, ExtensionContext, QuickPickItem, QuickPickItemKind, Range, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, ViewColumn, window, workspace } from "vscode";
+
+import { commands, ExtensionContext, QuickPickItem, Range, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, ViewColumn, window, workspace } from "vscode";
 import * as path from "path";
 import * as Handlebars from "handlebars";
 import { getPassword, getWorkingFile, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
@@ -14,6 +14,7 @@ import { parse } from "junit2json";
 import { LoggingService } from "../helper/LoggingService";
 
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
 
 interface TestTaskDefinition extends TaskDefinition {
@@ -65,7 +66,7 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
   }
 
   createTestTask(definition: TestTaskDefinition): Task {
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -91,11 +92,11 @@ export class TestTaskProvider extends AbstractBashTaskProvider implements TaskPr
   }
 
   async prepTestInfos(): Promise<ISQLTestInfos> {
-    let runner: ISQLTestInfos = {} as ISQLTestInfos;
+    const runner: ISQLTestInfos = {} as ISQLTestInfos;
 
     if (workspace.workspaceFolders) {
-      let fileUri:Uri = workspace.workspaceFolders[0].uri;
-      let apexUri:Uri = Uri.file(path.join(fileUri.fsPath, 'apex/f0000/install.sql'));
+      const fileUri:Uri = workspace.workspaceFolders[0].uri;
+      const apexUri:Uri = Uri.file(path.join(fileUri.fsPath, 'apex/f0000/install.sql'));
 
       if (apexUri !== undefined) {
         await this.setInitialCompileInfo("test.sh", apexUri, runner);
@@ -130,7 +131,7 @@ export function registerExecuteTestPackageCommand(projectInfos: IProjectInfos, c
     if (projectInfos.isValid) {
 
       // check what file has to build
-      let fileName = await getWorkingFile(context);
+      const fileName = await getWorkingFile(context);
       let methodName = "";
       const editor = window.activeTextEditor!;
       const selection = editor.selection;
@@ -180,7 +181,7 @@ export function registerExecuteTestPackageCommandWithCodeCoverage(projectInfos: 
     if (projectInfos.isValid) {
 
       // check what file has to build
-      let fileName = await getWorkingFile(context);
+      const fileName = await getWorkingFile(context);
 
       // now check connection infos
       setAppPassword(projectInfos);
@@ -277,10 +278,10 @@ async function testDashBoard(wsRoot:string, projectInfos: IProjectInfos, schemaN
     });
 
     Handlebars.registerHelper('split', function(context) {
-      let outputString = context.replace(/(ut\.expect.*?)\"/g, '$1,<br/><br/>');
+      let outputString = context.replace(/(ut\.expect.*?)"/g, '$1,<br/><br/>');
       outputString = outputString.replace(/("Actual:)/g, '<br/>$1');
       outputString = outputString.replace(/(line\s[0-9]*\sut\.)/g, '<br/>$1');
-      outputString = outputString.replace(/(ORA\-[0-9]*)/g, '<br/>$1');
+      outputString = outputString.replace(/(ORA-[0-9]*)/g, '<br/>$1');
       return outputString;
     });
 
@@ -342,6 +343,7 @@ async function getAnsiHtmlFile(wsRoot:string, projectInfos: IProjectInfos, schem
 
     // const htmlContent = convert.toHtml(logContent);
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const termToHtml = require('term-to-html');
     const htmlContent = termToHtml.strings(logContent, termToHtml.themes.dark.name);
 

@@ -110,7 +110,7 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
         schemaPWD = await context?.secrets.get(getWorkspaceRootPath() + `|dbFlux_${schemaName}_PWD`);
       }
      } catch (e) {
-
+        // do nothing
      }
   }
 

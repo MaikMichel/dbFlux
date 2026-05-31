@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { QuickPickItem, window,ExtensionContext, Uri, workspace, commands, TextDocument, ProgressLocation } from 'vscode';
+import { QuickPickItem, window, Uri, workspace, commands, TextDocument } from 'vscode';
 import { matchRuleShort, showInformationProgress, toFlatPropertyMap } from '../helper/utilities';
 import * as path from "path";
 import { existsSync, mkdirSync, PathLike, readdirSync, writeFileSync } from 'fs';
@@ -16,7 +16,7 @@ import { ConfigurationManager } from '../helper/ConfigurationManager';
 
 
 
-export async function createObjectWizard(context: ExtensionContext) {
+export async function createObjectWizard() {
   const title = 'dbFlux: Create Object';
 
   interface State {
@@ -68,23 +68,20 @@ export async function createObjectWizard(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
 
   async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+
     return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
   }
 
-  async function validateValueNotRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
-    return undefined;
-  }
+
 
   function rtrim(str:string, chr:string) {
-    var rgxtrim = (!chr) ? new RegExp('\\s+$') : new RegExp(chr+'+$');
+    const rgxtrim = (!chr) ? new RegExp('\\s+$') : new RegExp(chr+'+$');
     return str.replace(rgxtrim, '');
   }
 
@@ -96,7 +93,7 @@ export async function createObjectWizard(context: ExtensionContext) {
     const fileE = path.extname(fileF);
 
 
-    let myExt = new Map<string, string>([
+    const myExt = new Map<string, string>([
       ["packages", "pks"],
       ["types", "tps"],
       ["js", "js"],
@@ -141,7 +138,7 @@ export async function createObjectWizard(context: ExtensionContext) {
 
 export async function getAvailableObjectTypes(): Promise<QuickPickItem[]> {
   if (workspace.workspaceFolders){
-    let folders:string[] = [];
+    const folders:string[] = [];
 
     const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
     const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
@@ -155,9 +152,9 @@ export async function getAvailableObjectTypes(): Promise<QuickPickItem[]> {
         })
         .map((dirent) => path.join(source.toString(), dirent.name));
 
-    for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
+    for (const schemaPath of [ ... getSchemaFolders(sourceDB)]) {
       // known structure
-      for (let opath of originalPath) {
+      for (const opath of originalPath) {
         const folderString = schemaPath + "/" + (opath as string);
 
         if (folderString.includes("tables/tables_ddl")) {
@@ -168,7 +165,7 @@ export async function getAvailableObjectTypes(): Promise<QuickPickItem[]> {
       }
 
       // real file path
-      for (let folderItem of walkSync(schemaPath)) {
+      for (const folderItem of walkSync(schemaPath)) {
         const folderString = (folderItem as string);
         if (folderString.includes("tables" + path.sep + "tables_ddl")) {
           folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/').replace("tables/tables_ddl", "tables"));
@@ -177,8 +174,8 @@ export async function getAvailableObjectTypes(): Promise<QuickPickItem[]> {
       }
     }
 
-    for (let schemaPath of [ ... getSchemaFolders(sourceStatic)]) {
-      for (let folderItem of walkSync(schemaPath)) {
+    for (const schemaPath of [ ... getSchemaFolders(sourceStatic)]) {
+      for (const folderItem of walkSync(schemaPath)) {
         folders.push((folderItem as string).replace(wsRoot + path.sep, '').replace(/\\/g, '/'));
       }
     }
@@ -250,7 +247,7 @@ export function callSnippet(wsPath:string, document:TextDocument, prefix:string|
 
 }
 
-export async function createTableDDL(context: ExtensionContext) {
+export async function createTableDDL() {
 
   interface State {
     title: string;
@@ -291,25 +288,10 @@ export async function createTableDDL(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
-
-  async function validateValueIsRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
-    return (name == undefined || name.length === 0) ? 'Value is required' : undefined;
-  }
-
-  async function validateValueNotRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
-    return undefined;
-  }
-
-
-
-
-
 
 
 
@@ -332,7 +314,7 @@ export async function createTableDDL(context: ExtensionContext) {
         return !dirent.isDirectory() && dirent.name.includes(state.objectType.description!+".");
       });
 
-      for (let folderItem of files) {
+      for (const folderItem of files) {
         if (folderItem.name.match(regex)) {
           const num = parseInt(folderItem.name.match(regex)?.toString()!);
           if (num > nextNum) {
@@ -353,7 +335,7 @@ export async function createTableDDL(context: ExtensionContext) {
     if (existsSync(path.join(ws, ".git"))) {
       const gitCommand = 'git diff --unified=0 ' + path.join(ConfigurationManager.getDBFolderName(), state.objectType.label); // + " | grep -Po '(?<=^\+)(?!\+\+).*'";
       output = execSync(gitCommand, { cwd:ws }).toString().split("\n").filter((line) => {
-        return line.match(/(?<=^[\+-])(?![(\+\+)(--)]).*/);
+        return line.match(/(?<=^[+-])(?![(++)(--)]).*/);
       });
       writeFileSync(newDDLFileName, "/** \n  modified lines in " + state.objectType.description + ".sql\n" + "    " + output.join('\n    ') + "\n**/");
     } else {
@@ -397,7 +379,7 @@ function subDirExists(dir: string):boolean {
 
 export async function getAllTableFiles(): Promise<QuickPickItem[]> {
   if (workspace.workspaceFolders){
-    let folders:string[] = [];
+    const folders:string[] = [];
 
     const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
     const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
@@ -409,13 +391,13 @@ export async function getAllTableFiles(): Promise<QuickPickItem[]> {
         })
         .map((dirent) => path.join(source.toString(), dirent.name));
 
-    for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
+    for (const schemaPath of [ ... getSchemaFolders(sourceDB)]) {
       // real file path
       const folderPath = path.join(schemaPath, 'tables');
       if (existsSync(folderPath)) {
         const files = readdirSync(folderPath, { withFileTypes: true }).filter((dirent) => !dirent.isDirectory());
 
-        for (let folderItem of files) {
+        for (const folderItem of files) {
           folders.push(path.join(folderPath, folderItem.name).replace(sourceDB + path.sep, '').replace(/\\/g, '/'));
         }
       }

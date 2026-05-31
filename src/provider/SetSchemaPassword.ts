@@ -1,12 +1,9 @@
-import { ExtensionContext, commands, tasks, window, workspace } from "vscode";
-import { setAppPassword, CompileTaskStore } from "../stores/CompileTaskStore";
-import { ExportTaskStore } from "../stores/ExportTaskStore";
+import { ExtensionContext, commands, window, workspace } from "vscode";
 import { getDBFlowMode, IProjectInfos } from "./AbstractBashTaskProvider";
-import { ExportTaskProvider } from "./ExportTaskProvider";
-import { getSchemaFromFile, getWorkspaceRootPath } from "../helper/utilities";
+import { getWorkspaceRootPath } from "../helper/utilities";
 import { PathLike, readdirSync } from "fs";
 import * as path from "path";
-import { setEnvValue } from "../wizards/InitializeProjectWizard";
+
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 
 export function registerSetSchemaPassword(projectInfos: IProjectInfos, context: ExtensionContext) {

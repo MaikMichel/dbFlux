@@ -15,7 +15,7 @@ export async function syncFeatureSet(context: ExtensionContext, featurFolder: st
   }
 
   function shouldResume() {
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }

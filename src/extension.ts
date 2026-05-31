@@ -22,7 +22,7 @@ import { registerRemoveCurrentStaticFileCommand } from "./provider/RemoveStaticF
 import { DBLockTreeView } from "./ui/DBLockTreeView";
 
 import { registerConvert2dbFLow } from "./provider/ConvertToDBFlow";
-import { registerCreateDBFlowProject } from "./provider/GenerateDPFlowProjectProvider";
+import { registerCreateDBFlowProject } from "./provider/GenerateDBFlowProjectProvider";
 import { registerAddFeatureSet, registerSyncFeatureSet } from "./provider/FeatureStoreProvider";
 import { createObjectTypeSnippetWizard } from "./wizards/CreateObjectTypeSnippetWizzard";
 import { showTableDetailsWizard } from "./wizards/ShowTableDetailsWizards";
@@ -163,13 +163,13 @@ export async function activate(context: ExtensionContext) {
 
 
     // Add Command: Create an Object by Wizard => Choose a folder and name your file
-    context.subscriptions.push(commands.registerCommand('dbFlux.createObjectWizard', async () => createObjectWizard(context)));
+    context.subscriptions.push(commands.registerCommand('dbFlux.createObjectWizard', async () => createObjectWizard()));
 
     // Add Command: Create a Snippet for Specific Object Type
-    context.subscriptions.push(commands.registerCommand('dbFlux.createObjectTypeSnippet', async () => createObjectTypeSnippetWizard(context)));
+    context.subscriptions.push(commands.registerCommand('dbFlux.createObjectTypeSnippet', async () => createObjectTypeSnippetWizard()));
 
     // Add Command: Create a table DDL File => Choose Table from table folder
-    context.subscriptions.push(commands.registerCommand('dbFlux.createTableDDL', async () => createTableDDL(context)));
+    context.subscriptions.push(commands.registerCommand('dbFlux.createTableDDL', async () => createTableDDL()));
 
     // Add Command to call a snippet when File is opened
     context.subscriptions.push( workspace.onDidOpenTextDocument((document) => callSnippet(workspace.workspaceFolders![0].uri.fsPath, document)));
@@ -210,10 +210,10 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(registerAddApplicationCommand(projectInfos, context));
 
     // Add APEX Applictaion Plugin
-    context.subscriptions.push(registerAddApplicationPluginCommand(projectInfos, context));
+    context.subscriptions.push(registerAddApplicationPluginCommand(projectInfos));
 
     // Add Workspace Folder
-    context.subscriptions.push(registerAddWorkspaceCommand(projectInfos, context));
+    context.subscriptions.push(registerAddWorkspaceCommand(projectInfos));
 
     // Add Schema Folder
     context.subscriptions.push(registerAddSchemaCommand(projectInfos, context));
@@ -225,16 +225,16 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(registerAddReportTypeFolderCommand());
 
     // Add hook file
-    context.subscriptions.push(registerAddHookFileCommand(context));
+    context.subscriptions.push(registerAddHookFileCommand());
 
     // Add Custom Trigger Run Definition
     context.subscriptions.push(registerAddCustomtriggerRunCommand(context));
 
     // Add REST Modul
-    context.subscriptions.push(registerAddRESTModuleCommand(projectInfos, context));
+    context.subscriptions.push(registerAddRESTModuleCommand(projectInfos));
 
     // Reveal Item
-    context.subscriptions.push(commands.registerCommand('dbFlux.gotoToFolder', async () => revealItemWizard(context)));
+    context.subscriptions.push(commands.registerCommand('dbFlux.gotoToFolder', async () => revealItemWizard()));
 
 
     // Export REST
@@ -315,7 +315,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.add_item', async () => showTableDetailsWizard(context, tree, false)));
     context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.treeview.add_item_context', async () => showTableDetailsWizard(context, tree, true)));
 
-    context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.addColumnSnippet', async () => addColumnSnippet(context)));
+    context.subscriptions.push(commands.registerCommand('dbflux.showTableDetails.addColumnSnippet', async () => addColumnSnippet()));
 
 
 

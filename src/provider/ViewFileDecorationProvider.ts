@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { CancellationToken, commands, ExtensionContext, FileDecoration, FileDecorationProvider, Uri, workspace } from 'vscode';
+import { commands, ExtensionContext, FileDecoration, FileDecorationProvider, Uri, workspace } from 'vscode';
 import { Disposable, EventEmitter, ThemeColor, window } from 'vscode';
 import { ConfigurationManager } from '../helper/ConfigurationManager';
 
@@ -77,15 +77,15 @@ export class ViewFileDecorationProvider implements FileDecorationProvider, Dispo
 		this._onDidChangeFileDecorations.fire(undefined);
 	}
 
-  async provideFileDecoration(uri: Uri, token: CancellationToken): Promise<FileDecoration | undefined> {
+  async provideFileDecoration(uri: Uri): Promise<FileDecoration | undefined> {
     const relativePath = workspace.asRelativePath(uri);
     if (this.cachedFiles.indexOf(relativePath) > -1) {
-      return this.provideCommitFileStatusDecoration(uri, token);
+      return this.provideCommitFileStatusDecoration(uri);
     }
     return undefined;
   }
 
-  provideCommitFileStatusDecoration(uri: Uri, _token: CancellationToken): FileDecoration | undefined {
+  provideCommitFileStatusDecoration(uri: Uri): FileDecoration | undefined {
     const relativePath = workspace.asRelativePath(uri);
     const matchedIndex = this.cachedFiles.indexOf(relativePath);
 

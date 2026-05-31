@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -34,11 +34,11 @@ const readEnvVars = (file:string) => {
  * @param {string} key Key to find
  * @returns {string|null} Value of the key
  */
-const getEnvValue = (file: string, key: string): string | null => {
+export const getEnvValue = (file: string, key: string): string | null => {
   // find the line that contains the key (exact match)
   const matchedLine = readEnvVars(file).find((line) => line.split("=")[0] === key);
   // split the line (delimiter is '=') and return the item at index 2
-  return matchedLine !== undefined ? matchedLine.split("=")[1].replace(new RegExp('\"', 'g'), "") : null;
+  return matchedLine !== undefined ? matchedLine.split("=")[1].replace(new RegExp('"', 'g'), "") : null;
 };
 
 /**
@@ -124,7 +124,7 @@ export const dbFolderDef = [{
   "views": "",
   "mviews": "",
   "tables": {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+
     "tables_ddl": ""
   },
   "tests": {
@@ -297,7 +297,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
   function shouldResume() {
     // Could show a notification with the option to resume.
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<boolean>(() => {
       // noop
     });
   }
@@ -310,8 +310,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     return (name === undefined || name.length === 0) ? 'Value is required' : (!name.toLowerCase().match(/^[0-9a-z_]+$/)) ? 'Value not a valid schema name' : undefined;
   }
 
-  async function validateValueNotRequiered(name: string) {
-    // eslint-disable-next-line eqeqeq
+  async function validateValueNotRequiered() {
     return undefined;
   }
 
@@ -459,12 +458,6 @@ export async function initializeProjectWizard(context: ExtensionContext) {
                   );
 
 
-
-    // Get path to resource on disk
-    const onDiskPath = Uri.file(
-      path.join(context.extensionPath, 'css', 'style.css')
-    );
-
     panel.webview.onDidReceiveMessage(async message => {
       if (message.command === "open") {
         if (workspace.workspaceFolders) {
@@ -477,7 +470,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   });
 
     // And get the special URI to use with the webview
-    const cssURI = panel.webview.asWebviewUri(onDiskPath);
+    // const cssURI = panel.webview.asWebviewUri(onDiskPath);
     fcontent.userFile = fcontent.files[fcontent.files.length-1];
     panel.webview.html = getWebviewContent(fcontent, state);
   }

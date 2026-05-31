@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 import * as path from "path";
 
 import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
@@ -9,6 +9,7 @@ import { getActiveFileUri, getRelativePartsFromFile, getWorkingFile, getWorkspac
 import { existsSync } from "fs";
 import { ExportTaskStore } from "../stores/ExportTaskStore";
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
 
 interface ExportTaskDefinition extends TaskDefinition {
@@ -56,7 +57,7 @@ export class ExportPluingFilesProvider extends AbstractBashTaskProvider implemen
   }
 
   createExpTask(definition: ExportTaskDefinition): Task {
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -81,11 +82,11 @@ export class ExportPluingFilesProvider extends AbstractBashTaskProvider implemen
   }
 
   async prepExportInfos(pluginFolder:string|undefined): Promise<ISQLExportInfos> {
-    let runner: ISQLExportInfos = {} as ISQLExportInfos;
+    const runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders && pluginFolder) {
-      let fileUri:Uri = workspace.workspaceFolders[0].uri;
-      let apexUri:Uri = Uri.file(path.join(fileUri.fsPath, pluginFolder + '/install.sql'));
+      const fileUri:Uri = workspace.workspaceFolders[0].uri;
+      const apexUri:Uri = Uri.file(path.join(fileUri.fsPath, pluginFolder + '/install.sql'));
 
       runner.exportAppPath  = pluginFolder + "/src";
       const parts:string[] = getRelativePartsFromFile(pluginFolder);
@@ -174,7 +175,7 @@ export class ExportCurrentPluginFileProvider extends AbstractBashTaskProvider im
   }
 
   createExpTask(definition: ExportTaskDefinition): Task {
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -199,7 +200,7 @@ export class ExportCurrentPluginFileProvider extends AbstractBashTaskProvider im
   }
 
   async prepExportInfos(): Promise<ISQLExportInfos> {
-    let runner: ISQLExportInfos = {} as ISQLExportInfos;
+    const runner: ISQLExportInfos = {} as ISQLExportInfos;
 
     if (workspace.workspaceFolders) {
       const connectionUri = await getActiveFileUri(this.context);
@@ -245,7 +246,7 @@ export class ExportCurrentPluginFileProvider extends AbstractBashTaskProvider im
 export function registerExportCurrentPluginFileCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.exportCurrentPluginFile", async () => {
     // check what file has to build
-    let fileName = await getWorkingFile(context);
+    const fileName = await getWorkingFile(context);
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
 

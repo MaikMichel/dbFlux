@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { CancellationToken, CompletionContext, CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, SnippetString, TextDocument } from 'vscode';
+import { CompletionItem, CompletionItemKind, CompletionItemProvider, CompletionList, MarkdownString, Position, SnippetString, TextDocument } from 'vscode';
 
 
 interface ApiDetails {
@@ -49,7 +49,7 @@ export class PlsqlCompletionItemProvider implements CompletionItemProvider {
 
     }
 
-    async provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext): Promise<CompletionItem[] | CompletionList<CompletionItem> | null | undefined> {
+    async provideCompletionItems(document: TextDocument, position: Position): Promise<CompletionItem[] | CompletionList<CompletionItem> | null | undefined> {
       let completionItems: CompletionItem[] = [];
 
       const wordsOfLine = document.lineAt(position.line).text.split(" ");

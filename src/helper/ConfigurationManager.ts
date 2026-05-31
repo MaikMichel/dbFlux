@@ -185,7 +185,7 @@ export async function rmDBFluxConfig(context:ExtensionContext) {
 
 export function focusProblemPanel() {
   if (ConfigurationManager.getFocusProblemPanelWhenExists()) {
-    let myEvent = languages.onDidChangeDiagnostics(event => {
+    const myEvent = languages.onDidChangeDiagnostics(event => {
       const myUri = window.activeTextEditor?.document.uri;
       if (myUri) {
         let matched = false;

@@ -1,14 +1,14 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 import * as path from "path";
 
 import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
-import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
+import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
-import { getActiveFileUri, getRelativePartsFromFile, getWorkingFile, getWorkspaceRootPath, ltrim, matchRuleShort, rtrim } from "../helper/utilities";
+import { getActiveFileUri, getRelativePartsFromFile, getWorkingFile, getWorkspaceRootPath, ltrim, matchRuleShort } from "../helper/utilities";
 import { existsSync } from "fs";
 
-
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
 
 interface RemoveTaskDefinition extends TaskDefinition {
@@ -56,7 +56,7 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
   }
 
   createExpTask(definition: RemoveTaskDefinition): Task {
-    let _task = new Task(
+    const _task = new Task(
       definition,
       TaskScope.Workspace,
       definition.name,
@@ -82,7 +82,7 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
   }
 
   async prepExportInfos(): Promise<ISQLRemoveInfos> {
-    let runner: ISQLRemoveInfos = {} as ISQLRemoveInfos;
+    const runner: ISQLRemoveInfos = {} as ISQLRemoveInfos;
 
     if (workspace.workspaceFolders) {
       const connectionUri = await getActiveFileUri(this.context);
@@ -123,7 +123,7 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
 export function registerRemoveCurrentStaticFileCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.removeCurrentStaticFile", async () => {
     // check what file has to build
-    let fileName = await getWorkingFile(context);
+    const fileName = await getWorkingFile(context);
     const relativeFileName = fileName.replace(getWorkspaceRootPath() + "/", "");
 
 

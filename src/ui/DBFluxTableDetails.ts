@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import * as path from "path";
-import { CancellationToken, commands, DataTransfer, DataTransferItem, DocumentDropEdit, DocumentDropEditProvider, env, Event, EventEmitter, ExtensionContext, languages, Position, ProviderResult, SnippetString, TextDocument, ThemeIcon, TreeDataProvider, TreeDragAndDropController, TreeItem, TreeItemCollapsibleState, TreeView, window, workspace } from 'vscode';
+import { commands, DataTransfer, DataTransferItem, DocumentDropEdit, DocumentDropEditProvider, env, Event, EventEmitter, ExtensionContext, languages, Position, ProviderResult, SnippetString, TextDocument, ThemeIcon, TreeDataProvider, TreeDragAndDropController, TreeItem, TreeItemCollapsibleState, TreeView, window, workspace } from 'vscode';
 import { chooseSnippetWizard, getAvailableSnippetKeys, getSnippedBody } from '../wizards/ChooseSnippetWizzard';
 import { LoggingService } from '../helper/LoggingService';
 import { showInformationProgress } from '../helper/utilities';
@@ -148,7 +148,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
     /**
      * called when dropped into editor
      */
-    async provideDocumentDropEdits(document: TextDocument, position: Position, dataTransfer: DataTransfer, token: CancellationToken): Promise<DocumentDropEdit | undefined> {
+    async provideDocumentDropEdits(document: TextDocument, position: Position, dataTransfer: DataTransfer): Promise<DocumentDropEdit | undefined> {
       // Check the data transfer to see if we have dropped a list of uris
       const dataTransferItem = dataTransfer.get(uriListMime);
       if (!dataTransferItem) {
@@ -211,7 +211,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
         });
 
         // build the snippet
-        let touchedBodyLines:string[] = [];
+        const touchedBodyLines:string[] = [];
         for (let i=0; i < labels.length; i++) {
           const item = labels[i];
 
@@ -244,14 +244,14 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
       return inputString;
     }
 
-    handleDrag(source: readonly TableColumnItem[], dataTransfer: DataTransfer, token: CancellationToken): void | Thenable<void> {
+    handleDrag(source: readonly TableColumnItem[], dataTransfer: DataTransfer): void | Thenable<void> {
       dataTransfer.set(uriListMime, new DataTransferItem(source));
     }
 
     /**
      * not implemented
      */
-    handleDrop?(target: TableColumnItem | undefined, dataTransfer: DataTransfer, token: CancellationToken): void | Thenable<void> {}
+    // handleDrop?(target: TableColumnItem | undefined, dataTransfer: DataTransfer): void | Thenable<void> {}
 
 
     /**
@@ -317,7 +317,7 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
       if (workspace.workspaceFolders){
         this.treeContext.workspaceState.update(workspaceStateKey, undefined);
 
-        for (let tableItem of this.treedata) {
+        for (const tableItem of this.treedata) {
           const tableFile = path.join(workspace.workspaceFolders[0].uri.fsPath, ConfigurationManager.getDBFolderName(), ""+tableItem.description!);
 
           if (existsSync(tableFile)) {
@@ -398,10 +398,10 @@ export class DBFluxTableDetails implements TreeDataProvider<TableColumnItem>, Tr
       const columnMap              = new Map<string, ColumnProps>();
       const closingBrack           = this.findClosingBracketMatchIndex(script, script.indexOf("("));
       const columnDefinitionsLines = script.substring(script.indexOf("(")+1, closingBrack).replaceAll("\r", "").split("\n");
-      const columnRegex            =  /(\w+)\s+(\w+)(?:\(([^\)]+)\))?(.*)/;
+      const columnRegex            =  /(\w+)\s+(\w+)(?:\(([^)]+)\))?(.*)/;
 
 
-      for (let columnDefinitions of columnDefinitionsLines){
+      for (const columnDefinitions of columnDefinitionsLines){
         const columnMatch = columnRegex.exec(columnDefinitions.trim());
 
         if (columnMatch) {

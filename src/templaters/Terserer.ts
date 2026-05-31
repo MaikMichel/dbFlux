@@ -19,7 +19,7 @@ export class Terserer {
 
     const uploadSQLFile = this.sourceFile + '.sql';
     const inAppID = pPlugin?getApplicationIdFromPluginPath(this.sourceFile, this.isFlexMode):getApplicationIdFromStaticPath(this.sourceFile, this.isFlexMode);
-    const pluginID = pPlugin?getPluginIDFromPath(inAppID, this.sourceFile, this.isFlexMode):undefined;
+    const pluginID = pPlugin?getPluginIDFromPath(inAppID, this.sourceFile):undefined;
     const inFileName = getTargetPathFromFileName(inAppID, this.sourceFile, pluginID);
 
     const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", pPlugin?"upload.plugin.tmpl.sql":"upload.tmpl.sql").split(path.sep).join('/'), "utf8"));
@@ -34,7 +34,7 @@ export class Terserer {
 
     if (ConfigurationManager.getCreateAndUploadJavaScriptMinifiedVersion()) {
       try {
-        var result = await minify(this.sourceContent, { sourceMap: ConfigurationManager.getCreateAndUploadJavaScriptSourceMap() });
+        const result = await minify(this.sourceContent, { sourceMap: ConfigurationManager.getCreateAndUploadJavaScriptSourceMap() });
 
 
         if (result.code !== undefined) {

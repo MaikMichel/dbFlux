@@ -17,7 +17,7 @@ export interface KeyVal {
 }
 
 export function matchRuleShort(str:string, rule:string) {
-  var escapeRegex = (str:string) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+  const escapeRegex = (str:string) => str.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1");
   return new RegExp("^" + rule.split("*").map(escapeRegex).join(".*") + "$").test(str);
 }
 
@@ -101,7 +101,7 @@ export function getApplicationIdFromApexPath(sourceFile: string, isFlexMode: boo
   return getApplicationIdFromPath("apex", sourceFile, isFlexMode);
 }
 
-export function getPluginIDFromPath(inAppID: string, sourceFile: string, isFlexMode: boolean) {
+export function getPluginIDFromPath(inAppID: string, sourceFile: string) {
   return sourceFile.split('plugin/f'+inAppID+'/')[1].split('/')[0];
 }
 export function getTargetPathFromFileName(inAppID: string, sourceFile: string, pluginID: string|undefined) {
@@ -117,7 +117,7 @@ export function getStaticReference(sourceFile: string, isFlexMode: boolean) {
   const isPlugin = sourceFile.startsWith("plugin/");
 
   const inAppID = isPlugin?getApplicationIdFromPluginPath(sourceFile, isFlexMode):getApplicationIdFromStaticPath(sourceFile, isFlexMode);
-  const pluginID = isPlugin?getPluginIDFromPath(inAppID, sourceFile, isFlexMode):undefined;
+  const pluginID = isPlugin?getPluginIDFromPath(inAppID, sourceFile):undefined;
   const targetPath = getTargetPathFromFileName(inAppID, sourceFile, pluginID);
 
   return (isPlugin?"#PLUGIN_FILES#":"#APP_FILES#") + targetPath.replace(".js.sql", "#MIN#.js").replace(".css.sql", "#MIN#.css").replace(".sql", "");
@@ -125,7 +125,7 @@ export function getStaticReference(sourceFile: string, isFlexMode: boolean) {
 
 export function changeExtension(filename: string, extension: string): string {
   let ext: string = path.extname(filename);
-  let root: string = filename.substring(0, filename.length - ext.length);
+  const root: string = filename.substring(0, filename.length - ext.length);
 
   ext = extension.startsWith('.') ? extension : extension.length > 0 ? `.${extension}` : '';
   return `${root}${ext}`;
@@ -160,7 +160,7 @@ export async function createDirectoryPath(path: any, fullPath: string, rootPaath
   } else {
 
 
-    let makePath:string = rootPaath + fullPath + path;
+    const makePath:string = rootPaath + fullPath + path;
 
     if (!existsSync(makePath)) {
       mkdirSync(makePath, { recursive: true });
@@ -328,7 +328,7 @@ export function showInformationProgress(msg:string, timeoutms:number = 3000) {
     location: vscode.ProgressLocation.Notification,
     title:  msg,
     cancellable: false
-  }, (progress, token) => {
+  }, () => {
 
     // for(let i = 0; i <= 10; i++) {
     //   setTimeout(() => {

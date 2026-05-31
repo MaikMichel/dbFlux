@@ -25,7 +25,7 @@ export class ReportTemplater {
 
   async genFile() {
     if (this.sourceContent) {
-      let sourceFileName = await vscode.window.showInputBox({value: path.basename(this.sourceFile)+`_${new Date().toISOString().slice(0, 10)}.sql`, prompt:"Enter new filename"});
+      const sourceFileName = await vscode.window.showInputBox({value: path.basename(this.sourceFile)+`_${new Date().toISOString().slice(0, 10)}.sql`, prompt:"Enter new filename"});
 
       if (sourceFileName === undefined) {
         vscode.window.showErrorMessage('dbFlux: Action canceled');
@@ -54,7 +54,7 @@ export class ReportTemplater {
 
 
         if (workspace.workspaceFolders) {
-          let folders:string[] = [];
+          const folders:string[] = [];
           const wsRoot = workspace.workspaceFolders[0].uri.fsPath;
           const sourceDB = path.join(wsRoot, ConfigurationManager.getDBFolderName());
 
@@ -65,9 +65,9 @@ export class ReportTemplater {
                 })
                 .map((dirent) => path.join(source.toString(), dirent.name));
 
-          for (let schemaPath of [ ... getSchemaFolders(sourceDB)]) {
+          for (const schemaPath of [ ... getSchemaFolders(sourceDB)]) {
             // real file path
-            for (let folderItem of walkSync(schemaPath)) {
+            for (const folderItem of walkSync(schemaPath)) {
               const folderString = (folderItem as string);
               if (folderString.includes("tables" + path.sep + "tables_ddl")) {
                 folders.push(folderString.replace(wsRoot + path.sep, '').replace(/\\/g, '/').replace("tables/tables_ddl", "tables"));
