@@ -149,12 +149,10 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
       runner.executableCli          = ConfigurationManager.getCliToUseForCompilation();
       runner.useSQLErrorLog         = ConfigurationManager.getUseSQLplusSPERRORLOGTable()?"YES":"NO";
       runner.moveYesNo              = "NO";
-      runner.restSqlUrl             = runner.projectInfos.restSqlUrl + "";
-      runner.restOauthTokenUrl      = runner.projectInfos.restOauthTokenUrl + "";
-      // runner.restOauthClientId      = runner.projectInfos.restOauthClientId + "";
-      // runner.restOauthClientSecret  = runner.projectInfos.restOauthClientSecret + "";
-      runner.restAppSchema          = runner.projectInfos.restAppSchema + "";
-      runner.restWorkspace          = runner.projectInfos.restWorkspace + "";
+      runner.restSqlUrl             = runner.projectInfos.restSqlUrl ?? "";
+      runner.restOauthTokenUrl      = runner.projectInfos.restOauthTokenUrl ?? "";
+      runner.restAppSchema          = runner.projectInfos.restAppSchema ?? "";
+      runner.restWorkspace          = runner.projectInfos.restWorkspace ?? "";
 
 
       if (ConfigurationManager.getShowWarningMessages()) {
@@ -334,7 +332,11 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
         || (!insideSetup
           && (compTaskStoreInstance.appPwd !== undefined))) {
 
-        which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+        const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
+          ? Promise.resolve()
+          : which(ConfigurationManager.getCliToUseForCompilation());
+
+        cliCheck.then(async () => {
 
 
           let compilable = true;
