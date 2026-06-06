@@ -114,6 +114,8 @@ export abstract class AbstractBashTaskProvider {
     if (projectInfos.dbConnMode !== "REST") {
       runnerInfo.connectionTns  = projectInfos.dbTns;
       runnerInfo.connectionUser = this.buildConnectionUser(projectInfos, runnerInfo.cwd, fileUri.path);
+    } else {
+      runnerInfo.connectionUser = "";
     }
     runnerInfo.connectionPass = getPassword(projectInfos, runnerInfo.connectionUser, false, this.context);
 
