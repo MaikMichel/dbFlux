@@ -18,8 +18,9 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
     const buildEnv = dotenv.config({ path: path.join(ws, "build.env")});
 
     state.title      = 'Initialize dbFlow Project';
-    state.totalSteps = 14;
+    state.totalSteps = 17;
 
+    state.connMode         = applyEnv.parsed?.CONN_MODE || "SQLNET";
     state.projectName      = buildEnv.parsed?.PROJECT;
     state.projectType      = buildEnv.parsed?.PROJECT_MODE;
     state.buildBranch      = buildEnv.parsed?.BUILD_BRANCH;
@@ -32,6 +33,10 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
     state.depotPath    = applyEnv.parsed?.DEPOT_PATH;
     state.stageBranch  = applyEnv.parsed?.STAGE;
     state.logtopath    = applyEnv.parsed?.LOG_PATH;
+
+    state.restWorkspace = applyEnv.parsed?.REST_WORKSPACE || "";
+    state.restAppSchema = applyEnv.parsed?.REST_APP_SCHEMA || "";
+    state.restAppIdMap  = applyEnv.parsed?.REST_APP_ID_MAP || "";
 
 
     await MultiStepInput.run(input => inputProjectName(input, state));
@@ -50,8 +55,100 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
       shouldResume: shouldResume
     });
 
+    return (input: MultiStepInput) => pickConnectionMode(input, state);
+  }
+
+  async function pickConnectionMode(input: MultiStepInput, state: Partial<State>) {
+    const modes = [{label: "SQLNET"}, {label: "REST"}];
+    const currentMode = modes.find(m => m.label === (state.connMode || "SQLNET")) || modes[0];
+
+    state.connMode = await input.showQuickPick({
+      title:         state.title!,
+      step:          2,
+      totalSteps:    state.totalSteps!,
+      placeholder:   'Pick a connection mode',
+      items:         modes,
+      activeItem:    currentMode,
+      shouldResume:  shouldResume,
+      canSelectMany: false
+    }).then(value => value.label);
+
+    if (state.connMode === "REST") {
+      state.totalSteps = 11;
+      return (input: MultiStepInput) => inputRestWorkspace(input, state);
+    }
     return (input: MultiStepInput) => pickProjectType(input, state);
   }
+
+  // REST-specific steps
+
+  async function inputRestWorkspace(input: MultiStepInput, state: Partial<State>) {
+    state.restWorkspace = await input.showInputBox({
+      title:        state.title!,
+      step:         3,
+      totalSteps:   state.totalSteps!,
+      value:        state.restWorkspace || state.projectName || '',
+      prompt:       'Enter REST target workspace - ',
+      validate:     validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
+    return (input: MultiStepInput) => inputRestAppSchema(input, state);
+  }
+
+  async function inputRestAppSchema(input: MultiStepInput, state: Partial<State>) {
+    state.restAppSchema = await input.showInputBox({
+      title:        state.title!,
+      step:         4,
+      totalSteps:   state.totalSteps!,
+      value:        state.restAppSchema || state.projectName || '',
+      prompt:       'Enter REST target app schema - ',
+      validate:     validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
+    return (input: MultiStepInput) => inputRestUrlPrefix(input, state);
+  }
+
+  async function inputRestUrlPrefix(input: MultiStepInput, state: Partial<State>) {
+    state.restUrlPrefix = await input.showInputBox({
+      title:        state.title!,
+      step:         5,
+      totalSteps:   state.totalSteps!,
+      value:        state.restUrlPrefix || '',
+      prompt:       'Enter REST URL prefix (e.g. https://oracleapex.com/ords) - ',
+      validate:     validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
+    return (input: MultiStepInput) => inputRestAppIdMap(input, state);
+  }
+
+  async function inputRestAppIdMap(input: MultiStepInput, state: Partial<State>) {
+    state.restAppIdMap = await input.showInputBox({
+      title:        state.title!,
+      step:         6,
+      totalSteps:   state.totalSteps!,
+      value:        state.restAppIdMap || '',
+      prompt:       'Enter REST app ID mapping source:target [,source:target] (optional) - ',
+      validate:     validateValueNotRequiered,
+      shouldResume: shouldResume
+    });
+    return (input: MultiStepInput) => inputRestOauthBasicB64(input, state);
+  }
+
+  async function inputRestOauthBasicB64(input: MultiStepInput, state: Partial<State>) {
+    state.restOauthBasicB64 = await input.showInputBox({
+      title:        state.title!,
+      step:         7,
+      totalSteps:   state.totalSteps!,
+      value:        state.restOauthBasicB64 || '',
+      prompt:       'Enter REST OAuth Basic B64 value (base64-encoded client_id:client_secret) - ',
+      validate:     validateValueIsRequiered,
+      shouldResume: shouldResume,
+      password:     true
+    });
+    return (input: MultiStepInput) => inputPathToDepot(input, state);
+  }
+
+  // SQLNET-specific steps
 
   async function pickProjectType(input: MultiStepInput, state: Partial<State>) {
     const projectTypes = await getAvailableProjectTypes();
@@ -61,7 +158,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
 
     state.projectType = await input.showQuickPick({
       title:         state.title!,
-      step:          2,
+      step:          3,
       totalSteps:    state.totalSteps!,
       placeholder:  'Pick a type',
       items:         projectTypes,
@@ -76,7 +173,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
   async function inputBranchName(input: MultiStepInput, state: Partial<State>) {
     state.buildBranch = await input.showInputBox({
       title:         state.title!,
-      step:          3,
+      step:          4,
       totalSteps:    state.totalSteps!,
       value:         state.buildBranch || 'build',
       prompt:       'When running release tests, what is your prefered branch name? - ',
@@ -91,7 +188,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
     const answers = [{label:"Yes"}, {label:"No"}];
     state.createChangelogs = await input.showQuickPick({
       title:          state.title!,
-      step:           4,
+      step:           5,
       totalSteps:     state.totalSteps!,
       items:          answers,
       activeItem:     answers[0],
@@ -118,7 +215,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
   async function inputChangelogSchema(input: MultiStepInput, state: Partial<State>) {
     state.changeLogSchema = await input.showInputBox({
       title:         state.title!,
-      step:          5,
+      step:          6,
       totalSteps:    state.totalSteps!,
       value:         state.changeLogSchema || state.projectName + '_app',
       prompt:       'What is the schema name the changelog is processed with? - ',
@@ -131,7 +228,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
     const answers = [{label:state.projectName+"_data"}, {label:state.projectName+"_logic"}, {label:state.projectName+"_app"}];
     state.changeLogSchema = await input.showQuickPick({
       title:           state.title!,
-      step:            5,
+      step:            6,
       totalSteps:      state.totalSteps!,
       items:           answers,
       activeItem:      answers[0],
@@ -144,7 +241,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
   async function inputConnection(input: MultiStepInput, state: Partial<State>) {
     state.dbConnection = await input.showInputBox({
       title:        state.title!,
-      step:         6,
+      step:         7,
       totalSteps:   state.totalSteps!,
       value:        state.dbConnection || 'localhost:1521/xepdb1',
       prompt:       'Enter connection string (localhost:1521/xepdb1) - ',
@@ -158,7 +255,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
   async function inputAdminUserName(input: MultiStepInput, state: Partial<State>) {
     state.dbAdminUser = await input.showInputBox({
       title:        state.title!,
-      step:         7,
+      step:         8,
       totalSteps:   state.totalSteps!,
       value:        state.dbAdminUser || 'sys',
       prompt:       'Enter username of admin user (admin, sys) - ',
@@ -172,7 +269,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
   async function inputAdminUserPwd(input: MultiStepInput, state: Partial<State>) {
     state.dbAdminPwd = await input.showInputBox({
       title:        state.title!,
-      step:         8,
+      step:         9,
       totalSteps:   state.totalSteps!,
       value:        state.dbAdminPwd || '',
       prompt:       `Enter Password for user ${state.dbAdminUser} [Leave blank and you will be asked for] - `,
@@ -188,7 +285,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
     state.dbAppUser = (state.projectType==="SingleSchema")?state.projectName:state.projectName+"_depl";
     state.dbAppPwd = await input.showInputBox({
       title:        state.title!,
-      step:         9,
+      step:         10,
       totalSteps:   state.totalSteps!,
       value:        state.dbAppPwd || '',
       prompt:       `Enter password for deployment_user ${state.dbAppUser} [leave blank and you will be asked for] - `,
@@ -200,10 +297,13 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
     return (input: MultiStepInput) => inputPathToDepot(input, state);
   }
 
+  // Common steps (SQLNET and REST)
+
   async function inputPathToDepot(input: MultiStepInput, state: Partial<State>) {
+    const isRest = state.connMode === "REST";
     state.depotPath = await input.showInputBox({
       title:        state.title!,
-      step:         10,
+      step:         isRest ? 8 : 11,
       totalSteps:   state.totalSteps!,
       value:        state.depotPath || '_depot',
       prompt:       'Enter path to depot - ',
@@ -215,9 +315,10 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
   }
 
   async function inputStageMappedToBranch(input: MultiStepInput, state: Partial<State>) {
+    const isRest = state.connMode === "REST";
     state.stageBranch = await input.showInputBox({
       title:        state.title!,
-      step:         11,
+      step:         isRest ? 9 : 12,
       totalSteps:   state.totalSteps!,
       value:        state.stageBranch || 'develop',
       prompt:       'Enter stage of this configuration mapped to branch (develop, test, master) - ',
@@ -225,6 +326,9 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
       shouldResume: shouldResume
     });
 
+    if (state.connMode === "REST") {
+      return (input: MultiStepInput) => inputSqlCli(input, state);
+    }
     return (input: MultiStepInput) => inputInstallTooling(input, state);
   }
 
@@ -233,7 +337,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
 
     state.includeDefaultTools = await input.showQuickPick({
       title:          state.title!,
-      step:           12,
+      step:           13,
       totalSteps:     state.totalSteps!,
       items:          answers,
       activeItem:     answers[0],
@@ -246,11 +350,12 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
   }
 
   async function inputSqlCli(input: MultiStepInput, state: Partial<State>) {
+    const isRest = state.connMode === "REST";
     const answers = [{label:"sqlcl"}, {label:"sqlplus"}];
 
     state.sqlcli = await input.showQuickPick({
       title:          state.title!,
-      step:           13,
+      step:           isRest ? 10 : 14,
       totalSteps:     state.totalSteps!,
       items:          answers,
       activeItem:     answers[1],
@@ -259,13 +364,16 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
       shouldResume:   shouldResume
     }).then(value => value.label);
 
+    if (state.connMode === "REST") {
+      return (input: MultiStepInput) => inputDefaultLogPaths(input, state);
+    }
     return (input: MultiStepInput) => inputDefaultApps(input, state);
   }
 
   async function inputDefaultApps(input: MultiStepInput, state: Partial<State>) {
     state.defaultApps = await input.showInputBox({
       title:        state.title!,
-      step:         14,
+      step:         15,
       totalSteps:   state.totalSteps!,
       value:        '',
       prompt:       `Enter application IDs (comma separated) you wish to use initialy (100,101,...) - `,
@@ -279,7 +387,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
   async function inputDefaultModules(input: MultiStepInput, state: Partial<State>) {
     state.defaulsModules = await input.showInputBox({
       title:        state.title!,
-      step:         15,
+      step:         16,
       totalSteps:   state.totalSteps!,
       value:        '',
       prompt:       `Enter restful Moduls (comma separated) you wish to use initialy (api,test,...) - `,
@@ -291,9 +399,10 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
   }
 
   async function inputDefaultLogPaths(input: MultiStepInput, state: Partial<State>) {
+    const isRest = state.connMode === "REST";
     state.logtopath = await input.showInputBox({
       title:        state.title!,
-      step:         15,
+      step:         isRest ? 11 : 17,
       totalSteps:   state.totalSteps!,
       value:        state.logtopath || '_logs',
       prompt:       `Enter path to place logfiles into after installation - `,

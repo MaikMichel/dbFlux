@@ -273,7 +273,15 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
       projectInfos.projectName  = context.workspaceState.get("dbFlux_PROJECT");
       projectInfos.projectMode  = context.workspaceState.get("dbFlux_PROJECT_MODE");
       projectInfos.workspace    = context.workspaceState.get("dbFlux_WORKSPACE");
-      projectInfos.dbConnMode   = "SQLNET";
+      projectInfos.dbConnMode   = context.workspaceState.get("dbFlux_CONN_MODE") ?? "SQLNET";
+
+      if (projectInfos.dbConnMode === "REST") {
+        projectInfos.restWorkspace     = context.workspaceState.get("dbFlux_REST_WORKSPACE");
+        projectInfos.restAppSchema     = context.workspaceState.get("dbFlux_REST_APP_SCHEMA");
+        projectInfos.restSqlUrl        = context.workspaceState.get("dbFlux_REST_SQL_URL");
+        projectInfos.restOauthTokenUrl = context.workspaceState.get("dbFlux_REST_OAUTH_TOKEN_URL");
+        projectInfos.dbAppPwd          = await context.secrets.get(getWorkspaceRootPath()+"|dbFlux_REST_OAUTH_BASIC_B64") + "";
+      }
 
       // get all keys with pattern dbFlux_..._PWD and store them in array
       const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD"));

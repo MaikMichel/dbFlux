@@ -158,11 +158,18 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     step: number;
     totalSteps: number;
 
+    connectionMode: QuickPickItem;
     projectName: string;
     projectType: QuickPickItem;
     dbConnection: string;
     dbAdminUser: string;
     dbAppPwd: string;
+
+    restWorkspace: string;
+    restAppSchema: string;
+    restUrlPrefix: string;
+    restAppIdMap: string;
+    restOauthBasicB64: string;
 
     createWorkspace: QuickPickItem;
     developerName: string;
@@ -173,10 +180,13 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     const state = {} as Partial<State>;
     state.projectName = "";
     if (workspace.workspaceFolders) {
-      state.projectName = context.workspaceState.get("dbFlux_PROJECT") || "";
-      state.dbConnection = context.workspaceState.get("dbFlux_DB_TNS") || "";
-      state.dbAdminUser = context.workspaceState.get("dbFlux_DB_ADMIN_USER") || "";
+      state.projectName   = context.workspaceState.get("dbFlux_PROJECT") || "";
+      state.dbConnection  = context.workspaceState.get("dbFlux_DB_TNS") || "";
+      state.dbAdminUser   = context.workspaceState.get("dbFlux_DB_ADMIN_USER") || "";
       state.apexSchemaName = context.workspaceState.get("dbFlux_APEX_USER") || "";
+      state.restWorkspace = context.workspaceState.get("dbFlux_REST_WORKSPACE") || "";
+      state.restAppSchema = context.workspaceState.get("dbFlux_REST_APP_SCHEMA") || "";
+      state.restAppIdMap  = context.workspaceState.get("dbFlux_REST_APP_ID_MAP") || "";
     }
 
     if (state.projectName.length === 0) {
@@ -193,12 +203,31 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     state.projectName = await input.showInputBox({
       title,
       step: 1,
-      totalSteps: 5,
+      totalSteps: 7,
       value: state.projectName || '',
       prompt: 'Choose a Name for your project, this will be part of schema name[s] -',
       validate: validateRequiredValueOnlyNumbersAlphaUScore,
       shouldResume: shouldResume
     });
+    return (input: MultiStepInput) => pickConnectionMode(input, state);
+  }
+
+  async function pickConnectionMode(input: MultiStepInput, state: Partial<State>) {
+    const modes = [{label: "SQLNET"}, {label: "REST"}];
+    state.connectionMode = await input.showQuickPick({
+      title,
+      step: 2,
+      totalSteps: 7,
+      placeholder: 'Pick a connection mode',
+      items: modes,
+      activeItem: state.connectionMode || modes[0],
+      shouldResume: shouldResume,
+      canSelectMany: false
+    });
+
+    if (state.connectionMode.label === "REST") {
+      return (input: MultiStepInput) => inputRestWorkspace(input, state);
+    }
     return (input: MultiStepInput) => pickProjectType(input, state);
   }
 
@@ -206,8 +235,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     const projectTypes = await getAvailableProjectTypes();
     state.projectType = await input.showQuickPick({
       title,
-      step: 2,
-      totalSteps: 5,
+      step: 3,
+      totalSteps: 7,
       placeholder: 'Pick a type',
       items: projectTypes,
       activeItem: state.projectType || projectTypes[0],
@@ -221,8 +250,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   async function inputConnection(input: MultiStepInput, state: Partial<State>) {
     state.dbConnection = await input.showInputBox({
       title,
-      step: 3,
-      totalSteps: 5,
+      step: 4,
+      totalSteps: 7,
       value: state.dbConnection || 'localhost:1521/xepdb1',
       prompt: 'Enter connection string (localhost:1521/xepdb1)',
       validate: validateValueIsRequiered,
@@ -236,8 +265,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     const appUserName = (state.projectType?.label==="SingleSchema")?state.projectName:state.projectName+"_depl";
     state.dbAppPwd = await input.showInputBox({
       title,
-      step: 4,
-      totalSteps: 5,
+      step: 5,
+      totalSteps: 7,
       value: state.dbAppPwd || '',
       prompt: `Enter password of user ${appUserName} (creation of user scripts) `,
       validate: validateValueIsRequiered,
@@ -251,8 +280,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   async function inputAdminName(input: MultiStepInput, state: Partial<State>) {
     state.dbAdminUser = await input.showInputBox({
       title,
-      step: 5,
-      totalSteps: 6,
+      step: 6,
+      totalSteps: 7,
       value: state.dbAdminUser || 'sys',
       prompt: 'Enter name of an Admin-User (sys, admin, ...)',
       validate: validateValueNotRequiered,
@@ -262,7 +291,73 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     if (state.projectType?.label !== "FlexSchema") {
       return (input: MultiStepInput) => inputCreateWorkspace(input, state);
     }
+  }
 
+  // REST-specific steps
+
+  async function inputRestWorkspace(input: MultiStepInput, state: Partial<State>) {
+    state.restWorkspace = await input.showInputBox({
+      title,
+      step: 3,
+      totalSteps: 7,
+      value: state.restWorkspace || state.projectName || '',
+      prompt: 'Enter REST target workspace',
+      validate: validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
+    return (input: MultiStepInput) => inputRestAppSchema(input, state);
+  }
+
+  async function inputRestAppSchema(input: MultiStepInput, state: Partial<State>) {
+    state.restAppSchema = await input.showInputBox({
+      title,
+      step: 4,
+      totalSteps: 7,
+      value: state.restAppSchema || state.projectName || '',
+      prompt: 'Enter REST target app schema',
+      validate: validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
+    return (input: MultiStepInput) => inputRestUrlPrefix(input, state);
+  }
+
+  async function inputRestUrlPrefix(input: MultiStepInput, state: Partial<State>) {
+    state.restUrlPrefix = await input.showInputBox({
+      title,
+      step: 5,
+      totalSteps: 7,
+      value: state.restUrlPrefix || '',
+      prompt: 'Enter REST URL prefix (e.g. https://oracleapex.com/ords)',
+      validate: validateValueIsRequiered,
+      shouldResume: shouldResume
+    });
+    return (input: MultiStepInput) => inputRestAppIdMap(input, state);
+  }
+
+  async function inputRestAppIdMap(input: MultiStepInput, state: Partial<State>) {
+    state.restAppIdMap = await input.showInputBox({
+      title,
+      step: 6,
+      totalSteps: 7,
+      value: state.restAppIdMap || '',
+      prompt: 'Enter REST app ID mapping source:target [,source:target] (optional)',
+      validate: validateValueNotRequiered,
+      shouldResume: shouldResume
+    });
+    return (input: MultiStepInput) => inputRestOauthBasicB64(input, state);
+  }
+
+  async function inputRestOauthBasicB64(input: MultiStepInput, state: Partial<State>) {
+    state.restOauthBasicB64 = await input.showInputBox({
+      title,
+      step: 7,
+      totalSteps: 7,
+      value: state.restOauthBasicB64 || '',
+      prompt: 'Enter REST OAuth Basic B64 value (base64-encoded client_id:client_secret)',
+      validate: validateValueIsRequiered,
+      shouldResume: shouldResume,
+      password: true
+    });
   }
 
   async function inputCreateWorkspace(input: MultiStepInput, state: Partial<State>) {
@@ -378,6 +473,11 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     }
   }
 
+  // REST mode forces SingleSchema folder structure
+  if (state.connectionMode?.label === "REST") {
+    state.projectType = {label: "SingleSchema"};
+  }
+
   createFolders(state);
 
   const fcontent = {
@@ -388,6 +488,12 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   };
 
   async function writeUserScritps(state: State) {
+    if (!workspace.workspaceFolders) {
+      return;
+    }
+    if (state.connectionMode?.label === "REST") {
+      return;
+    }
     if (workspace.workspaceFolders) {
 
       const gitIgnore = path.resolve(workspace.workspaceFolders![0].uri.fsPath, ".gitignore");
@@ -478,34 +584,50 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   async function writeConfigFiles(state: State) {
     if (workspace.workspaceFolders) {
       context.workspaceState.update("dbFlux_mode", "dbFlux");
-      context.workspaceState.update("dbFlux_DB_TNS", state.dbConnection);
-      if (state.projectType.label === "SingleSchema") {
-          context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase());
-      } else {
-          context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase() + "_depl");
-      }
-
-      await context.secrets.store(getWorkspaceRootPath()+"|dbFlux_DB_APP_PWD", state.dbAppPwd);
-      context.workspaceState.update("dbFlux_DB_ADMIN_USER", state.dbAdminUser);
-
       context.workspaceState.update("dbFlux_PROJECT", state.projectName.toLowerCase());
-      if (state.projectType.label === "MultiSchema") {
-        context.workspaceState.update("dbFlux_PROJECT_MODE", "MULTI");
-        context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
-        context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
-        context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
-      } else if (state.projectType.label === "SingleSchema") {
+
+      const isRest = state.connectionMode?.label === "REST";
+      context.workspaceState.update("dbFlux_CONN_MODE", isRest ? "REST" : "SQLNET");
+
+      if (isRest) {
+        const urlPrefix = state.restUrlPrefix.replace(/\/$/, "");
+        context.workspaceState.update("dbFlux_REST_WORKSPACE",      state.restWorkspace);
+        context.workspaceState.update("dbFlux_REST_APP_SCHEMA",     state.restAppSchema);
+        context.workspaceState.update("dbFlux_REST_SQL_URL",        `${urlPrefix}/${state.restWorkspace}/dbflow/deploy`);
+        context.workspaceState.update("dbFlux_REST_OAUTH_TOKEN_URL",`${urlPrefix}/oauth/token`);
+        context.workspaceState.update("dbFlux_REST_APP_ID_MAP",     state.restAppIdMap || "");
+        await context.secrets.store(getWorkspaceRootPath()+"|dbFlux_REST_OAUTH_BASIC_B64", state.restOauthBasicB64);
+
         context.workspaceState.update("dbFlux_PROJECT_MODE", "SINGLE");
         context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase());
-      } else if (state.projectType.label === "FlexSchema") {
-        context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
+        context.workspaceState.update("dbFlux_WORKSPACE", state.projectName.toLowerCase());
+      } else {
+        context.workspaceState.update("dbFlux_DB_TNS", state.dbConnection);
+        if (state.projectType.label === "SingleSchema") {
+          context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase());
+        } else {
+          context.workspaceState.update("dbFlux_DB_APP_USER", state.projectName.toLowerCase() + "_depl");
+        }
+
+        await context.secrets.store(getWorkspaceRootPath()+"|dbFlux_DB_APP_PWD", state.dbAppPwd);
+        context.workspaceState.update("dbFlux_DB_ADMIN_USER", state.dbAdminUser);
+
+        if (state.projectType.label === "MultiSchema") {
+          context.workspaceState.update("dbFlux_PROJECT_MODE", "MULTI");
+          context.workspaceState.update("dbFlux_DATA_SCHEMA", state.projectName.toLowerCase() + "_data");
+          context.workspaceState.update("dbFlux_LOGIC_SCHEMA", state.projectName.toLowerCase() + "_logic");
+          context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase() + "_app");
+        } else if (state.projectType.label === "SingleSchema") {
+          context.workspaceState.update("dbFlux_PROJECT_MODE", "SINGLE");
+          context.workspaceState.update("dbFlux_APP_SCHEMA", state.projectName.toLowerCase());
+        } else if (state.projectType.label === "FlexSchema") {
+          context.workspaceState.update("dbFlux_PROJECT_MODE", "FLEX");
+        }
+
+        context.workspaceState.update("dbFlux_WORKSPACE", state.projectName.toLowerCase());
+        context.workspaceState.update("dbFlux_APEX_USER", state.apexSchemaName?.toUpperCase() ?? "");
       }
-
-      context.workspaceState.update("dbFlux_WORKSPACE", state.projectName.toLowerCase());
-      context.workspaceState.update("dbFlux_APEX_USER", state.apexSchemaName.toUpperCase());
-
     }
-
   }
 
   writeConfigFiles(state);

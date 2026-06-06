@@ -13,6 +13,7 @@ export interface State {
   step:       number;
   totalSteps: number;
 
+  connMode:            string;           // SQLNET | REST
   projectName:         string;           // project_name
   projectType:         string;           // project_mode
 
@@ -35,6 +36,12 @@ export interface State {
   defaulsModules:      string;           // api,test
 
   logtopath:           string;           // log to path
+
+  restWorkspace:       string;           // REST_WORKSPACE
+  restAppSchema:       string;           // REST_APP_SCHEMA
+  restUrlPrefix:       string;           // base URL, shell derives REST_SQL_URL and REST_OAUTH_TOKEN_URL
+  restAppIdMap:        string;           // REST_APP_ID_MAP
+  restOauthBasicB64:   string;           // REST_OAUTH_BASIC_B64
 
 }
 
@@ -91,23 +98,29 @@ export class GenerateDBFlowProjectProvider extends AbstractBashTaskProvider impl
       GenerateDBFlowProjectProvider.dbFluxType,
       new ShellExecution(definition.runner.runFile, {
         env: {
-          "wiz_project_name":      definition.state.projectName,
-          "wiz_project_mode":      definition.state.projectType.charAt(0),
-          "wiz_build_branch":      definition.state.buildBranch,
-          "wiz_create_changelogs": definition.state.createChangelogs.charAt(0),
-          "wiz_chl_schema":        definition.state.changeLogSchema,
-          "wiz_db_tns":            definition.state.dbConnection,
-          "wiz_db_admin_user":     definition.state.dbAdminUser,
-          "wiz_db_admin_pwd":      definition.state.dbAdminPwd,
-          "wiz_db_app_user":       definition.state.dbAppUser,
-          "wiz_db_app_pwd":        definition.state.dbAppPwd,
-          "wiz_depot_path":        definition.state.depotPath,
-          "wiz_stage":             definition.state.stageBranch,
-          "wiz_sqlcli":            definition.state.sqlcli,
-          "wiz_with_tools":        definition.state.includeDefaultTools.charAt(0),
-          "wiz_apex_ids":          definition.state.defaultApps,
-          "wiz_rest_modules":      definition.state.defaulsModules,
-          "wiz_logpath":           definition.state.logtopath,
+          "wiz_conn_mode":             definition.state.connMode || "SQLNET",
+          "wiz_project_name":          definition.state.projectName,
+          "wiz_project_mode":          definition.state.projectType?.charAt(0) || "S",
+          "wiz_build_branch":          definition.state.buildBranch || "",
+          "wiz_create_changelogs":     definition.state.createChangelogs?.charAt(0) || "N",
+          "wiz_chl_schema":            definition.state.changeLogSchema || "",
+          "wiz_db_tns":                definition.state.dbConnection || "",
+          "wiz_db_admin_user":         definition.state.dbAdminUser || "",
+          "wiz_db_admin_pwd":          definition.state.dbAdminPwd || "",
+          "wiz_db_app_user":           definition.state.dbAppUser || "",
+          "wiz_db_app_pwd":            definition.state.dbAppPwd || "",
+          "wiz_depot_path":            definition.state.depotPath,
+          "wiz_stage":                 definition.state.stageBranch,
+          "wiz_sqlcli":                definition.state.sqlcli,
+          "wiz_with_tools":            definition.state.includeDefaultTools?.charAt(0) || "N",
+          "wiz_apex_ids":              definition.state.defaultApps || "",
+          "wiz_rest_modules":          definition.state.defaulsModules || "",
+          "wiz_logpath":               definition.state.logtopath,
+          "wiz_rest_workspace":        definition.state.restWorkspace || "",
+          "wiz_rest_app_schema":       definition.state.restAppSchema || "",
+          "wiz_rest_url_prefix":       definition.state.restUrlPrefix || "",
+          "wiz_rest_app_id_map":       definition.state.restAppIdMap || "",
+          "wiz_rest_oauth_basic_b64":  definition.state.restOauthBasicB64 || "",
           "env_only": "NO"
         },
       })
