@@ -247,7 +247,7 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
     }
   }
 
-  validateProjectInfos(projectInfos);
+  await validateProjectInfos(projectInfos);
 
   return projectInfos;
 }
@@ -271,6 +271,7 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
       projectInfos.projectName  = context.workspaceState.get("dbFlux_PROJECT");
       projectInfos.projectMode  = context.workspaceState.get("dbFlux_PROJECT_MODE");
       projectInfos.workspace    = context.workspaceState.get("dbFlux_WORKSPACE");
+      projectInfos.dbConnMode   = "SQLNET";
 
       // get all keys with pattern dbFlux_..._PWD and store them in array
       const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD"));
@@ -283,7 +284,7 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
 
   }
 
-  validateProjectInfos(projectInfos);
+  await validateProjectInfos(projectInfos);
 
   return projectInfos;
 }
