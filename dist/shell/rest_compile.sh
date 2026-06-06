@@ -22,6 +22,9 @@ REST_ERRORS_FOUND=0
 REST_ACCESS_TOKEN=""
 REST_ACCESS_TOKEN_EXPIRES_AT=0
 REST_TOKEN_EXPIRY_SAFETY_SECONDS=30
+REST_CONNECT_TIMEOUT="${DBFLOW_REST_CONNECT_TIMEOUT:-10}"
+REST_TOKEN_MAX_TIME="${DBFLOW_REST_TOKEN_MAX_TIME:-30}"
+REST_COMPILE_MAX_TIME="${DBFLOW_REST_COMPILE_MAX_TIME:-120}"
 
 function print_rest_success_message() {
   local color_off=""
@@ -193,8 +196,8 @@ function ensure_rest_access_token() {
 
   local token_response
   token_response=$(curl -sS \
-    --connect-timeout 10 \
-    --max-time 30 \
+    --connect-timeout "${REST_CONNECT_TIMEOUT}" \
+    --max-time "${REST_TOKEN_MAX_TIME}" \
     --header "Authorization: Basic ${DBFLOW_DBPASS}" \
     --data "grant_type=client_credentials" \
     "${REST_OAUTH_TOKEN_URL}")
@@ -304,8 +307,8 @@ function run_sql_file_rest() {
   local -a curl_args
   curl_args=(
     -sS
-    --connect-timeout 10
-    --max-time 120
+    --connect-timeout "${REST_CONNECT_TIMEOUT}"
+    --max-time "${REST_COMPILE_MAX_TIME}"
     -X POST
     --header "Content-Type:application/zip"
     --header "file_name:${sql_file}"

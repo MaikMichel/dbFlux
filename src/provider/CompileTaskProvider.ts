@@ -125,6 +125,9 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
           DBFLOW_REST_OAUTH_TOKEN_URL:      definition.runner.restOauthTokenUrl,
           DBFLOW_REST_APP_SCHEMA:           definition.runner.restAppSchema,
           DBFLOW_REST_WORKSPACE:            definition.runner.restWorkspace,
+          DBFLOW_REST_CONNECT_TIMEOUT:      String(ConfigurationManager.getRestCompileConnectTimeout()),
+          DBFLOW_REST_TOKEN_MAX_TIME:       String(ConfigurationManager.getRestCompileTokenMaxTime()),
+          DBFLOW_REST_COMPILE_MAX_TIME:     String(ConfigurationManager.getRestCompileCompileMaxTime()),
         },
       }),
       ["$dbflux-plsql"]

@@ -872,6 +872,24 @@
 						"markdownDescription": "Token/Mandant identification. (Displayed during installation of dbLock)",
 						"scope": "window"
 					},
+					"dbFlux.restCompile.connectTimeout": {
+						"type": "number",
+						"default": 10,
+						"description": "curl --connect-timeout (seconds) for REST compile requests (token fetch and compile POST).",
+						"scope": "window"
+					},
+					"dbFlux.restCompile.tokenMaxTime": {
+						"type": "number",
+						"default": 30,
+						"description": "curl --max-time (seconds) for the OAuth token fetch in REST compile mode.",
+						"scope": "window"
+					},
+					"dbFlux.restCompile.compileMaxTime": {
+						"type": "number",
+						"default": 120,
+						"description": "curl --max-time (seconds) for the SQL compile POST in REST compile mode.",
+						"scope": "window"
+					},
 					"dbFlux.test.Output.Format": {
 						"type": "string",
 						"default": "ANSI Console",

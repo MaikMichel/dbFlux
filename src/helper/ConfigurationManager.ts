@@ -90,6 +90,18 @@ export class ConfigurationManager {
     return this.get<string>("dbLock.RestAPIToken");
   }
 
+  static getRestCompileConnectTimeout(): number {
+    return this.get<number>("restCompile.connectTimeout");
+  }
+
+  static getRestCompileTokenMaxTime(): number {
+    return this.get<number>("restCompile.tokenMaxTime");
+  }
+
+  static getRestCompileCompileMaxTime(): number {
+    return this.get<number>("restCompile.compileMaxTime");
+  }
+
   static getTestOutputFormat(): string {
     return this.get<string>("test.Output.Format");
   }
