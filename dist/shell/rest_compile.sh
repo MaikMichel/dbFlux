@@ -346,9 +346,16 @@ function run_sql_file_rest() {
   # Print response only when it is not JSON or JSON.success != true
   if [[ "${curl_response}" =~ ^[[:space:]]*\{ ]]; then
     echo
-    local compact_response
-    compact_response=$(echo "${curl_response}" | tr -d '\r\n')
-    if [[ ! "${compact_response}" =~ \"success\"[[:space:]]*:[[:space:]]*true ]]; then
+    local is_success=false
+    if command -v jq >/dev/null 2>&1; then
+      jq -e '(.success // false) == true' >/dev/null 2>&1 <<< "${curl_response}" && is_success=true
+    else
+      local compact_response
+      compact_response=$(echo "${curl_response}" | tr -d '\r\n')
+      [[ "${compact_response}" =~ \"success\"[[:space:]]*:[[:space:]]*true ]] && is_success=true
+    fi
+
+    if [[ "${is_success}" != "true" ]]; then
       print_rest_response_as_problem_lines "${curl_response}"
       echo
     fi

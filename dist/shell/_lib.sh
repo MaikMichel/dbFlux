@@ -89,7 +89,7 @@ timelog () {
   esac
 
   LOGTIME=`date "+%Y-%m-%d %H:%M:%S"`
-  echo -e "${LWHITE}$LOGTIME${NC}: ${color}${text}${reset}";
+  echo -e "${WHITE}$LOGTIME${NC}: ${color}${text}${reset}";
 }
 
 function print_rest_status_message() {
