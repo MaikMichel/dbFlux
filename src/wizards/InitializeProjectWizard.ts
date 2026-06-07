@@ -751,12 +751,9 @@ export function writeUserCreationScript(index: number, schema: string, projectNa
 export async function enableFlexMode(context: ExtensionContext, projectInfos:IProjectInfos) {
   const mode = getDBFlowMode(context);
 
-  if (mode === "xcl") {
-    window.showErrorMessage('dbFlux: xcl does not support FlexMode, yet!');
-  } else {
-    window.showInformationMessage("Do you realy want to enable FlexMode? This is not revertable!", ... ["Yes", "No"])
-      .then(async (answer) => {
-        if (answer === "Yes") {
+  window.showInformationMessage("Do you realy want to enable FlexMode? This is not revertable!", ... ["Yes", "No"])
+    .then(async (answer) => {
+      if (answer === "Yes") {
           const wsName = projectInfos.workspace?projectInfos.workspace:projectInfos.projectName!;
           const wsRoot = getWorkspaceRootPath();
 
@@ -787,8 +784,6 @@ export async function enableFlexMode(context: ExtensionContext, projectInfos:IPr
           commands.executeCommand("dbFlux.reloadExtension");
         }
       });
-  }
-
 }
 
 export function getFilesForInstallSQL() {

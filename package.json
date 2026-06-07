@@ -32,7 +32,6 @@
 	],
 	"activationEvents": [
 		"workspaceContains:build.env",
-		"workspaceContains:xcl.yml",
 		"onStartupFinished",
 		""
 	],

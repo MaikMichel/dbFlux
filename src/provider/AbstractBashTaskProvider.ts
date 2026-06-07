@@ -166,15 +166,10 @@ export function getDBFlowMode(context: ExtensionContext):string | undefined {
   let retValue: string | undefined = undefined;
   if (workspace.workspaceFolders !== undefined) {
     const workspaceFolder = workspace.workspaceFolders[0].uri.fsPath;
-    const knownBuildFiles = ["xcl.yml", "build.env"];
-
-    for (const buildFileName of knownBuildFiles) {
-      const buildFile = path.join(workspaceFolder, buildFileName);
-      if (existsSync(buildFile)) {
-        retValue = buildFileName === "build.env" ? "dbFlow" : "xcl";
-        break;
-      }
-    };
+    const buildFile = path.join(workspaceFolder, "build.env");
+    if (existsSync(buildFile)) {
+      retValue = "dbFlow";
+    }
 
 
     if (retValue === undefined) {
@@ -185,9 +180,9 @@ export function getDBFlowMode(context: ExtensionContext):string | undefined {
   return retValue;
 }
 
-export function applyFileExists(pMode:string) {
+export function applyFileExists() {
   return workspace.workspaceFolders
-       && existsSync(path.join(workspace.workspaceFolders[0].uri.fsPath, pMode === "dbFlow"?"apply.env":".xcl/env.yml"));
+       && existsSync(path.join(workspace.workspaceFolders[0].uri.fsPath, "apply.env"));
 }
 
 

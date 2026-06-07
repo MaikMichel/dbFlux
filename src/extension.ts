@@ -77,8 +77,8 @@ export async function activate(context: ExtensionContext) {
   // Following makes only sense, when project is allready configured
   if (   workspace.workspaceFolders
       && dbFluxMode !== undefined
-      && ( (dbFluxMode === "dbFlux") || (["dbFlow", "xcl"].includes(dbFluxMode)
-      && applyFileExists(dbFluxMode)))) {
+      && ( (dbFluxMode === "dbFlux") || (dbFluxMode === "dbFlow"
+      && applyFileExists()))) {
 
 
 
@@ -143,8 +143,8 @@ export async function activate(context: ExtensionContext) {
 
 
     } else {
-      const applyFileName = join(workspace.workspaceFolders[0].uri.fsPath, dbFluxMode === "dbFlow"?"apply.env":".xcl/env.yml");
-      const buildFileName = join(workspace.workspaceFolders[0].uri.fsPath, dbFluxMode === "dbFlow"?"build.env":"xcl.yml");
+      const applyFileName = join(workspace.workspaceFolders[0].uri.fsPath, "apply.env");
+      const buildFileName = join(workspace.workspaceFolders[0].uri.fsPath, "build.env");
 
       myStatusBarItem.tooltip = `dbFlux: configuration found (${basename(buildFileName)}/${basename(applyFileName)})`;
 
