@@ -291,6 +291,11 @@
 				"category": "dbFlux"
 			},
 			{
+				"command": "dbFlux.showRESTCompileGuide",
+				"title": "Show REST Compile Installation Guide",
+				"category": "dbFlux"
+			},
+			{
 				"command": "dbFlux.setSchemaPassword",
 				"title": "Set Schema Password",
 				"category": "dbFlux",

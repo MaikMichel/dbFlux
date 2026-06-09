@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+    <html lang="en">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>{{title}}</title>
+      </head>
+      <body>
+        <h1>{{title}}</h1>
+        <p><strong>dbFlux</strong> has just created the REST project structure.</p>
+
+        {{#if installFile}}
+        <p>The REST compile install script has been downloaded to:</p>
+        <ul>
+          <li><a href='file:///{{{installFile}}}'>{{{installFile}}}</a></li>
+        </ul>
+        {{else}}
+        <p style="background-color: #f0ad4e; color: #000; padding: 8px;">
+          The install script could not be downloaded automatically (check your internet connection).<br/>
+          You can download it manually via the command <em>dbFlux: Show REST Compile Installation Guide</em>.
+        </p>
+        {{/if}}
+
+        <h2>Next Steps</h2>
+        <ol>
+          <li>Log in to your APEX Workspace, e.g. <em>https://&lt;your-host&gt;/ords/r/apex/workspace-sign-in</em></li>
+          <li>Navigate to <em>SQL Workshop &rarr; SQL Scripts &rarr; Upload</em></li>
+          <li>Upload the install script, name it <code>install-rest-compile</code>, and confirm</li>
+          <li>Run the script, then <strong>open the detail view</strong> of the run to see the output</li>
+          <li>The output contains <code>REST_SQL_URL</code>, <code>REST_OAUTH_TOKEN_URL</code>, and <code>REST_OAUTH_BASIC_B64</code></li>
+        </ol>
+
+        <p>The connection parameters you entered during initialization are already saved in your workspace settings.<br/>
+        Use <em>dbFlux: Show REST Compile Installation Guide</em> at any time to revisit these instructions.</p>
+
+        <h2>Have fun developing with <em>dbFlux</em>.</h2>
+        <p>You can find more documentation on github at: <a href="https://github.com/MaikMichel/dbFlux">https://github.com/MaikMichel/dbFlux</a></p>
+        <script language="javascript">
+          const vscode = acquireVsCodeApi();
+
+          for (const link of document.querySelectorAll('a[href^="file:"]')) {
+              link.addEventListener('click', () => {
+                  vscode.postMessage({
+                      command: "open",
+                      link: link.getAttribute('href'),
+                  });
+              });
+          }
+        </script>
+      </body>
+    </html>

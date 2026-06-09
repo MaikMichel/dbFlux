@@ -32,6 +32,7 @@ import { getWorkspaceRootPath, showInformationProgress } from "./helper/utilitie
 import { registerExportCurrentPluginFileCommand, registerExportPluginFilesCommand } from "./provider/ExportPluginFilesProvider";
 import { registerSetSchemaPassword } from "./provider/SetSchemaPassword";
 import { existsSync } from "fs";
+import { registerShowRESTCompileGuide } from "./provider/RESTCompileGuideProvider";
 
 
 
@@ -70,6 +71,9 @@ export async function activate(context: ExtensionContext) {
   context.subscriptions.push(registerWrapLogSelection());
   context.subscriptions.push(registerWrapLogSelectionDown());
   context.subscriptions.push(registerWrapLogSelectionUp());
+
+  // REST Compile Installation Guide (global — no project required)
+  context.subscriptions.push(registerShowRESTCompileGuide('dbFlux.showRESTCompileGuide'));
 
   LoggingService.logDebug('Determining Mode');
   const dbFluxMode = getDBFlowMode(context);

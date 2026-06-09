@@ -13,6 +13,7 @@ import * as os from "os";
 import * as Handlebars from "handlebars";
 import { getDBFlowMode, IProjectInfos } from '../provider/AbstractBashTaskProvider';
 import { existsSync, mkdirSync, readdirSync, renameSync } from 'fs';
+import { downloadFile, INSTALL_SCRIPT_URL } from '../provider/RESTCompileGuideProvider';
 import { CompileTaskStore } from '../stores/CompileTaskStore';
 import { MultiStepInput } from './InputFlowAction';
 import { ConfigurationManager } from '../helper/ConfigurationManager';
@@ -165,6 +166,7 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     dbAdminUser: string;
     dbAppPwd: string;
 
+    restPrerequisiteConfirmed?: boolean;
     restWorkspace: string;
     restAppSchema: string;
     restUrlPrefix: string;
@@ -226,7 +228,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     });
 
     if (state.connectionMode.label === "REST") {
-      return (input: MultiStepInput) => inputRestWorkspace(input, state);
+      commands.executeCommand('dbFlux.showRESTCompileGuide');
+      return (input: MultiStepInput) => confirmRESTPrerequisite(input, state);
     }
     return (input: MultiStepInput) => pickProjectType(input, state);
   }
@@ -295,11 +298,33 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
   // REST-specific steps
 
+  async function confirmRESTPrerequisite(input: MultiStepInput, state: Partial<State>) {
+    const answers = [
+      { label: "Yes – I have my credentials ready" },
+      { label: "No – I need to install the endpoint first" }
+    ];
+    const choice = await input.showQuickPick({
+      title,
+      step: 3,
+      totalSteps: 8,
+      placeholder: 'Have you already installed the REST endpoint in your APEX workspace?',
+      items: answers,
+      activeItem: answers[0],
+      shouldResume: shouldResume,
+      canSelectMany: false
+    });
+    if (choice.label.startsWith("Yes")) {
+      state.restPrerequisiteConfirmed = true;
+      return (input: MultiStepInput) => inputRestWorkspace(input, state);
+    }
+    // "No" → return undefined → MultiStepInput chain ends
+  }
+
   async function inputRestWorkspace(input: MultiStepInput, state: Partial<State>) {
     state.restWorkspace = await input.showInputBox({
       title,
-      step: 3,
-      totalSteps: 7,
+      step: 4,
+      totalSteps: 8,
       value: state.restWorkspace || state.projectName || '',
       prompt: 'Enter REST target workspace',
       validate: validateValueIsRequiered,
@@ -311,8 +336,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   async function inputRestAppSchema(input: MultiStepInput, state: Partial<State>) {
     state.restAppSchema = await input.showInputBox({
       title,
-      step: 4,
-      totalSteps: 7,
+      step: 5,
+      totalSteps: 8,
       value: state.restAppSchema || state.projectName || '',
       prompt: 'Enter REST target app schema',
       validate: validateValueIsRequiered,
@@ -324,8 +349,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   async function inputRestUrlPrefix(input: MultiStepInput, state: Partial<State>) {
     state.restUrlPrefix = await input.showInputBox({
       title,
-      step: 5,
-      totalSteps: 7,
+      step: 6,
+      totalSteps: 8,
       value: state.restUrlPrefix || '',
       prompt: 'Enter REST URL prefix (e.g. https://oracleapex.com/ords)',
       validate: validateValueIsRequiered,
@@ -337,8 +362,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   async function inputRestAppIdMap(input: MultiStepInput, state: Partial<State>) {
     state.restAppIdMap = await input.showInputBox({
       title,
-      step: 6,
-      totalSteps: 7,
+      step: 7,
+      totalSteps: 8,
       value: state.restAppIdMap || '',
       prompt: 'Enter REST app ID mapping source:target [,source:target] (optional)',
       validate: validateValueNotRequiered,
@@ -350,8 +375,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   async function inputRestOauthBasicB64(input: MultiStepInput, state: Partial<State>) {
     state.restOauthBasicB64 = await input.showInputBox({
       title,
-      step: 7,
-      totalSteps: 7,
+      step: 8,
+      totalSteps: 8,
       value: state.restOauthBasicB64 || '',
       prompt: 'Enter REST OAuth Basic B64 value (base64-encoded client_id:client_secret)',
       validate: validateValueIsRequiered,
@@ -414,6 +439,12 @@ export async function initializeProjectWizard(context: ExtensionContext) {
 
   const state = await collectInputs();
 
+  if (state.connectionMode?.label === "REST" && !state.restPrerequisiteConfirmed) {
+    window.showInformationMessage(
+      "Re-run 'Initialize Project structure' once you have the credentials from the REST endpoint installation."
+    );
+    return;
+  }
 
   function createFolders(state: State) {
     if (workspace.workspaceFolders) {
@@ -435,10 +466,9 @@ export async function initializeProjectWizard(context: ExtensionContext) {
             pre: "",
             post: ""
           },
-          ["_setup"]: {
-            users: "",
-            workspaces: ""
-          },
+          ["_setup"]: state.connectionMode?.label === "REST"
+            ? { "rest-compile": "" }
+            : { users: "", workspaces: "" },
           [dataSchema] : schemaDef,
           [logicSchema] : schemaDef,
           [appSchema] : schemaDef,
@@ -492,6 +522,20 @@ export async function initializeProjectWizard(context: ExtensionContext) {
       return;
     }
     if (state.connectionMode?.label === "REST") {
+      if (workspace.workspaceFolders) {
+        const destPath = path.join(
+          workspace.workspaceFolders[0].uri.fsPath,
+          "db", "_setup", "rest-compile", "install.sql"
+        );
+        try {
+          await downloadFile(INSTALL_SCRIPT_URL, destPath);
+          const relPath = path.join("db", "_setup", "rest-compile", "install.sql");
+          (fcontent.files as string[]).push(relPath);
+          fcontent.installFile = relPath;
+        } catch {
+          // download failed (e.g. offline) — user can download manually via the guide
+        }
+      }
       return;
     }
     if (workspace.workspaceFolders) {
@@ -547,7 +591,13 @@ export async function initializeProjectWizard(context: ExtensionContext) {
   }
 
   function getWebviewContent(content:any, state: State) {
-    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", state.projectType.label==="FlexSchema" ? "welcomeFlex.tmpl.html": "welcome.tmpl.html").split(path.sep).join('/'), "utf8"));
+    let templateName = "welcome.tmpl.html";
+    if (state.connectionMode?.label === "REST") {
+      templateName = "welcomeRest.tmpl.html";
+    } else if (state.projectType.label === "FlexSchema") {
+      templateName = "welcomeFlex.tmpl.html";
+    }
+    const template = Handlebars.compile(fs.readFileSync(path.resolve(__dirname, "..", "..", "dist", "templates", templateName).split(path.sep).join('/'), "utf8"));
     return template(content);
   }
 
@@ -630,8 +680,8 @@ export async function initializeProjectWizard(context: ExtensionContext) {
     }
   }
 
-  writeConfigFiles(state);
-  writeUserScritps(state);
+  await writeConfigFiles(state);
+  await writeUserScritps(state);
   openWebView(state);
   commands.executeCommand("dbFlux.reloadExtension");
 

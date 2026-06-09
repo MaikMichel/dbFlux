@@ -1,5 +1,5 @@
 
-import { workspace } from "vscode";
+import { commands, workspace } from "vscode";
 import { getWorkspaceRootPath } from "../helper/utilities";
 import { State } from "../provider/GenerateDBFlowProjectProvider";
 import { getAvailableProjectTypes } from "./InitializeProjectWizard";
@@ -75,6 +75,7 @@ export async function initializeDBFlowProjectWizard() : Promise<State> {
 
     if (state.connMode === "REST") {
       state.totalSteps = 11;
+      commands.executeCommand('dbFlux.showRESTCompileGuide');
       return (input: MultiStepInput) => inputRestWorkspace(input, state);
     }
     return (input: MultiStepInput) => pickProjectType(input, state);
