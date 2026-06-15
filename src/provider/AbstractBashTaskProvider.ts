@@ -100,6 +100,20 @@ export abstract class AbstractBashTaskProvider {
 
 
 
+  // env block needed by every script that talks to the REST endpoint
+  getRestEnv(runnerInfo: IBashInfos): { [key: string]: string } {
+    return {
+      DBFLOW_REST_SQL_URL:          runnerInfo.projectInfos.restSqlUrl ?? "",
+      DBFLOW_REST_OAUTH_TOKEN_URL:  runnerInfo.projectInfos.restOauthTokenUrl ?? "",
+      DBFLOW_REST_APP_SCHEMA:       runnerInfo.projectInfos.restAppSchema ?? "",
+      DBFLOW_REST_WORKSPACE:        runnerInfo.projectInfos.restWorkspace ?? "",
+      DBFLOW_REST_CONNECT_TIMEOUT:  String(ConfigurationManager.getRestCompileConnectTimeout()),
+      DBFLOW_REST_TOKEN_MAX_TIME:   String(ConfigurationManager.getRestCompileTokenMaxTime()),
+      DBFLOW_REST_COMPILE_MAX_TIME: String(ConfigurationManager.getRestCompileCompileMaxTime()),
+      DBFLOW_REST_EXPORT_MAX_TIME:  String(ConfigurationManager.getRestCompileExportMaxTime()),
+    };
+  }
+
    async setInitialCompileInfo(execFileName:string, fileUri: Uri, runnerInfo:IBashInfos):Promise<void> {
     const projectInfos: IProjectInfos = await getProjectInfos(this.context);
     const activeFile = fileUri.fsPath.split(path.sep).join(path.posix.sep);

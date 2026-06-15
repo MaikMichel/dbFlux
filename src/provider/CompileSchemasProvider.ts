@@ -72,7 +72,8 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
           DBFLOW_SQL_WARNING_STRING:  definition.runner.sqlWarningString?definition.runner.sqlWarningString:"NIX",
           DBFLOW_SQL_WARNING_EXCLUDE: definition.runner.sqlWarningExcList?definition.runner.sqlWarningExcList:"-1",
           DBFLOW_SQL_COMPILE_OPTION: definition.runner.sqlCompileOption==="Invalid"?"false":"true",
-          DBFLOW_DB_FOLDER: ConfigurationManager.getDBFolderName()
+          DBFLOW_DB_FOLDER: ConfigurationManager.getDBFolderName(),
+          ...this.getRestEnv(definition.runner)
         }
       }),
       ["$dbflux-plsql-all"]
@@ -91,8 +92,8 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
       const apexUri:vscode.Uri = vscode.Uri.file(path.join(fileUri.fsPath, 'apex/f0000/install.sql'));
 
       if (apexUri !== undefined) {
-        await this.setInitialCompileInfo("compile.sh", apexUri, runner);
         const projectInfos = await getProjectInfos(this.context);
+        await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_compile_schema.sh" : "compile.sh", apexUri, runner);
         if (CompileTaskStore.getInstance().selectedSchemas) {
           runner.connectionArray = CompileTaskStore.getInstance().selectedSchemas!.map((element) =>{
             return '"' + this.buildConnectionUser(projectInfos, element) + '"';

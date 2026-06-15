@@ -3,7 +3,8 @@ import * as path from "path";
 
 import { getAllFoldersButNotTheLastFolder, getLastFolderFromFolderPath } from "../helper/utilities";
 import { ExportTaskStore } from "../stores/ExportTaskStore";
-import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
@@ -81,7 +82,8 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
           DBFLOW_APPID:     appID.length>0?appID:appFolder==="*"?"*":"NULL",
           DBFLOW_APPFOLDER: folder?folder:"NULL",
           DBFLOW_MODE:      definition.runner.projectInfos.projectMode+"",
-          DBFLOW_EXPORT_OPTION: ConfigurationManager.getAppExportOptions() + ""
+          DBFLOW_EXPORT_OPTION: ConfigurationManager.getAppExportOptions() + "",
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -102,7 +104,8 @@ export class ExportTaskProvider extends AbstractBashTaskProvider implements Task
       runner.appID = appFolder;
 
       if (apexUri !== undefined) {
-        await this.setInitialCompileInfo("export_app.sh", apexUri, runner);
+        const projectInfos = await getProjectInfos(this.context);
+        await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_export_app.sh" : "export_app.sh", apexUri, runner);
       }
     }
 
@@ -163,7 +166,8 @@ export class ExportTaskPluginProvider extends AbstractBashTaskProvider implement
           DBFLOW_PLGFOLDER: plugFolder,
           DBFLOW_PLGID:     plugID,
           DBFLOW_MODE:      definition.runner.projectInfos.projectMode+"",
-          DBFLOW_EXPORT_OPTION: ConfigurationManager.getAppExportOptions() + ""
+          DBFLOW_EXPORT_OPTION: ConfigurationManager.getAppExportOptions() + "",
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -183,7 +187,8 @@ export class ExportTaskPluginProvider extends AbstractBashTaskProvider implement
       runner.pluginID = pluginFolder;
 
       if (apexUri !== undefined) {
-        await this.setInitialCompileInfo("export_plug.sh", apexUri, runner);
+        const projectInfos = await getProjectInfos(this.context);
+        await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_export_plug.sh" : "export_plug.sh", apexUri, runner);
       }
     }
 
@@ -199,7 +204,12 @@ export function registerExportAPEXCommand(projectInfos: IProjectInfos, context: 
 
     if (projectInfos.isValid) {
 
-      which('sql').then(async () => {
+      if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export APEX Application"))) {
+        return;
+      }
+
+      const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST" ? Promise.resolve() : which('sql');
+      cliCheck.then(async () => {
         const hasDbPasses = projectInfos.dbPasses && Object.keys(projectInfos.dbPasses).length > 0;
         const showWildCard = (!projectInfos.isFlexMode || !(hasDbPasses));
 
@@ -227,7 +237,12 @@ export function registerExportAPEXPluginCommand(projectInfos: IProjectInfos, con
 
     if (projectInfos.isValid) {
 
-      which('sql').then(async () => {
+      if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export APEX Plugin"))) {
+        return;
+      }
+
+      const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST" ? Promise.resolve() : which('sql');
+      cliCheck.then(async () => {
         try {
 
           ExportTaskStore.getInstance().expPlugin = await ExportTaskStore.getInstance().getAppPlugID(projectInfos, false);

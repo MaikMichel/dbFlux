@@ -894,6 +894,12 @@
 						"description": "curl --max-time (seconds) for the SQL compile POST in REST compile mode.",
 						"scope": "window"
 					},
+					"dbFlux.restCompile.exportMaxTime": {
+						"type": "number",
+						"default": 600,
+						"description": "curl --max-time (seconds) for export downloads (APEX app, static files, schema DDL, REST modules) in REST compile mode.",
+						"scope": "window"
+					},
 					"dbFlux.test.Output.Format": {
 						"type": "string",
 						"default": "ANSI Console",

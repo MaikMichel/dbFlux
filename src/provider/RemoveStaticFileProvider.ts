@@ -1,7 +1,8 @@
 
 import * as path from "path";
 
-import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
@@ -71,7 +72,8 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
           DBFLOW_EXP_PATH:    definition.runner.exportAppPath!,
           DBFLOW_EXP_FNAME:   definition.runner.exportFileName!,
           DBFLOW_EXP_FEXT:    definition.runner.exportFileExt!,
-          DBFLOW_COLOR_ON:    definition.runner.coloredOutput
+          DBFLOW_COLOR_ON:    definition.runner.coloredOutput,
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -105,7 +107,8 @@ export class RemoveStaticFileProvider extends AbstractBashTaskProvider implement
           runner.exportAppID    = runner.exportAppPath.replace("/src", "").split("/").pop()?.replace("f", "");
 
         }
-        await this.setInitialCompileInfo("remove_static_file.sh", connectionUri!, runner);
+        const projectInfos = await getProjectInfos(this.context);
+        await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_remove_static_file.sh" : "remove_static_file.sh", connectionUri!, runner);
 
       }
 
@@ -135,7 +138,15 @@ export function registerRemoveCurrentStaticFileCommand(projectInfos: IProjectInf
 
         if (CompileTaskStore.getInstance().appPwd !== undefined) {
 
-          which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+          if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Remove Static File"))) {
+            return;
+          }
+
+          const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
+            ? Promise.resolve()
+            : which(ConfigurationManager.getCliToUseForCompilation());
+
+          cliCheck.then(async () => {
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new RemoveStaticFileProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: removeCurrentStaticFile");
           }).catch(() => {

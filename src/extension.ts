@@ -7,9 +7,10 @@ import { registerExportAPEXCommand, registerExportAPEXPluginCommand } from "./pr
 import { registerExportRESTCommand } from "./provider/RestTaskProvider";
 import { applyFileExists, getDBFlowMode, getProjectInfos} from "./provider/AbstractBashTaskProvider";
 import { openCoverageResult, openTestResult, registerExecuteTestPackageCommand, registerExecuteTestPackageCommandWithCodeCoverage, registerExecuteTestsTaskCommand } from "./provider/TestTaskProvider";
-import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig, showDBFluxConfig } from "./helper/ConfigurationManager";
+import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig } from "./helper/ConfigurationManager";
+import { DBFluxConfigPanel } from "./ui/DBFluxConfigPanel";
 import { LoggingService } from './helper/LoggingService';
-import { initializeProjectWizard, registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
+import { registerEnableFlexModeCommand, registerResetPasswordCommand } from './wizards/InitializeProjectWizard';
 import { callSnippet, createObjectWizard, createTableDDL } from './wizards/CreateObjectWizard';
 import { registerAddApplicationCommand, registerAddApplicationPluginCommand, registerAddCustomtriggerRunCommand, registerAddHookFileCommand, registerAddReportTypeFolderCommand, registerAddRESTModuleCommand, registerAddSchemaCommand, registerAddStaticApplicationFolderCommand, registerAddWorkspaceCommand, registerCopySelectionWithFilenameToClipBoard, registerJoinFromFilesCommand, registerOpenSpecOrBody, registerReverseBuildFromFilesCommand, registerSplitToFilesCommand } from "./provider/AddFolderCommands";
 import { registerWrapLogSelection, registerWrapLogSelectionDown, registerWrapLogSelectionUp } from "./provider/WrapLogProvider";
@@ -53,7 +54,7 @@ export async function activate(context: ExtensionContext) {
 
 
   LoggingService.logDebug('Register global Commands');
-  context.subscriptions.push(commands.registerCommand('dbFlux.initializeProject', async () =>  initializeProjectWizard(context)));
+  context.subscriptions.push(commands.registerCommand('dbFlux.initializeProject', () => DBFluxConfigPanel.createOrShow(context)));
   context.subscriptions.push(registerCreateDBFlowProject("dbFlux.initialize.dbFlow.Project", context));
   context.subscriptions.push(commands.registerCommand("dbFlux.reloadExtension", async () => {
     deactivate();
@@ -135,7 +136,7 @@ export async function activate(context: ExtensionContext) {
       myStatusBarItem.tooltip = `dbFlux: configuration found in workspaceState`;
 
       // Commands to view and remove dbFlux - Config
-      context.subscriptions.push(commands.registerCommand('dbFlux.showConfig', () => showDBFluxConfig(context)));
+      context.subscriptions.push(commands.registerCommand('dbFlux.showConfig', () => DBFluxConfigPanel.createOrShow(context)));
       context.subscriptions.push(commands.registerCommand('dbFlux.removeConfiguration', () => removeDBFluxConfig(context)));
 
       // this for migration of old Storage of PWD

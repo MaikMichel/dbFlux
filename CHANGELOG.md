@@ -1,5 +1,17 @@
 # Change Log
 
+## [Unreleased]
+- New: REST connection mode (CONN_MODE=REST) now supports almost all features of the SQLNET mode (requires rest_compile package v1.1.0+ on the server, re-run the install script to upgrade):
+  - Compile Schemas (invalid/all objects)
+  - Export APEX Application and APEX Plugin
+  - Export Static Files and Plugin Files (all or current)
+  - Remove current Static File
+  - Export DB Schema and DB Object (dbms_metadata)
+  - Export REST Modules
+- New: Setting `dbFlux.restCompile.exportMaxTime` (curl --max-time for export downloads, default 600s)
+- Chg: dbFlux checks the server side rest_compile version (api_level) and offers the install guide when an upgrade is needed
+- Not supported in REST mode (by design): utPLSQL tests, dbLock, Run SQLcl/SQLplus terminal
+
 ## [5.7.0 - 2025-02-19]
 - New: Command to Set Schema Password to have a dedicated user/pass per schema
 - New: Command "Add Custom Trigger Run" so you don't have to do it manually

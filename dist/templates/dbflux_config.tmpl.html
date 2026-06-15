@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dbFlux Configuration</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: var(--vscode-font-family);
+      font-size: var(--vscode-font-size);
+      color: var(--vscode-foreground);
+      background: var(--vscode-editor-background);
+      padding: 24px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 1.4em; margin-bottom: 24px; }
+    h2 {
+      font-size: 1em;
+      margin-top: 28px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--vscode-panel-border, #444);
+      padding-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--vscode-descriptionForeground);
+    }
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    label {
+      min-width: 190px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    input[type="text"],
+    input[type="password"],
+    select {
+      flex: 1;
+      background: var(--vscode-input-background);
+      color: var(--vscode-input-foreground);
+      border: 1px solid var(--vscode-input-border, transparent);
+      padding: 4px 8px;
+      font-family: var(--vscode-font-family);
+      font-size: var(--vscode-font-size);
+      outline: none;
+      min-width: 0;
+    }
+    input:focus, select:focus {
+      border-color: var(--vscode-focusBorder);
+      outline: 1px solid var(--vscode-focusBorder);
+      outline-offset: -1px;
+    }
+    .hint {
+      font-size: 0.85em;
+      color: var(--vscode-descriptionForeground);
+      margin-left: 200px;
+      margin-top: -6px;
+      margin-bottom: 10px;
+    }
+    .actions {
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: 200px;
+    }
+    button {
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      border: none;
+      padding: 6px 16px;
+      cursor: pointer;
+      font-family: var(--vscode-font-family);
+      font-size: var(--vscode-font-size);
+    }
+    button:hover { background: var(--vscode-button-hoverBackground); }
+    button.secondary {
+      background: var(--vscode-button-secondaryBackground, #3a3d41);
+      color: var(--vscode-button-secondaryForeground, #cccccc);
+    }
+    button.secondary:hover {
+      background: var(--vscode-button-secondaryHoverBackground, #45494e);
+    }
+    #test-result {
+      font-style: italic;
+      color: var(--vscode-descriptionForeground);
+      font-size: 0.9em;
+    }
+    .optional-tag {
+      font-style: italic;
+      font-size: 0.85em;
+      color: var(--vscode-descriptionForeground);
+    }
+  </style>
+</head>
+<body>
+  <h1>dbFlux Configuration</h1>
+
+  <!-- ── Connection Mode ── -->
+  <div class="form-row">
+    <label for="connMode">Connection Mode</label>
+    <select id="connMode" onchange="onConnModeChange()">
+      <option value="SQLNET" {{#unless connModeIsRest}}selected{{/unless}}>SQLNET</option>
+      <option value="REST" {{#if connModeIsRest}}selected{{/if}}>REST</option>
+    </select>
+  </div>
+
+  <!-- ── Project Name ── -->
+  <div class="form-row">
+    <label for="projectName">Project Name</label>
+    <input type="text" id="projectName" value="{{projectName}}" placeholder="myproject">
+  </div>
+
+  <!-- ════════════════════════════════════
+       SQLNET Section
+       ════════════════════════════════════ -->
+  <div id="section-sqlnet" {{#if connModeIsRest}}style="display:none"{{/if}}>
+
+    <h2>Database Connection</h2>
+
+    <div class="form-row">
+      <label for="dbTns">DB Connection</label>
+      <input type="text" id="dbTns" value="{{dbTns}}" placeholder="localhost:1521/XEPDB1">
+    </div>
+    <div class="form-row">
+      <label for="dbAppUser">App User</label>
+      <input type="text" id="dbAppUser" value="{{dbAppUser}}" placeholder="myproject_depl">
+    </div>
+    <div class="form-row">
+      <label for="dbAppPwd">App Password</label>
+      <input type="password" id="dbAppPwd" value="{{dbAppPwd}}" placeholder="leave empty to keep current">
+    </div>
+    <div class="form-row">
+      <label for="dbAdminUser">Admin User</label>
+      <input type="text" id="dbAdminUser" value="{{dbAdminUser}}" placeholder="sys">
+    </div>
+
+    <h2>Project Layout</h2>
+
+    <div class="form-row">
+      <label for="projectMode">Project Mode</label>
+      <select id="projectMode" onchange="onProjectModeChange()">
+        <option value="SINGLE" {{#if projectModeIsSingle}}selected{{/if}}>SingleSchema</option>
+        <option value="MULTI"  {{#if projectModeIsMulti}}selected{{/if}}>MultiSchema</option>
+        <option value="FLEX"   {{#if projectModeIsFlex}}selected{{/if}}>FlexSchema</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label for="workspace">APEX Workspace</label>
+      <input type="text" id="workspace" value="{{workspace}}" placeholder="MYWORKSPACE">
+    </div>
+
+    <!-- App schema — hidden in FLEX mode -->
+    <div id="row-app-schema" class="form-row" {{#if projectModeIsFlex}}style="display:none"{{/if}}>
+      <label for="appSchema">App Schema</label>
+      <input type="text" id="appSchema" value="{{appSchema}}">
+    </div>
+
+    <!-- MULTI-only schema fields -->
+    <div id="section-multi-schemas" {{#unless projectModeIsMulti}}style="display:none"{{/unless}}>
+      <div class="form-row">
+        <label for="dataSchema">Data Schema</label>
+        <input type="text" id="dataSchema" value="{{dataSchema}}">
+      </div>
+      <div class="form-row">
+        <label for="logicSchema">Logic Schema</label>
+        <input type="text" id="logicSchema" value="{{logicSchema}}">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════
+       REST Section
+       ════════════════════════════════════ -->
+  <div id="section-rest" {{#unless connModeIsRest}}style="display:none"{{/unless}}>
+
+    <h2>REST Endpoint</h2>
+
+    <div class="form-row">
+      <label for="restSqlUrl">REST SQL URL</label>
+      <input type="text" id="restSqlUrl" value="{{restSqlUrl}}"
+             placeholder="https://host/ords/WORKSPACE/dbflow/deploy">
+    </div>
+    <div class="form-row">
+      <label for="restOauthTokenUrl">OAuth Token URL</label>
+      <input type="text" id="restOauthTokenUrl" value="{{restOauthTokenUrl}}"
+             placeholder="https://host/ords/oauth/token">
+    </div>
+    <div class="form-row">
+      <label for="restWorkspace">Workspace</label>
+      <input type="text" id="restWorkspace" value="{{restWorkspace}}" placeholder="MYWORKSPACE">
+    </div>
+    <div class="form-row">
+      <label for="restAppSchema">App Schema</label>
+      <input type="text" id="restAppSchema" value="{{restAppSchema}}" placeholder="MYSCHEMA">
+    </div>
+    <div class="form-row">
+      <label for="restOauthBasicB64">OAuth Basic B64</label>
+      <input type="password" id="restOauthBasicB64" value="{{restOauthBasicB64}}"
+             placeholder="leave empty to keep current">
+    </div>
+    <div class="form-row">
+      <label for="restAppIdMap">App ID Map <span class="optional-tag">(optional)</span></label>
+      <input type="text" id="restAppIdMap" value="{{restAppIdMap}}"
+             placeholder="100:MYAPP,200:OTHERAPP">
+    </div>
+    <div class="hint">Format: APEX_APP_ID:REST_MODULE_NAME, comma-separated for multiple apps</div>
+
+  </div>
+
+  <!-- ── Actions ── -->
+  <div class="actions">
+    <button onclick="save()">Save Configuration</button>
+    <button class="secondary" id="btn-test" onclick="testConnection()"
+            {{#unless connModeIsRest}}style="display:none"{{/unless}}>Test Connection</button>
+    <span id="test-result"></span>
+  </div>
+
+  <script>
+    const vscode = acquireVsCodeApi();
+
+    function onConnModeChange() {
+      const mode = document.getElementById('connMode').value;
+      document.getElementById('section-sqlnet').style.display = mode === 'SQLNET' ? '' : 'none';
+      document.getElementById('section-rest').style.display   = mode === 'REST'   ? '' : 'none';
+      document.getElementById('btn-test').style.display       = mode === 'REST'   ? '' : 'none';
+    }
+
+    function onProjectModeChange() {
+      const mode = document.getElementById('projectMode').value;
+      document.getElementById('section-multi-schemas').style.display = mode === 'MULTI' ? '' : 'none';
+      document.getElementById('row-app-schema').style.display        = mode === 'FLEX'  ? 'none' : '';
+    }
+
+    function save() {
+      const mode = document.getElementById('connMode').value;
+      const msg = {
+        command: 'save',
+        connMode: mode,
+        projectName: document.getElementById('projectName').value,
+      };
+
+      if (mode === 'REST') {
+        Object.assign(msg, {
+          restSqlUrl:        document.getElementById('restSqlUrl').value,
+          restOauthTokenUrl: document.getElementById('restOauthTokenUrl').value,
+          restWorkspace:     document.getElementById('restWorkspace').value,
+          restAppSchema:     document.getElementById('restAppSchema').value,
+          restOauthBasicB64: document.getElementById('restOauthBasicB64').value,
+          restAppIdMap:      document.getElementById('restAppIdMap').value,
+        });
+      } else {
+        const projectMode = document.getElementById('projectMode').value;
+        Object.assign(msg, {
+          projectMode: projectMode,
+          dbTns:       document.getElementById('dbTns').value,
+          dbAppUser:   document.getElementById('dbAppUser').value,
+          dbAppPwd:    document.getElementById('dbAppPwd').value,
+          dbAdminUser: document.getElementById('dbAdminUser').value,
+          workspace:   document.getElementById('workspace').value,
+          appSchema:   projectMode !== 'FLEX' ? document.getElementById('appSchema').value : '',
+          dataSchema:  projectMode === 'MULTI' ? document.getElementById('dataSchema').value : '',
+          logicSchema: projectMode === 'MULTI' ? document.getElementById('logicSchema').value : '',
+        });
+      }
+
+      vscode.postMessage(msg);
+    }
+
+    function testConnection() {
+      document.getElementById('test-result').textContent = 'Testing…';
+      vscode.postMessage({
+        command:           'testConnection',
+        restSqlUrl:        document.getElementById('restSqlUrl').value,
+        restOauthTokenUrl: document.getElementById('restOauthTokenUrl').value,
+        restOauthBasicB64: document.getElementById('restOauthBasicB64').value,
+      });
+    }
+
+    window.addEventListener('message', function(event) {
+      if (event.data.type === 'connectionResult') {
+        const el = document.getElementById('test-result');
+        el.textContent = event.data.message;
+        el.style.color = event.data.success
+          ? 'var(--vscode-terminal-ansiGreen, #4ec9b0)'
+          : 'var(--vscode-errorForeground, #f48771)';
+        if (event.data.success) {
+          setTimeout(function() { el.textContent = ''; el.style.color = ''; }, 8000);
+        }
+      }
+    });
+
+    // Sync initial visibility with rendered state
+    onProjectModeChange();
+  </script>
+</body>
+</html>

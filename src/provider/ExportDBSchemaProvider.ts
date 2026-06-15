@@ -1,7 +1,8 @@
 
 import * as path from "path";
 
-import { AbstractBashTaskProvider, getDBFlowMode, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, getDBFlowMode, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ExportDBSchemaStore } from "../stores/ExportDBSchemaStore";
@@ -72,7 +73,8 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
           DBFLOW_DBPASS:     definition.runner.connectionPass,
           DBFLOW_SCHEMA:     definition.runner.schemaName!,
           DBFLOW_SCHEMA_NEW: definition.runner.schemaNameNew!,
-          DBFLOW_EXP_GRANTS_W_OBJ:  ConfigurationManager.getGrantsOfViewsAndSourcesAtObject()
+          DBFLOW_EXP_GRANTS_W_OBJ:  ConfigurationManager.getGrantsOfViewsAndSourcesAtObject(),
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -93,7 +95,8 @@ export class ExportDBSchemaProvider extends AbstractBashTaskProvider implements 
 
       // if (schemaName !== undefined) {
         CompileTaskStore.getInstance().selectedSchemas = [schemaName];
-        await this.setInitialCompileInfo("export_schema.sh", connectionUri, runner);
+        const projectInfos = await getProjectInfos(this.context);
+        await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_export_schema.sh" : "export_schema.sh", connectionUri, runner);
       // }
     } else {
       throw new Error("Missing required workspace folders or schema name");
@@ -112,7 +115,15 @@ export function registerExportDBSchemaCommand(projectInfos: IProjectInfos, conte
       setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+        if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Schema"))) {
+          return;
+        }
+
+        const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
+          ? Promise.resolve()
+          : which(ConfigurationManager.getCliToUseForCompilation());
+
+        cliCheck.then(async () => {
           const state:ExportSchemaWizardState = await exportSchemaWizard();
 
           ExportDBSchemaStore.getInstance().schemaName = state.schemaName.label;
@@ -176,7 +187,8 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
           DBFLOW_SCHEMA_NEW:        definition.runner.schemaNameNew!,
           DBFLOW_EXP_FOLDER:        definition.runner.exportFolder!,
           DBFLOW_EXP_FNAME:         definition.runner.exportFileName!,
-          DBFLOW_EXP_GRANTS_W_OBJ:  ConfigurationManager.getGrantsOfViewsAndSourcesAtObject()
+          DBFLOW_EXP_GRANTS_W_OBJ:  ConfigurationManager.getGrantsOfViewsAndSourcesAtObject(),
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -208,7 +220,8 @@ export class ExportDBObjectProvider extends AbstractBashTaskProvider implements 
         }
       }
 
-      await this.setInitialCompileInfo("export_schema.sh", connectionUri!, runner);
+      const projectInfos = await getProjectInfos(this.context);
+      await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_export_schema.sh" : "export_schema.sh", connectionUri!, runner);
 
     } else {
       throw new Error("Missing required workspace folders or schema name");
@@ -236,7 +249,15 @@ export function registerExportDBObjectCommand(projectInfos: IProjectInfos, conte
 
         if (CompileTaskStore.getInstance().appPwd !== undefined) {
 
-          which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+          if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Object"))) {
+            return;
+          }
+
+          const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
+            ? Promise.resolve()
+            : which(ConfigurationManager.getCliToUseForCompilation());
+
+          cliCheck.then(async () => {
             const schema = getSchemaFromFile(fileName, getDBFlowMode(context) === "dbFlux");
             const state:ExportSchemaWizardState = await exportObjectWizard(context, schema);
 

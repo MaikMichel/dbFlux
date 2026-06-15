@@ -2,7 +2,8 @@
 import * as path from "path";
 
 import { getAllFoldersButNotTheLastFolder, getLastFolderFromFolderPath } from "../helper/utilities";
-import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { RestTaskStore } from "../stores/RestTaskStore";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
@@ -66,7 +67,8 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
           DBFLOW_DBPASS:       definition.runner.connectionPass,
           DBFLOW_RESTMODULE:   module?module:"NULL",
           DBFLOW_MODULEFOLDER: folder?folder:"NULL",
-          DBFLOW_MODE:         definition.runner.projectInfos.projectMode+""
+          DBFLOW_MODE:         definition.runner.projectInfos.projectMode+"",
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -87,7 +89,8 @@ export class RestTaskProvider extends AbstractBashTaskProvider implements TaskPr
       runner.restModule = moduleFolder;
 
       if (restUri !== undefined) {
-        await this.setInitialCompileInfo("export_rest.sh", restUri, runner);
+        const projectInfos = await getProjectInfos(this.context);
+        await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_export_rest.sh" : "export_rest.sh", restUri, runner);
       }
     }
 
@@ -104,7 +107,12 @@ export function registerExportRESTCommand(projectInfos: IProjectInfos, context: 
       setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        which('sql').then(async () => {
+        if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export REST Module"))) {
+          return;
+        }
+
+        const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST" ? Promise.resolve() : which('sql');
+        cliCheck.then(async () => {
           RestTaskStore.getInstance().restModule = await RestTaskStore.getInstance().getRestModule(projectInfos);
           if (RestTaskStore.getInstance().restModule !== undefined) {
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new RestTaskProvider(context)));

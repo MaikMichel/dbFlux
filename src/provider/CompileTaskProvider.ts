@@ -16,6 +16,7 @@ import fetch from "node-fetch";
 import { CompileSchemasProvider } from "./CompileSchemasProvider";
 import { homedir } from "os";
 import { LoggingService } from "../helper/LoggingService";
+import { assertRestApiLevel } from "../helper/RestApiUtils";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
@@ -44,12 +45,6 @@ interface ICompileInfos extends IBashInfos {
   additionalOutput:   string;
   onlyTriggerRun:     string;
   useSQLErrorLog:     string;
-  restSqlUrl:         string;
-  restAppSchema:      string;
-  restWorkspace:      string;
-  restOauthTokenUrl:  string;
-  // restOauthClientId:     string;
-  // restOauthClientSecret: string;
 }
 
 
@@ -121,13 +116,7 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
           DBFLOW_TARGET_APP_ID:    CompileTaskStore.getInstance().targetApplicationID + "",
           DBFLOW_TARGET_WORKSP:    CompileTaskStore.getInstance().targetWorkspace + "",
 
-          DBFLOW_REST_SQL_URL:              definition.runner.restSqlUrl,
-          DBFLOW_REST_OAUTH_TOKEN_URL:      definition.runner.restOauthTokenUrl,
-          DBFLOW_REST_APP_SCHEMA:           definition.runner.restAppSchema,
-          DBFLOW_REST_WORKSPACE:            definition.runner.restWorkspace,
-          DBFLOW_REST_CONNECT_TIMEOUT:      String(ConfigurationManager.getRestCompileConnectTimeout()),
-          DBFLOW_REST_TOKEN_MAX_TIME:       String(ConfigurationManager.getRestCompileTokenMaxTime()),
-          DBFLOW_REST_COMPILE_MAX_TIME:     String(ConfigurationManager.getRestCompileCompileMaxTime()),
+          ...this.getRestEnv(definition.runner),
         },
       }),
       ["$dbflux-plsql"]
@@ -152,10 +141,6 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
       runner.executableCli          = ConfigurationManager.getCliToUseForCompilation();
       runner.useSQLErrorLog         = ConfigurationManager.getUseSQLplusSPERRORLOGTable()?"YES":"NO";
       runner.moveYesNo              = "NO";
-      runner.restSqlUrl             = runner.projectInfos.restSqlUrl ?? "";
-      runner.restOauthTokenUrl      = runner.projectInfos.restOauthTokenUrl ?? "";
-      runner.restAppSchema          = runner.projectInfos.restAppSchema ?? "";
-      runner.restWorkspace          = runner.projectInfos.restWorkspace ?? "";
 
 
       if (ConfigurationManager.getShowWarningMessages()) {
@@ -272,7 +257,15 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
 
           if (compileOption !== undefined) {
 
-            which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+            if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Compile Schemas"))) {
+              return;
+            }
+
+            const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
+              ? Promise.resolve()
+              : which(ConfigurationManager.getCliToUseForCompilation());
+
+            cliCheck.then(async () => {
               context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new CompileSchemasProvider(context, "compileSchemas", compileOption.label)));
               await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: compileSchemas");
             }).catch(() => {

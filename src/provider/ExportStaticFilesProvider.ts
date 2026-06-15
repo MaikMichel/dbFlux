@@ -1,7 +1,8 @@
 
 import * as path from "path";
 
-import { AbstractBashTaskProvider, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
@@ -69,7 +70,8 @@ export class ExportStaticFilesProvider extends AbstractBashTaskProvider implemen
           DBFLOW_DBUSER:     definition.runner.connectionUser,
           DBFLOW_DBPASS:     definition.runner.connectionPass,
           DBFLOW_EXP_APP_ID: definition.runner.exportAppID!,
-          DBFLOW_EXP_PATH:   definition.runner.exportAppPath!
+          DBFLOW_EXP_PATH:   definition.runner.exportAppPath!,
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -91,7 +93,8 @@ export class ExportStaticFilesProvider extends AbstractBashTaskProvider implemen
       runner.executableCli  = ConfigurationManager.getCliToUseForCompilation();
 
       if (apexUri !== undefined) {
-        await this.setInitialCompileInfo("export_static_files.sh", apexUri, runner);
+        const projectInfos = await getProjectInfos(this.context);
+        await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_export_static_files.sh" : "export_static_files.sh", apexUri, runner);
       }
     } else {
       throw new Error("Error workspace.workspaceFolders or schemaName undefined");
@@ -110,7 +113,15 @@ export function registerExportStaticFilesCommand(projectInfos: IProjectInfos, co
       setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+        if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Static Files"))) {
+          return;
+        }
+
+        const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
+          ? Promise.resolve()
+          : which(ConfigurationManager.getCliToUseForCompilation());
+
+        cliCheck.then(async () => {
           ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, false);
 
           if (ExportTaskStore.getInstance().expID !== undefined) {
@@ -176,7 +187,8 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
           DBFLOW_DBPASS:      definition.runner.connectionPass,
           DBFLOW_EXP_APP_ID:  definition.runner.exportAppID!,
           DBFLOW_EXP_PATH:    definition.runner.exportAppPath!,
-          DBFLOW_EXP_FNAME:   definition.runner.exportFileName!
+          DBFLOW_EXP_FNAME:   definition.runner.exportFileName!,
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -208,7 +220,8 @@ export class ExportCurrentStaticFileProvider extends AbstractBashTaskProvider im
           runner.exportAppID    = runner.exportAppPath.replace("/src", "").split("/").pop()?.replace("f", "");
 
         }
-        await this.setInitialCompileInfo("export_static_files.sh", connectionUri!, runner);
+        const projectInfos = await getProjectInfos(this.context);
+        await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_export_static_files.sh" : "export_static_files.sh", connectionUri!, runner);
 
       }
 
@@ -238,7 +251,15 @@ export function registerExportCurrentStaticFileCommand(projectInfos: IProjectInf
 
         if (CompileTaskStore.getInstance().appPwd !== undefined) {
 
-          which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+          if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Current Static File"))) {
+            return;
+          }
+
+          const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
+            ? Promise.resolve()
+            : which(ConfigurationManager.getCliToUseForCompilation());
+
+          cliCheck.then(async () => {
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportCurrentStaticFileProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportCurrentStaticFile");
           }).catch(() => {

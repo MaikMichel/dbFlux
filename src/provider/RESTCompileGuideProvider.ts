@@ -91,6 +91,17 @@ function getWebviewHtml(): string {
     </li>
   </ol>
 
+  <h2>Upgrading an existing installation</h2>
+  <p class="intro">
+    Re-running the install script upgrades the <code>rest_compile</code> package in place.
+    Package version <strong>1.1.0+</strong> is required for the following features over REST:
+    <em>Compile Schemas, Export APEX Application/Plugin, Export Static/Plugin Files,
+    Remove Static File, Export Schema/Object DDL, Export REST Modules</em>.
+    Compiling single files works with any version.
+    Note: re-running the script recreates the <code>rest_compile_logs</code> table,
+    so previously logged payloads are lost.
+  </p>
+
   <div class="warning-box">
     <strong>IMPORTANT: Open the script run detail view!</strong>
     After execution, open the <strong>detail view</strong> of the script run (click on the

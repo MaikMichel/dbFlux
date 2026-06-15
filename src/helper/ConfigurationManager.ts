@@ -102,6 +102,10 @@ export class ConfigurationManager {
     return this.get<number>("restCompile.compileMaxTime");
   }
 
+  static getRestCompileExportMaxTime(): number {
+    return this.get<number>("restCompile.exportMaxTime");
+  }
+
   static getTestOutputFormat(): string {
     return this.get<string>("test.Output.Format");
   }
@@ -131,35 +135,6 @@ export function showConfig(applyFileName:string, buildFileName:string){
     workspace.openTextDocument(Uri.file(buildFileName)).then(doc => {
       window.showTextDocument(doc, {preview: false, viewColumn: ViewColumn.Beside});
     });
-}
-
-export async function showDBFluxConfig(context:ExtensionContext){
-  LoggingService.show();
-
-  LoggingService.logInfo("Outputting Configuration");
-
-  LoggingService.logInfo("DB_TNS: " + context.workspaceState.get("dbFlux_DB_TNS"));
-  LoggingService.logInfo("DB_APP_USER: " + context.workspaceState.get("dbFlux_DB_APP_USER"));
-  LoggingService.logInfo("DB_APP_PWD: " + await context.secrets.get(getWorkspaceRootPath() + "|dbFlux_DB_APP_PWD")+"");
-  LoggingService.logInfo("DB_ADMIN_USER: " + context.workspaceState.get("dbFlux_DB_ADMIN_USER"));
-
-  LoggingService.logInfo("PROJECT: " + context.workspaceState.get("dbFlux_PROJECT"));
-  LoggingService.logInfo("PROJECT_MODE: " + context.workspaceState.get("dbFlux_PROJECT_MODE"));
-  if (context.workspaceState.get("dbFlux_PROJECT_MODE") === "MULTI") {
-    LoggingService.logInfo("DATA_SCHEMA: " + context.workspaceState.get("dbFlux_DATA_SCHEMA"));
-    LoggingService.logInfo("LOGIC_SCHEMA: " + context.workspaceState.get("dbFlux_LOGIC_SCHEMA"));
-    LoggingService.logInfo("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
-  } else if (context.workspaceState.get("dbFlux_PROJECT_MODE") === "SINGLE") {
-    LoggingService.logInfo("APP_SCHEMA: " + context.workspaceState.get("dbFlux_APP_SCHEMA"));
-  }
-
-  const otherPWDs = context.workspaceState.keys().filter(key => key.endsWith("_PWD") && key !== "dbFlux_DB_APP_PWD");
-  for (const key of otherPWDs) {
-    LoggingService.logInfo(key + ": " + await context.secrets.get(getWorkspaceRootPath() +`|${key}`));
-  }
-
-  LoggingService.logInfo("WORKSPACE: " + context.workspaceState.get("dbFlux_WORKSPACE"));
-
 }
 
 export function removeDBFluxConfig(context:ExtensionContext){

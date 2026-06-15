@@ -2,6 +2,7 @@
 import * as path from "path";
 
 import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
+import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
 import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
@@ -71,7 +72,8 @@ export class ExportPluingFilesProvider extends AbstractBashTaskProvider implemen
           DBFLOW_DBPASS:     definition.runner.connectionPass,
           DBFLOW_EXP_APP_ID: definition.runner.exportAppID!,
           DBFLOW_EXP_PLG_ID: definition.runner.exportPluginName!,
-          DBFLOW_EXP_PATH:   definition.runner.exportAppPath!
+          DBFLOW_EXP_PATH:   definition.runner.exportAppPath!,
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -102,7 +104,7 @@ export class ExportPluingFilesProvider extends AbstractBashTaskProvider implemen
       runner.executableCli  = ConfigurationManager.getCliToUseForCompilation();
 
       if (apexUri !== undefined) {
-        await this.setInitialCompileInfo("export_plugin_files.sh", apexUri, runner);
+        await this.setInitialCompileInfo(projectInfos.dbConnMode === "REST" ? "rest_export_plugin_files.sh" : "export_plugin_files.sh", apexUri, runner);
       }
     } else {
       throw new Error("Error workspace.workspaceFolders or schemaName undefined");
@@ -121,7 +123,15 @@ export function registerExportPluginFilesCommand(projectInfos: IProjectInfos, co
       setAppPassword(projectInfos);
 
       if (CompileTaskStore.getInstance().appPwd !== undefined) {
-        which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+        if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Plugin Files"))) {
+          return;
+        }
+
+        const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
+          ? Promise.resolve()
+          : which(ConfigurationManager.getCliToUseForCompilation());
+
+        cliCheck.then(async () => {
           ExportTaskStore.getInstance().expPlugin = await ExportTaskStore.getInstance().getAppPlugID(projectInfos, false);
 
 
@@ -189,7 +199,8 @@ export class ExportCurrentPluginFileProvider extends AbstractBashTaskProvider im
           DBFLOW_EXP_APP_ID:  definition.runner.exportAppID!,
           DBFLOW_EXP_PLG_ID:  definition.runner.exportPluginName!,
           DBFLOW_EXP_PATH:    definition.runner.exportAppPath!,
-          DBFLOW_EXP_FNAME:   definition.runner.exportFileName!
+          DBFLOW_EXP_FNAME:   definition.runner.exportFileName!,
+          ...this.getRestEnv(definition.runner)
         },
       })
 
@@ -228,7 +239,8 @@ export class ExportCurrentPluginFileProvider extends AbstractBashTaskProvider im
           }
 
         }
-        await this.setInitialCompileInfo("export_plugin_files.sh", connectionUri!, runner);
+        const currentProjectInfos = await getProjectInfos(this.context);
+        await this.setInitialCompileInfo(currentProjectInfos.dbConnMode === "REST" ? "rest_export_plugin_files.sh" : "export_plugin_files.sh", connectionUri!, runner);
 
       }
 
@@ -258,7 +270,15 @@ export function registerExportCurrentPluginFileCommand(projectInfos: IProjectInf
 
         if (CompileTaskStore.getInstance().appPwd !== undefined) {
 
-          which(ConfigurationManager.getCliToUseForCompilation()).then(async () => {
+          if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Current Plugin File"))) {
+            return;
+          }
+
+          const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
+            ? Promise.resolve()
+            : which(ConfigurationManager.getCliToUseForCompilation());
+
+          cliCheck.then(async () => {
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportCurrentPluginFileProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportCurrentPluginFile");
           }).catch(() => {
