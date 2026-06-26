@@ -55,7 +55,9 @@ export async function activate(context: ExtensionContext) {
 
   LoggingService.logDebug('Register global Commands');
   context.subscriptions.push(commands.registerCommand('dbFlux.initializeProject', () => DBFluxConfigPanel.createOrShow(context)));
+  context.subscriptions.push(commands.registerCommand('dbFlux.configureProject', () => DBFluxConfigPanel.createOrShow(context)));
   context.subscriptions.push(registerCreateDBFlowProject("dbFlux.initialize.dbFlow.Project", context));
+  context.subscriptions.push(registerCreateDBFlowProject("dbFlux.configure.dbFlow.Project", context));
   context.subscriptions.push(commands.registerCommand("dbFlux.reloadExtension", async () => {
     deactivate();
     for (const sub of context.subscriptions) {

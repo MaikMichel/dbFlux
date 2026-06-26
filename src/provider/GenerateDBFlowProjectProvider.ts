@@ -3,7 +3,7 @@ import { chmodSync, existsSync } from "fs";
 import * as path from "path";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope} from "vscode";
 import { getWorkspaceRootPath } from "../helper/utilities";
-import { initializeDBFlowProjectWizard } from "../wizards/InitializeDBFlowProjectWizard";
+import { DBFlowConfigPanel } from "../ui/DBFlowConfigPanel";
 import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 
 
@@ -36,12 +36,18 @@ export interface State {
   defaulsModules:      string;           // api,test
 
   logtopath:           string;           // log to path
+  doNotClearSchemaOnInit: string;        // DO_NOT_CLEAR_SCHEMA_ON_INIT
+  envOnly:             string;           // YES | NO
+  applyOnly:           string;           // YES | NO
 
   restWorkspace:       string;           // REST_WORKSPACE
   restAppSchema:       string;           // REST_APP_SCHEMA
   restUrlPrefix:       string;           // base URL, shell derives REST_SQL_URL and REST_OAUTH_TOKEN_URL
+  restSqlUrl:          string;           // REST_SQL_URL
+  restOauthTokenUrl:   string;           // REST_OAUTH_TOKEN_URL
   restAppIdMap:        string;           // REST_APP_ID_MAP
   restOauthBasicB64:   string;           // REST_OAUTH_BASIC_B64
+  restUsesOauth:       string;           // REST_USES_OAUTH
 
 }
 
@@ -74,7 +80,6 @@ export class GenerateDBFlowProjectProvider extends AbstractBashTaskProvider impl
 
     const runTask: IBashInfos = await this.prepExportInfos();
 
-    // const state = await initializeDBFlowProjectWizard(this.context);
     result.push(this.createCreateTask(this.createCreateDBFlowTaskDefinition("createDBFlow", runTask, this.state)));
 
     return Promise.resolve(result);
@@ -119,9 +124,13 @@ export class GenerateDBFlowProjectProvider extends AbstractBashTaskProvider impl
           "wiz_rest_workspace":        definition.state.restWorkspace || "",
           "wiz_rest_app_schema":       definition.state.restAppSchema || "",
           "wiz_rest_url_prefix":       definition.state.restUrlPrefix || "",
+          "wiz_rest_sql_url":          definition.state.restSqlUrl || "",
+          "wiz_rest_oauth_token_url":  definition.state.restOauthTokenUrl || "",
           "wiz_rest_app_id_map":       definition.state.restAppIdMap || "",
           "wiz_rest_oauth_basic_b64":  definition.state.restOauthBasicB64 || "",
-          "env_only": "NO"
+          "wiz_rest_uses_oauth":       definition.state.restUsesOauth || "TRUE",
+          "wiz_do_not_clear_schema_on_init": definition.state.doNotClearSchemaOnInit || "NO",
+          "env_only":                  definition.state.envOnly || "NO"
         },
       })
 
@@ -154,11 +163,10 @@ export class GenerateDBFlowProjectProvider extends AbstractBashTaskProvider impl
 
 export function registerCreateDBFlowProject(command: string, context: ExtensionContext) {
   return commands.registerCommand(command, async () => {
-    // initializeProjectWizard(context)
-    const state = await initializeDBFlowProjectWizard();
-     // initialize dbFlow as submodule
-     context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new GenerateDBFlowProjectProvider(context, state)));
+    DBFlowConfigPanel.createOrShow(context, async (state: State) => {
+      context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new GenerateDBFlowProjectProvider(context, state)));
 
-     await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: createDBFlow");
+      await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: createDBFlow");
+    });
   });
 }

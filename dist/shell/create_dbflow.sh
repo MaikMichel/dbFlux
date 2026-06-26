@@ -14,16 +14,26 @@ initialize_session;
 printf "${CYAN}Generating project with following options${NC}\n"
 printf "  Project:                          ${BWHITE}${wiz_project_name}${NC}\n"
 printf "  Mode:                             ${BWHITE}${wiz_project_mode}${NC}\n"
+printf "  Connection Mode:                  ${BWHITE}${wiz_conn_mode}${NC}\n"
 printf "  Build Branch:                     ${BWHITE}${wiz_build_branch}${NC}\n"
 printf "  Create Changelos:                 ${BWHITE}${wiz_create_changelogs}${NC}\n"
 printf "  Schema Changelog proccessed:      ${BWHITE}${wiz_chl_schema}${NC}\n"
-printf "  Connection:                       ${BWHITE}${wiz_db_tns}${NC}\n"
-printf "  Admin User:                       ${BWHITE}${wiz_db_admin_user}${NC}\n"
-printf "  Deployment User:                  ${BWHITE}${wiz_db_app_user}${NC}\n"
+if [[ "${wiz_conn_mode}" == "REST" ]]; then
+  printf "  REST SQL URL:                     ${BWHITE}${wiz_rest_sql_url}${NC}\n"
+  printf "  REST App Schema:                  ${BWHITE}${wiz_rest_app_schema}${NC}\n"
+  printf "  REST Workspace:                   ${BWHITE}${wiz_rest_workspace}${NC}\n"
+  printf "  REST OAuth URL:                   ${BWHITE}${wiz_rest_oauth_token_url}${NC}\n"
+  printf "  REST Uses OAuth:                  ${BWHITE}${wiz_rest_uses_oauth}${NC}\n"
+else
+  printf "  Connection:                       ${BWHITE}${wiz_db_tns}${NC}\n"
+  printf "  Admin User:                       ${BWHITE}${wiz_db_admin_user}${NC}\n"
+  printf "  Deployment User:                  ${BWHITE}${wiz_db_app_user}${NC}\n"
+fi
 printf "  Location depot:                   ${BWHITE}${wiz_depot_path}${NC}\n"
 printf "  Location logs:                    ${BWHITE}${wiz_logpath}${NC}\n"
 printf "  Branch is mapped to Stage:        ${BWHITE}${wiz_stage}${NC}\n"
 printf "  SQl commandline:                  ${BWHITE}${wiz_sqlcli}${NC}\n"
+printf "  Do not clear schema on init:      ${BWHITE}${wiz_do_not_clear_schema_on_init}${NC}\n"
 printf "  Install default tools:            ${BWHITE}${wiz_with_tools}${NC}\n"
 printf "  Configure with default apps:      ${BWHITE}${wiz_apex_ids}${NC}\n"
 printf "  Configure with default modules:   ${BWHITE}${wiz_rest_modules}${NC}\n"
@@ -51,4 +61,9 @@ fi
 printf "${CLR_GREEN}dbFlow initialized${NC}\n"
 printf "${CLR_DGRAY}Documentation can be found here: ${CLR_LBLUE}https://maikmichel.github.io/dbFlow/${NC}\n"
 
-.dbFlow/setup.sh -g "${wiz_project_name}" -w
+setup_args=(-g "${wiz_project_name}" -w)
+if [[ "${env_only}" == "YES" ]]; then
+  setup_args+=(-e)
+fi
+
+.dbFlow/setup.sh "${setup_args[@]}"

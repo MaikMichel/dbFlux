@@ -117,6 +117,22 @@
 				{
 					"command": "dbflux.showTableDetails.treeview.clear_item",
 					"when": "false"
+				},
+				{
+					"command": "dbFlux.initializeProject",
+					"when": "!inDbFlowProject"
+				},
+				{
+					"command": "dbFlux.configureProject",
+					"when": "inDbFlowProject && isDBFluxMode"
+				},
+				{
+					"command": "dbFlux.initialize.dbFlow.Project",
+					"when": "!inDbFlowProject"
+				},
+				{
+					"command": "dbFlux.configure.dbFlow.Project",
+					"when": "inDbFlowProject && !isDBFluxMode"
 				}
 			],
 			"view/title": [
@@ -286,8 +302,18 @@
 				"category": "dbFlux"
 			},
 			{
+				"command": "dbFlux.configureProject",
+				"title": "Configure Project structure (dbFlux)",
+				"category": "dbFlux"
+			},
+			{
 				"command": "dbFlux.initialize.dbFlow.Project",
 				"title": "Initialize Project structure (dbFlow)",
+				"category": "dbFlux"
+			},
+			{
+				"command": "dbFlux.configure.dbFlow.Project",
+				"title": "Configure Project structure (dbFlow)",
 				"category": "dbFlux"
 			},
 			{
