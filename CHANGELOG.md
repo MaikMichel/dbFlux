@@ -1,6 +1,7 @@
 # Change Log
 
 ## [Unreleased]
+- New: File icon theme "dbFlux Icons" with icons for all dbFlow project folders and for PL/SQL, SQL, JS, CSS and other common files
 - New: REST connection mode (CONN_MODE=REST) now supports almost all features of the SQLNET mode (requires rest_compile package v1.1.0+ on the server, re-run the install script to upgrade):
   - Compile Schemas (invalid/all objects)
   - Export APEX Application and APEX Plugin

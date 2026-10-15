@@ -45,6 +45,7 @@ Using this extension enables you to develop Oracle Database and APEX application
 
 - [**TreeView, that will show columns infos based on tables**](#dbstruct---view-table-structure 'Jump to dbStruct - View table structure') you added. With some nice features
 - [**Configure Logging output**](#view-and-configure-logging-output 'Jump to View and configure logging output')
+- [**dbFlux Icons**](#dbflux-icons 'Jump to dbFlux Icons'), a file icon theme for the dbFlow folder structure and PL/SQL files
 
 
 
@@ -411,6 +412,19 @@ When you select a method name in a package, you can copy the selection and the p
 Command                           | Key               | Description
 ----------------------------------|-------------------|---------------------------------------
 Write package name.selection to ClipBoard   | `Ctrl+alt+a`      | when active file extension is of: pks, pkb, tps, tpb
+
+
+## dbFlux Icons [#](#features 'Jumpt back to Features')
+
+dbFlux ships a file icon theme that gives every folder of the dbFlow project structure its own icon (`db`, `apex`, `static`, `rest`, `sources`, `packages`, `tables`, `views`, `.hooks`, ...). Files get icons too, so a package specification (`.pks`) can be told apart from a package body (`.pkb`) at a glance. Common files like `.sql`, `.tps`, `.tpb`, `.js`, `.css`, `.json`, `.md`, `.sh`, `build.env` and `apply.env` are covered as well.
+
+To activate it, run `Preferences: File Icon Theme` from the command palette and choose **dbFlux Icons**.
+
+Good to know:
+- VS Code allows only one active file icon theme. dbFlux Icons replaces your current one (e.g. Seti or Material Icon Theme) in all workspaces.
+- Icon themes match folders by name, not by path. A folder named `tables` gets the table icon everywhere.
+- Generic names like `init`, `patch`, `pre`, `post` and `base` intentionally keep the default folder icon.
+- If you renamed the db folder via `dbFlux.mapping.dbFolder`, that folder gets the default icon.
 
 
 ## Install APEX Application [#](#features 'Jumpt back to Features')

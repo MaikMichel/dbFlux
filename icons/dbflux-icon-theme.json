@@ -1,0 +1,495 @@
+{
+  "iconDefinitions": {
+    "_folder": {
+      "iconPath": "./folders/folder.svg"
+    },
+    "_folder_open": {
+      "iconPath": "./folders/folder-open.svg"
+    },
+    "_file": {
+      "iconPath": "./files/file.svg"
+    },
+    "_folder_db": {
+      "iconPath": "./folders/db.svg"
+    },
+    "_folder_db_open": {
+      "iconPath": "./folders/db-open.svg"
+    },
+    "_folder_apex": {
+      "iconPath": "./folders/apex.svg"
+    },
+    "_folder_apex_open": {
+      "iconPath": "./folders/apex-open.svg"
+    },
+    "_folder_static": {
+      "iconPath": "./folders/static.svg"
+    },
+    "_folder_static_open": {
+      "iconPath": "./folders/static-open.svg"
+    },
+    "_folder_rest": {
+      "iconPath": "./folders/rest.svg"
+    },
+    "_folder_rest_open": {
+      "iconPath": "./folders/rest-open.svg"
+    },
+    "_folder_reports": {
+      "iconPath": "./folders/reports.svg"
+    },
+    "_folder_reports_open": {
+      "iconPath": "./folders/reports-open.svg"
+    },
+    "_folder_plugin": {
+      "iconPath": "./folders/plugin.svg"
+    },
+    "_folder_plugin_open": {
+      "iconPath": "./folders/plugin-open.svg"
+    },
+    "_folder_hooks": {
+      "iconPath": "./folders/hooks.svg"
+    },
+    "_folder_hooks_open": {
+      "iconPath": "./folders/hooks-open.svg"
+    },
+    "_folder_setup": {
+      "iconPath": "./folders/setup.svg"
+    },
+    "_folder_setup_open": {
+      "iconPath": "./folders/setup-open.svg"
+    },
+    "_folder_workspaces": {
+      "iconPath": "./folders/workspaces.svg"
+    },
+    "_folder_workspaces_open": {
+      "iconPath": "./folders/workspaces-open.svg"
+    },
+    "_folder_constraints": {
+      "iconPath": "./folders/constraints.svg"
+    },
+    "_folder_constraints_open": {
+      "iconPath": "./folders/constraints-open.svg"
+    },
+    "_folder_contexts": {
+      "iconPath": "./folders/contexts.svg"
+    },
+    "_folder_contexts_open": {
+      "iconPath": "./folders/contexts-open.svg"
+    },
+    "_folder_ddl": {
+      "iconPath": "./folders/ddl.svg"
+    },
+    "_folder_ddl_open": {
+      "iconPath": "./folders/ddl-open.svg"
+    },
+    "_folder_dml": {
+      "iconPath": "./folders/dml.svg"
+    },
+    "_folder_dml_open": {
+      "iconPath": "./folders/dml-open.svg"
+    },
+    "_folder_indexes": {
+      "iconPath": "./folders/indexes.svg"
+    },
+    "_folder_indexes_open": {
+      "iconPath": "./folders/indexes-open.svg"
+    },
+    "_folder_jobs": {
+      "iconPath": "./folders/jobs.svg"
+    },
+    "_folder_jobs_open": {
+      "iconPath": "./folders/jobs-open.svg"
+    },
+    "_folder_policies": {
+      "iconPath": "./folders/policies.svg"
+    },
+    "_folder_policies_open": {
+      "iconPath": "./folders/policies-open.svg"
+    },
+    "_folder_sequences": {
+      "iconPath": "./folders/sequences.svg"
+    },
+    "_folder_sequences_open": {
+      "iconPath": "./folders/sequences-open.svg"
+    },
+    "_folder_sources": {
+      "iconPath": "./folders/sources.svg"
+    },
+    "_folder_sources_open": {
+      "iconPath": "./folders/sources-open.svg"
+    },
+    "_folder_views": {
+      "iconPath": "./folders/views.svg"
+    },
+    "_folder_views_open": {
+      "iconPath": "./folders/views-open.svg"
+    },
+    "_folder_mviews": {
+      "iconPath": "./folders/mviews.svg"
+    },
+    "_folder_mviews_open": {
+      "iconPath": "./folders/mviews-open.svg"
+    },
+    "_folder_tables": {
+      "iconPath": "./folders/tables.svg"
+    },
+    "_folder_tables_open": {
+      "iconPath": "./folders/tables-open.svg"
+    },
+    "_folder_tables_ddl": {
+      "iconPath": "./folders/tables_ddl.svg"
+    },
+    "_folder_tables_ddl_open": {
+      "iconPath": "./folders/tables_ddl-open.svg"
+    },
+    "_folder_tests": {
+      "iconPath": "./folders/tests.svg"
+    },
+    "_folder_tests_open": {
+      "iconPath": "./folders/tests-open.svg"
+    },
+    "_folder_synonyms": {
+      "iconPath": "./folders/synonyms.svg"
+    },
+    "_folder_synonyms_open": {
+      "iconPath": "./folders/synonyms-open.svg"
+    },
+    "_folder_functions": {
+      "iconPath": "./folders/functions.svg"
+    },
+    "_folder_functions_open": {
+      "iconPath": "./folders/functions-open.svg"
+    },
+    "_folder_packages": {
+      "iconPath": "./folders/packages.svg"
+    },
+    "_folder_packages_open": {
+      "iconPath": "./folders/packages-open.svg"
+    },
+    "_folder_procedures": {
+      "iconPath": "./folders/procedures.svg"
+    },
+    "_folder_procedures_open": {
+      "iconPath": "./folders/procedures-open.svg"
+    },
+    "_folder_triggers": {
+      "iconPath": "./folders/triggers.svg"
+    },
+    "_folder_triggers_open": {
+      "iconPath": "./folders/triggers-open.svg"
+    },
+    "_folder_types": {
+      "iconPath": "./folders/types.svg"
+    },
+    "_folder_types_open": {
+      "iconPath": "./folders/types-open.svg"
+    },
+    "_folder_modules": {
+      "iconPath": "./folders/modules.svg"
+    },
+    "_folder_modules_open": {
+      "iconPath": "./folders/modules-open.svg"
+    },
+    "_folder_access": {
+      "iconPath": "./folders/access.svg"
+    },
+    "_folder_access_open": {
+      "iconPath": "./folders/access-open.svg"
+    },
+    "_folder_roles": {
+      "iconPath": "./folders/roles.svg"
+    },
+    "_folder_roles_open": {
+      "iconPath": "./folders/roles-open.svg"
+    },
+    "_folder_privileges": {
+      "iconPath": "./folders/privileges.svg"
+    },
+    "_folder_privileges_open": {
+      "iconPath": "./folders/privileges-open.svg"
+    },
+    "_folder_mapping": {
+      "iconPath": "./folders/mapping.svg"
+    },
+    "_folder_mapping_open": {
+      "iconPath": "./folders/mapping-open.svg"
+    },
+    "_folder_src": {
+      "iconPath": "./folders/src.svg"
+    },
+    "_folder_src_open": {
+      "iconPath": "./folders/src-open.svg"
+    },
+    "_folder_js": {
+      "iconPath": "./folders/js.svg"
+    },
+    "_folder_js_open": {
+      "iconPath": "./folders/js-open.svg"
+    },
+    "_folder_css": {
+      "iconPath": "./folders/css.svg"
+    },
+    "_folder_css_open": {
+      "iconPath": "./folders/css-open.svg"
+    },
+    "_folder_img": {
+      "iconPath": "./folders/img.svg"
+    },
+    "_folder_img_open": {
+      "iconPath": "./folders/img-open.svg"
+    },
+    "_file_sql": {
+      "iconPath": "./files/sql.svg"
+    },
+    "_file_pks": {
+      "iconPath": "./files/pks.svg"
+    },
+    "_file_pkb": {
+      "iconPath": "./files/pkb.svg"
+    },
+    "_file_tps": {
+      "iconPath": "./files/tps.svg"
+    },
+    "_file_tpb": {
+      "iconPath": "./files/tpb.svg"
+    },
+    "_file_prc": {
+      "iconPath": "./files/prc.svg"
+    },
+    "_file_fnc": {
+      "iconPath": "./files/fnc.svg"
+    },
+    "_file_trg": {
+      "iconPath": "./files/trg.svg"
+    },
+    "_file_vw": {
+      "iconPath": "./files/vw.svg"
+    },
+    "_file_js": {
+      "iconPath": "./files/js.svg"
+    },
+    "_file_ts": {
+      "iconPath": "./files/ts.svg"
+    },
+    "_file_css": {
+      "iconPath": "./files/css.svg"
+    },
+    "_file_html": {
+      "iconPath": "./files/html.svg"
+    },
+    "_file_json": {
+      "iconPath": "./files/json.svg"
+    },
+    "_file_md": {
+      "iconPath": "./files/md.svg"
+    },
+    "_file_sh": {
+      "iconPath": "./files/sh.svg"
+    },
+    "_file_bat": {
+      "iconPath": "./files/bat.svg"
+    },
+    "_file_env": {
+      "iconPath": "./files/env.svg"
+    },
+    "_file_yml": {
+      "iconPath": "./files/yml.svg"
+    },
+    "_file_xml": {
+      "iconPath": "./files/xml.svg"
+    },
+    "_file_txt": {
+      "iconPath": "./files/txt.svg"
+    },
+    "_file_log": {
+      "iconPath": "./files/log.svg"
+    },
+    "_file_csv": {
+      "iconPath": "./files/csv.svg"
+    },
+    "_file_pdf": {
+      "iconPath": "./files/pdf.svg"
+    },
+    "_file_zip": {
+      "iconPath": "./files/zip.svg"
+    },
+    "_file_git": {
+      "iconPath": "./files/git.svg"
+    },
+    "_file_image": {
+      "iconPath": "./files/image.svg"
+    },
+    "_file_font": {
+      "iconPath": "./files/font.svg"
+    }
+  },
+  "file": "_file",
+  "folder": "_folder",
+  "folderExpanded": "_folder_open",
+  "rootFolder": "_folder",
+  "rootFolderExpanded": "_folder_open",
+  "folderNames": {
+    "db": "_folder_db",
+    "apex": "_folder_apex",
+    "static": "_folder_static",
+    "rest": "_folder_rest",
+    "reports": "_folder_reports",
+    "plugin": "_folder_plugin",
+    "plugins": "_folder_plugin",
+    ".hooks": "_folder_hooks",
+    "_setup": "_folder_setup",
+    "workspaces": "_folder_workspaces",
+    "constraints": "_folder_constraints",
+    "checks": "_folder_constraints",
+    "foreigns": "_folder_constraints",
+    "primaries": "_folder_constraints",
+    "uniques": "_folder_constraints",
+    "contexts": "_folder_contexts",
+    "ddl": "_folder_ddl",
+    "dml": "_folder_dml",
+    "indexes": "_folder_indexes",
+    "defaults": "_folder_indexes",
+    "jobs": "_folder_jobs",
+    "policies": "_folder_policies",
+    "sequences": "_folder_sequences",
+    "sources": "_folder_sources",
+    "views": "_folder_views",
+    "mviews": "_folder_mviews",
+    "tables": "_folder_tables",
+    "tables_ddl": "_folder_tables_ddl",
+    "tests": "_folder_tests",
+    "test": "_folder_tests",
+    "synonyms": "_folder_synonyms",
+    "private": "_folder_synonyms",
+    "public": "_folder_synonyms",
+    "functions": "_folder_functions",
+    "packages": "_folder_packages",
+    "procedures": "_folder_procedures",
+    "triggers": "_folder_triggers",
+    "types": "_folder_types",
+    "modules": "_folder_modules",
+    "access": "_folder_access",
+    "roles": "_folder_roles",
+    "privileges": "_folder_privileges",
+    "mapping": "_folder_mapping",
+    "src": "_folder_src",
+    "js": "_folder_js",
+    "css": "_folder_css",
+    "img": "_folder_img",
+    "images": "_folder_img"
+  },
+  "folderNamesExpanded": {
+    "db": "_folder_db_open",
+    "apex": "_folder_apex_open",
+    "static": "_folder_static_open",
+    "rest": "_folder_rest_open",
+    "reports": "_folder_reports_open",
+    "plugin": "_folder_plugin_open",
+    "plugins": "_folder_plugin_open",
+    ".hooks": "_folder_hooks_open",
+    "_setup": "_folder_setup_open",
+    "workspaces": "_folder_workspaces_open",
+    "constraints": "_folder_constraints_open",
+    "checks": "_folder_constraints_open",
+    "foreigns": "_folder_constraints_open",
+    "primaries": "_folder_constraints_open",
+    "uniques": "_folder_constraints_open",
+    "contexts": "_folder_contexts_open",
+    "ddl": "_folder_ddl_open",
+    "dml": "_folder_dml_open",
+    "indexes": "_folder_indexes_open",
+    "defaults": "_folder_indexes_open",
+    "jobs": "_folder_jobs_open",
+    "policies": "_folder_policies_open",
+    "sequences": "_folder_sequences_open",
+    "sources": "_folder_sources_open",
+    "views": "_folder_views_open",
+    "mviews": "_folder_mviews_open",
+    "tables": "_folder_tables_open",
+    "tables_ddl": "_folder_tables_ddl_open",
+    "tests": "_folder_tests_open",
+    "test": "_folder_tests_open",
+    "synonyms": "_folder_synonyms_open",
+    "private": "_folder_synonyms_open",
+    "public": "_folder_synonyms_open",
+    "functions": "_folder_functions_open",
+    "packages": "_folder_packages_open",
+    "procedures": "_folder_procedures_open",
+    "triggers": "_folder_triggers_open",
+    "types": "_folder_types_open",
+    "modules": "_folder_modules_open",
+    "access": "_folder_access_open",
+    "roles": "_folder_roles_open",
+    "privileges": "_folder_privileges_open",
+    "mapping": "_folder_mapping_open",
+    "src": "_folder_src_open",
+    "js": "_folder_js_open",
+    "css": "_folder_css_open",
+    "img": "_folder_img_open",
+    "images": "_folder_img_open"
+  },
+  "fileExtensions": {
+    "sql": "_file_sql",
+    "pks": "_file_pks",
+    "pkb": "_file_pkb",
+    "tps": "_file_tps",
+    "tpb": "_file_tpb",
+    "prc": "_file_prc",
+    "fnc": "_file_fnc",
+    "trg": "_file_trg",
+    "vw": "_file_vw",
+    "js": "_file_js",
+    "mjs": "_file_js",
+    "cjs": "_file_js",
+    "ts": "_file_ts",
+    "css": "_file_css",
+    "scss": "_file_css",
+    "less": "_file_css",
+    "html": "_file_html",
+    "htm": "_file_html",
+    "json": "_file_json",
+    "jsonc": "_file_json",
+    "md": "_file_md",
+    "markdown": "_file_md",
+    "sh": "_file_sh",
+    "bash": "_file_sh",
+    "zsh": "_file_sh",
+    "bat": "_file_bat",
+    "cmd": "_file_bat",
+    "ps1": "_file_bat",
+    "env": "_file_env",
+    "yml": "_file_yml",
+    "yaml": "_file_yml",
+    "xml": "_file_xml",
+    "txt": "_file_txt",
+    "log": "_file_log",
+    "csv": "_file_csv",
+    "pdf": "_file_pdf",
+    "zip": "_file_zip",
+    "gz": "_file_zip",
+    "tar": "_file_zip",
+    "tgz": "_file_zip",
+    "png": "_file_image",
+    "jpg": "_file_image",
+    "jpeg": "_file_image",
+    "gif": "_file_image",
+    "svg": "_file_image",
+    "ico": "_file_image",
+    "webp": "_file_image",
+    "bmp": "_file_image",
+    "woff": "_file_font",
+    "woff2": "_file_font",
+    "ttf": "_file_font",
+    "otf": "_file_font",
+    "eot": "_file_font"
+  },
+  "fileNames": {
+    "build.env": "_file_env",
+    "apply.env": "_file_env",
+    ".env": "_file_env",
+    ".gitignore": "_file_git",
+    ".gitattributes": "_file_git",
+    ".gitkeep": "_file_git"
+  },
+  "hidesExplorerArrows": false,
+  "showLanguageModuleIcons": true
+}

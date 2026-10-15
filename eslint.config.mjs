@@ -13,4 +13,21 @@ export default defineConfig(
       "no-prototype-builtins": "off",
     },
   },
+  {
+    // plain Node.js (CommonJS) helper scripts, e.g. scripts/generate-icon-theme.js
+    files: ["scripts/**/*.js"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: {
+        require: "readonly",
+        module: "writable",
+        process: "readonly",
+        console: "readonly",
+        __dirname: "readonly",
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 );

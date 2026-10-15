@@ -37,6 +37,13 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"iconThemes": [
+			{
+				"id": "dbflux-icons",
+				"label": "dbFlux Icons",
+				"path": "./icons/dbflux-icon-theme.json"
+			}
+		],
 		"snippets": [
 			{
 				"language": "plsql",
