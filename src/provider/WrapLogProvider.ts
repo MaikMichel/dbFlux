@@ -2,27 +2,29 @@ import { commands, Range, TextDocument, TextEditor, TextEditorEdit, TextLine, wi
 
 
 export function registerWrapLogSelection() {
-  return commands.registerCommand('dbFlux.wrapLogSelection', () => {edit(Direction.None);});
+  return commands.registerCommand('dbFlux.wrapLogSelection', () => edit(Direction.None));
 }
 
 export function registerWrapLogSelectionDown() {
-  return commands.registerCommand('dbFlux.wrapLogSelection.down', () => {edit(Direction.Down);});
+  return commands.registerCommand('dbFlux.wrapLogSelection.down', () => edit(Direction.Down));
 }
 
 export function registerWrapLogSelectionUp() {
-  return commands.registerCommand('dbFlux.wrapLogSelection.up', () => {edit(Direction.Up);
-  });
+  return commands.registerCommand('dbFlux.wrapLogSelection.up', () => edit(Direction.Up));
 }
 
 
 
-const edit = (direction: Direction) => {
-  const editor: TextEditor = window.activeTextEditor!;
+const edit = async (direction: Direction): Promise<boolean> => {
+  const editor: TextEditor | undefined = window.activeTextEditor;
+  if (!editor) {
+    return false;
+  }
 
   const doc: TextDocument = editor.document;
   const wrapper: string = getWrapWithFunctionCall(editor.document.languageId);
 
-  editor.edit(function (edit: TextEditorEdit): void {
+  return editor.edit(function (edit: TextEditorEdit): void {
     for (let x: number = 0; x < editor.selections.length; x++) {
       const selRange = new Range(editor.selections[x].start, editor.selections[x].end);
       const selectedText: string = doc.getText(selRange);
