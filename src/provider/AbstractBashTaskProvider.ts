@@ -200,6 +200,11 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
   if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
     return projectInfos.dbAdminUser+"".toLowerCase();
   } else {
+    if (projectInfos.projectMode?.toUpperCase() === "SINGLE" &&
+        dbUserFromPath.toLowerCase() !== projectInfos.dbAppUser.toLowerCase()) {
+      return projectInfos.dbAppUser;
+    }
+
     // check if there is a var with pattern: dbFlux_..._PWD,
     if (projectInfos.dbPasses?.hasOwnProperty(`dbFlux_${dbUserFromPath}_PWD`)) {
       return `${dbUserFromPath}`;
