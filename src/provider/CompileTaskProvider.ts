@@ -116,7 +116,8 @@ export class CompileTaskProvider extends AbstractBashTaskProvider implements Tas
           DBFLOW_TARGET_APP_ID:    CompileTaskStore.getInstance().targetApplicationID + "",
           DBFLOW_TARGET_WORKSP:    CompileTaskStore.getInstance().targetWorkspace + "",
 
-          ...this.getRestEnv(definition.runner),
+          ...this.getDBFlowVarEnv(),
+          ...this.getRestEnv(definition.runner)
         },
       }),
       ["$dbflux-plsql"]

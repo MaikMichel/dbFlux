@@ -73,6 +73,7 @@ export class CompileSchemasProvider extends AbstractBashTaskProvider implements 
           DBFLOW_SQL_WARNING_EXCLUDE: definition.runner.sqlWarningExcList?definition.runner.sqlWarningExcList:"-1",
           DBFLOW_SQL_COMPILE_OPTION: definition.runner.sqlCompileOption==="Invalid"?"false":"true",
           DBFLOW_DB_FOLDER: ConfigurationManager.getDBFolderName(),
+          ...this.getDBFlowVarEnv(),
           ...this.getRestEnv(definition.runner)
         }
       }),

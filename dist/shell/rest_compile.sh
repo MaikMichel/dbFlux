@@ -81,7 +81,12 @@ function run_sql_file_rest() {
   payload_file="${payload_dir}/payload.zip"
 
   mkdir -p "${payload_dir}/$(dirname "${rel_file}")"
-  cp "${sql_file}" "${payload_dir}/${rel_file}"
+  dbflow_expand_sql_file "${sql_file}" "${payload_dir}/${rel_file}"
+  if [[ $? -ne 0 ]]; then
+    rm -rf "${payload_dir}"
+    print_rest_status_message "error" "Error" "REST compile payload preparation failed for ${sql_file}"
+    return 1
+  fi
 
   (
     cd "${payload_dir}" && zip -q "${payload_file}" "${rel_file}"

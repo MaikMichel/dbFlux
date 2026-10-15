@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as dotenv from "dotenv";
-import { chmodSync, existsSync, PathLike, readdirSync } from "fs";
+import { chmodSync, existsSync, PathLike, readFileSync, readdirSync } from "fs";
 import { getPassword, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import { CompileTaskStore } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, Uri, window, workspace } from "vscode";
@@ -39,6 +39,32 @@ export interface IProjectInfos {
   restSqlUrl: string|undefined;
   restAppSchema: string|undefined;
   restWorkspace: string|undefined;
+}
+
+export interface IDBFlowVariables {
+  names: string[];
+  values: Record<string, string>;
+}
+
+const dbFlowVariableNamePattern = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+export function parseDBFlowVariables(
+  applyEnv: Record<string, string | undefined>,
+  inheritedEnv: NodeJS.ProcessEnv = process.env,
+): IDBFlowVariables {
+  const names = Array.from(new Set(
+    (applyEnv.VAR_LIST ?? "")
+      .split(":")
+      .map((name) => name.trim())
+      .filter((name) => dbFlowVariableNamePattern.test(name)),
+  ));
+
+  const values: Record<string, string> = {};
+  for (const name of names) {
+    values[name] = applyEnv[name] ?? inheritedEnv[name] ?? "";
+  }
+
+  return { names, values };
 }
 
 export abstract class AbstractBashTaskProvider {
@@ -112,6 +138,28 @@ export abstract class AbstractBashTaskProvider {
       DBFLOW_REST_COMPILE_MAX_TIME: String(ConfigurationManager.getRestCompileCompileMaxTime()),
       DBFLOW_REST_EXPORT_MAX_TIME:  String(ConfigurationManager.getRestCompileExportMaxTime()),
     };
+  }
+
+  getDBFlowVarEnv(): { [key: string]: string } {
+    if (this.dbFluxMode !== "dbFlow" || workspace.workspaceFolders === undefined) {
+      return {};
+    }
+
+    const applyEnvPath = path.join(workspace.workspaceFolders[0].uri.fsPath, "apply.env");
+    if (!existsSync(applyEnvPath)) {
+      return {};
+    }
+
+    const variables = parseDBFlowVariables(dotenv.parse(readFileSync(applyEnvPath)));
+    const env: { [key: string]: string } = {
+      DBFLOW_VAR_LIST: variables.names.join(":"),
+    };
+
+    for (const name of variables.names) {
+      env[`DBFLOW_VAR_${name}`] = variables.values[name];
+    }
+
+    return env;
   }
 
    async setInitialCompileInfo(execFileName:string, fileUri: Uri, runnerInfo:IBashInfos):Promise<void> {
@@ -206,8 +254,14 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
   if (workspace.workspaceFolders !== undefined) {
     const f = workspace.workspaceFolders[0].uri.fsPath;
 
-    const applyEnv = dotenv.config({ path: path.join(f, "apply.env")});
-    const buildEnv = dotenv.config({ path: path.join(f, "build.env")});
+    const applyEnv = dotenv.config({
+      path: path.join(f, "apply.env"),
+      quiet: true
+    });
+    const buildEnv = dotenv.config({
+      path: path.join(f, "build.env"),
+      quiet: true
+    });
 
 
     if (applyEnv.parsed) {

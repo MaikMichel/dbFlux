@@ -49,6 +49,76 @@ function initialize_session() {
   esac
 }
 
+# Emit the SQL*Plus/SQLcl definitions corresponding to dbFlow's VAR_LIST.
+# Values are passed by the extension as DBFLOW_VAR_<NAME> so only explicitly
+# allowlisted variables are made available to compiled SQL files.
+function dbflow_compile_var_value() {
+  local var_name="$1"
+  local upper_name
+  local var_key
+
+  upper_name="$(printf '%s' "${var_name}" | tr '[:lower:]' '[:upper:]')"
+  case "${upper_name}" in
+    MODE)
+      printf 'patch'
+      ;;
+    VERSION)
+      printf '0.0.0'
+      ;;
+    *)
+      var_key="DBFLOW_VAR_${var_name}"
+      printf '%s' "${!var_key-}"
+      ;;
+  esac
+}
+
+function dbflow_sql_var_defines() {
+  local var_name
+  local var_value
+  local -a var_array
+
+  printf 'define VERSION="0.0.0" "UNDEFINED"\n'
+  printf 'define MODE="patch" "UNDEFINED"\n'
+
+  IFS=':' read -r -a var_array <<< "${DBFLOW_VAR_LIST:-}"
+  for var_name in "${var_array[@]}"; do
+    [[ "${var_name}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    case "$(printf '%s' "${var_name}" | tr '[:lower:]' '[:upper:]')" in
+      MODE|VERSION)
+        continue
+        ;;
+    esac
+    var_value="$(dbflow_compile_var_value "${var_name}")"
+    printf 'define %s="%s" "UNDEFINED"\n' "$(printf '%s' "${var_name}" | tr '[:lower:]' '[:upper:]')" "${var_value}"
+  done
+}
+
+# Expand dbFlow's ^NAME references in a temporary REST payload. The REST
+# endpoint executes statements directly and therefore cannot perform the
+# SQL*Plus substitution that the SQL CLI performs.
+function dbflow_expand_sql_file() {
+  local source_file="$1"
+  local target_file="$2"
+  local line
+  local var_name
+  local var_value
+  local -a var_array
+
+  var_array=(VERSION MODE)
+  IFS=':' read -r -a var_array <<< "${DBFLOW_VAR_LIST:-}"
+  var_array=(VERSION MODE "${var_array[@]}")
+  : > "${target_file}" || return 1
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    for var_name in "${var_array[@]}"; do
+      [[ "${var_name}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+      var_value="$(dbflow_compile_var_value "${var_name}")"
+      line="${line//^${var_name}/${var_value}}"
+    done
+    printf '%s\n' "${line}" >> "${target_file}" || return 1
+  done < "${source_file}"
+}
+
 ## Logging
 failure="failure"
 success="success"

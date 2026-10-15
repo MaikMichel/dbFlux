@@ -156,8 +156,16 @@ $(
 
 Rem Run the Sublime File
 set feedback on
+$(dbflow_sql_var_defines)
+set scan on
+set define '^'
+set verify off
+set concat on
+set concat .
 @"${DBFLOW_FILE}"
 set feedback off
+set scan off
+set define off
 Rem show errors for easy correction
 Rem prompt Errors
 
