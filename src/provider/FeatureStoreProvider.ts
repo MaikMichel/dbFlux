@@ -75,7 +75,7 @@ const writeCatalog = async (featureSet: FeatureSet, targetFolder: string, gitURL
   }
 
   LoggingService.logInfo("Writing Catalog");
-  writeFileSync(featureCatalogFile, Buffer.from(JSON.stringify(catalog, null, 2)));
+  writeFileSync(featureCatalogFile, JSON.stringify(catalog, null, 2));
 };
 
 const updateCatalog = async (featureSet: FeatureSet, catalog: Catalog | undefined, existingIndex: number) => {
@@ -93,7 +93,7 @@ const updateCatalog = async (featureSet: FeatureSet, catalog: Catalog | undefine
 
   LoggingService.logInfo("Writing Catalog");
   catalog!.features[existingIndex]! = featureSet;
-  writeFileSync(featureCatalogFile, Buffer.from(JSON.stringify(catalog, null, 2)));
+  writeFileSync(featureCatalogFile, JSON.stringify(catalog, null, 2));
 };
 
 const informWhenNewVersionExists = () => {
@@ -170,7 +170,7 @@ const executeInstructions = async (catalog: Catalog, featureName: string) => {
   // Write Back to Catalog
   featureSet.state = "APPLIED";
   LoggingService.logInfo("Writing Catalog");
-  writeFileSync(featureCatalogFile, Buffer.from(JSON.stringify(catalog, null, 2)));
+  writeFileSync(featureCatalogFile, JSON.stringify(catalog, null, 2));
 };
 
 
