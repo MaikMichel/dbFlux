@@ -12,7 +12,7 @@
 	"description": "Build PL/SQL, Javascript and CSS for your Oracle APEX Instance",
 	"version": "5.7.1",
 	"engines": {
-		"vscode": "^1.82.0"
+		"vscode": "^1.101.0"
 	},
 	"keywords": [
 		"plsql",
@@ -994,20 +994,19 @@
 	"devDependencies": {
 		"@eslint/js": "^10.0.0",
 		"@types/fs-extra": "^11.0.4",
-		"@types/glob": "^7.1.3",
 		"@types/mocha": "^10.0.10",
-		"@types/node": "^25.9.1",
+		"@types/node": "^25.9.5",
 		"@types/vscode": "^1.120.0",
-		"@typescript-eslint/eslint-plugin": "^8.60.0",
-		"@typescript-eslint/parser": "^8.60.0",
+		"@typescript-eslint/eslint-plugin": "^8.70.0",
+		"@typescript-eslint/parser": "^8.70.0",
 		"@vscode/test-electron": "^2.5.2",
 		"esbuild": "^0.28.0",
 		"eslint": "^10.4.1",
-		"glob": "^8.1.0",
+		"glob": "^13.0.6",
 		"mocha": "^11.7.6",
 		"term-to-html": "^1.2.0",
-		"typescript": "^5.9.3",
-		"typescript-eslint": "^8.60.0"
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.70.0"
 	},
 	"overrides": {
 		"diff": "^9.0.0",
