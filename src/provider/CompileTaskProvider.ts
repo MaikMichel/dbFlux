@@ -567,9 +567,8 @@ export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, 
 
     if (schemaSelected && selectedSchemas) {
       const connectionUser = buildConnectionUser(projectInfos, "", undefined);
-      const schemaName = selectedSchemas[0].split("/")[1];
       await setAppPassword(projectInfos);
-      const passWord = getPassword(projectInfos, schemaName, (CompileTaskStore.getInstance().appPwd === undefined) , context);
+      const passWord = getPassword(projectInfos, connectionUser, (CompileTaskStore.getInstance().appPwd === undefined) , context);
 
       if (passWord !== undefined) {
         const termName = cli;

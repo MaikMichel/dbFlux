@@ -197,10 +197,11 @@ export abstract class AbstractBashTaskProvider {
 export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: string, currentFilePath: string | undefined = undefined): string {
   const dbUserFromPath = getDBUserFromPath(currentPath, projectInfos, currentFilePath);
 
-  if (dbUserFromPath.toLowerCase() === projectInfos.dbAdminUser+"".toLowerCase()) {
-    return projectInfos.dbAdminUser+"".toLowerCase();
+  if (dbUserFromPath.toLowerCase() === (projectInfos.dbAdminUser+"").toLowerCase()) {
+    return projectInfos.dbAdminUser+"";
   } else {
     if (projectInfos.projectMode?.toUpperCase() === "SINGLE" &&
+        projectInfos.dbAppUser &&
         dbUserFromPath.toLowerCase() !== projectInfos.dbAppUser.toLowerCase()) {
       return projectInfos.dbAppUser;
     }
