@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as Handlebars from "handlebars";
 import * as path from "path";
 import { commands, ExtensionContext, ViewColumn, Webview, WebviewPanel, window } from "vscode";
-import { IProjectInfos } from "../provider/AbstractBashTaskProvider";
+import { getStoredOrInferredProjectMode, IProjectInfos } from "../provider/AbstractBashTaskProvider";
 import { getRestServerInfo } from "../helper/RestApiUtils";
 import { LoggingService } from "../helper/LoggingService";
 import { getWorkspaceRootPath } from "../helper/utilities";
@@ -47,7 +47,7 @@ export class DBFluxConfigPanel {
 
   private async getHtml(_webview: Webview, context: ExtensionContext): Promise<string> {
     const connMode    = context.workspaceState.get<string>("dbFlux_CONN_MODE") ?? "SQLNET";
-    const projectMode = context.workspaceState.get<string>("dbFlux_PROJECT_MODE") ?? "SINGLE";
+    const projectMode = getStoredOrInferredProjectMode(context);
     const prefix      = getWorkspaceRootPath() + "|";
 
     const appPwd   = await context.secrets.get(prefix + "dbFlux_DB_APP_PWD");

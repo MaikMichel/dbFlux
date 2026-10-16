@@ -338,9 +338,9 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
       projectInfos.dataSchema   = context.workspaceState.get("dbFlux_DATA_SCHEMA")!;
 
 
-      projectInfos.isFlexMode   = context.workspaceState.get("dbFlux_PROJECT_MODE") === "FLEX";
+      projectInfos.projectMode  = getStoredOrInferredProjectMode(context);
+      projectInfos.isFlexMode   = projectInfos.projectMode === "FLEX";
       projectInfos.projectName  = context.workspaceState.get("dbFlux_PROJECT");
-      projectInfos.projectMode  = context.workspaceState.get("dbFlux_PROJECT_MODE");
       projectInfos.workspace    = context.workspaceState.get("dbFlux_WORKSPACE");
       projectInfos.dbConnMode   = context.workspaceState.get("dbFlux_CONN_MODE") ?? "SQLNET";
 
@@ -515,6 +515,24 @@ readdirSync(source, { withFileTypes: true })
   return dirent.isDirectory() && !["_setup", ".setup", "sys", "dist", ".hooks"].includes(dirent.name);
 })
 .map((dirent) => dirent.name);
+
+// used when no project mode is stored: 1 schema folder = SINGLE, 3 = MULTI, otherwise FLEX
+export function inferProjectMode(dbFolder: string): string {
+  if (!existsSync(dbFolder)) {
+    return "SINGLE";
+  }
+
+  const schemaCount = getSchemaFolders(dbFolder).length;
+  if (schemaCount <= 1) {
+    return "SINGLE";
+  }
+  return schemaCount === 3 ? "MULTI" : "FLEX";
+}
+
+export function getStoredOrInferredProjectMode(context: ExtensionContext): string {
+  return context.workspaceState.get<string>("dbFlux_PROJECT_MODE")
+      ?? inferProjectMode(path.join(getWorkspaceRootPath(), ConfigurationManager.getDBFolderName()));
+}
 
 export async function getDBSchemaFolders():Promise<QuickPickItem[]> {
   if (workspace.workspaceFolders){

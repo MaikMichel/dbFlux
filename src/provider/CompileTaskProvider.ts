@@ -558,8 +558,10 @@ async function isfileLockedByAnotherUser(projectName: string, relativeFileName: 
 }
 
 
-export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, cli: string, context: ExtensionContext) {
+export function registerRunSQLcli(command: string, cli: string, context: ExtensionContext) {
   return commands.registerCommand(command, async () => {
+    // reload on each run, so changes from the config panel apply without a reload
+    const projectInfos = await getProjectInfos(context);
 
     const dbSchemaFolders = await getDBSchemaFolders();
     const schemaSelected: boolean = await selectSchema(dbSchemaFolders);
@@ -576,9 +578,11 @@ export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, 
         // pass the connect string as $1, so bash doesn't interpret special chars in the password
         const term = window.createTerminal(termName, 'bash', ['-cl', cli + ' "$1"', cli, `${connectionUser}/"${passWord}"@${projectInfos.dbTns}`]);
 
-          window.onDidCloseTerminal(event => {
-            if (term && termName === event.name) {
+          // listen only for this terminal and remove the listener once it is closed
+          const closeListener = window.onDidCloseTerminal(event => {
+            if (event === term) {
               term.dispose();
+              closeListener.dispose();
             }
           });
 
