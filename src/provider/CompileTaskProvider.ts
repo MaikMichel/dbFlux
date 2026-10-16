@@ -573,7 +573,8 @@ export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, 
       if (passWord !== undefined) {
         const termName = cli;
 
-        const term = window.createTerminal(termName, 'bash', ['-cl', cli + " " + connectionUser + "/" + passWord + "@" + projectInfos.dbTns]);
+        // pass the connect string as $1, so bash doesn't interpret special chars in the password
+        const term = window.createTerminal(termName, 'bash', ['-cl', cli + ' "$1"', cli, `${connectionUser}/"${passWord}"@${projectInfos.dbTns}`]);
 
           window.onDidCloseTerminal(event => {
             if (term && termName === event.name) {

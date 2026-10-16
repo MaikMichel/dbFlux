@@ -82,4 +82,11 @@ suite('Connection user resolution', () => {
 
 		assert.strictEqual(buildConnectionUser(projectInfos, wsPath('db/ati')), 'ati');
 	});
+
+	test('does not throw in MULTI mode when DB_APP_USER is not set', () => {
+		const projectInfos = createProjectInfos('MULTI');
+		projectInfos.dbAppUser = undefined as unknown as string;
+
+		assert.doesNotThrow(() => buildConnectionUser(projectInfos, wsPath('db/ati')));
+	});
 });

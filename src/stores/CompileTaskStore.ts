@@ -114,8 +114,13 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
      }
   }
 
-  if (schemaPWD) {
-    compTaskStoreInstance.appPwd = schemaPWD;
+  // In SINGLE mode DB_APP_USER always connects, so a schema secret is not used there.
+  // Otherwise getPassword reads the schema secret from dbPasses, so only skip the prompt
+  // and never store the schema password as app password (it would leak into later tasks).
+  if (schemaPWD && projectInfosReloaded.projectMode?.toUpperCase() !== "SINGLE" && !projectInfosReloaded.dbAppPwd) {
+    if (compTaskStoreInstance.appPwd === undefined) {
+      compTaskStoreInstance.appPwd = "";
+    }
   } else {
 
     // if connConnMode is REST we look for an API key instead of a password

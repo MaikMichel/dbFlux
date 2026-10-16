@@ -211,7 +211,7 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
       return `${dbUserFromPath}`;
     } else {
       // otherwise as usual
-      if (projectInfos.dbAppUser.toLowerCase() === dbUserFromPath.toLowerCase()) {
+      if (projectInfos.dbAppUser?.toLowerCase() === dbUserFromPath.toLowerCase()) {
         return `${projectInfos.dbAppUser}`;
       } else {
         return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
