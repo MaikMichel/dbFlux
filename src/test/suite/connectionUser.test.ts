@@ -51,6 +51,13 @@ suite('Connection user resolution', () => {
 		assert.strictEqual(buildConnectionUser(projectInfos, wsPath('db/ati')), 'ati');
 	});
 
+	test('uses DB_APP_USER as configured in SINGLE mode even when a schema secret exists for it', () => {
+		const projectInfos = createProjectInfos('SINGLE', { dbFlux_ati_PWD: 'schema-password' });
+		projectInfos.dbAppUser = 'ATI';
+
+		assert.strictEqual(buildConnectionUser(projectInfos, wsPath('db/ati')), 'ATI');
+	});
+
 	test('keeps proxy authentication for a different schema in MULTI mode', () => {
 		const projectInfos = createProjectInfos('MULTI');
 

@@ -211,25 +211,23 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
 
   if (dbUserFromPath.toLowerCase() === (projectInfos.dbAdminUser+"").toLowerCase()) {
     return projectInfos.dbAdminUser+"";
-  } else {
-    if (projectInfos.projectMode?.toUpperCase() === "SINGLE" &&
-        projectInfos.dbAppUser &&
-        dbUserFromPath.toLowerCase() !== projectInfos.dbAppUser.toLowerCase()) {
-      return projectInfos.dbAppUser;
-    }
-
-    // check if there is a var with pattern: dbFlux_..._PWD,
-    if (findSchemaPwdKey(projectInfos.dbPasses, dbUserFromPath) !== undefined) {
-      return `${dbUserFromPath}`;
-    } else {
-      // otherwise as usual
-      if (projectInfos.dbAppUser?.toLowerCase() === dbUserFromPath.toLowerCase()) {
-        return `${projectInfos.dbAppUser}`;
-      } else {
-        return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
-      }
-    }
   }
+
+  // SINGLE: DB_APP_USER always connects, without proxy and ignoring schema passwords
+  if (projectInfos.projectMode?.toUpperCase() === "SINGLE" && projectInfos.dbAppUser) {
+    return projectInfos.dbAppUser;
+  }
+
+  // a schema password (dbFlux_..._PWD) means connecting directly as the schema
+  if (findSchemaPwdKey(projectInfos.dbPasses, dbUserFromPath) !== undefined) {
+    return `${dbUserFromPath}`;
+  }
+
+  // otherwise as usual
+  if (projectInfos.dbAppUser?.toLowerCase() === dbUserFromPath.toLowerCase()) {
+    return `${projectInfos.dbAppUser}`;
+  }
+  return `${projectInfos.dbAppUser}[${dbUserFromPath}]`;
 }
 
 // apply.env may hold passwords (dbFlux_<SCHEMA>_PWD), so it must never be committed.
