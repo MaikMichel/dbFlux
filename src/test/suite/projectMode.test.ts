@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { inferProjectMode, stripNumericPrefix } from '../../provider/AbstractBashTaskProvider';
+import { inferProjectMode, resolveProjectMode, stripNumericPrefix } from '../../provider/AbstractBashTaskProvider';
 
 const multiSchemas = { appSchema: 'proj_app', logicSchema: 'proj_logic', dataSchema: 'proj_data' };
 
@@ -82,5 +82,11 @@ suite('Project mode inference', () => {
 		assert.strictEqual(stripNumericPrefix('2024data'), '2024data');
 		assert.strictEqual(stripNumericPrefix('proj_app'), 'proj_app');
 		assert.strictEqual(inferProjectMode(createDbFolder(['2024proj']), { appSchema: 'proj' }), 'FLEX');
+	});
+
+	test('resolves REST projects to SINGLE and keeps a stored mode without detection', () => {
+		assert.deepStrictEqual(resolveProjectMode('FLEX', 'REST'), { projectMode: 'SINGLE', detected: false });
+		assert.deepStrictEqual(resolveProjectMode(undefined, 'REST'), { projectMode: 'SINGLE', detected: false });
+		assert.deepStrictEqual(resolveProjectMode('MULTI', 'SQLNET'), { projectMode: 'MULTI', detected: false });
 	});
 });

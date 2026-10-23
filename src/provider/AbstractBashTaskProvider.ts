@@ -376,9 +376,7 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
       projectInfos.logicSchema  = buildEnv.parsed.LOGIC_SCHEMA;
       projectInfos.dataSchema   = buildEnv.parsed.DATA_SCHEMA;
 
-      // REST projects are always SINGLE, like the dbFlow config panel enforces
-      projectInfos.projectMode  = buildEnv.parsed.PROJECT_MODE
-                               || (projectInfos.dbConnMode === "REST" ? "SINGLE" : inferProjectMode(getDBFolderPath(), projectInfos));
+      projectInfos.projectMode  = resolveProjectMode(buildEnv.parsed.PROJECT_MODE, projectInfos.dbConnMode, projectInfos).projectMode;
 
       projectInfos.isFlexMode  = (projectInfos.projectMode?.toUpperCase() === "FLEX");
       projectInfos.workspace   = buildEnv.parsed.WORKSPACE;
@@ -637,6 +635,19 @@ export function inferProjectMode(dbFolder: string, schemas: IConfiguredSchemas =
     return "MULTI";
   }
   return "FLEX";
+}
+
+// The one place deciding the project mode of a dbFlow project (loader and config panel):
+// REST is always SINGLE, otherwise the stored mode, otherwise the one inferred from the db folder.
+// "detected" is true when the mode is only inferred, i.e. not saved yet.
+export function resolveProjectMode(storedMode: string | undefined, connMode: string | undefined, schemas: IConfiguredSchemas = {}): { projectMode: string, detected: boolean } {
+  if (connMode === "REST") {
+    return { projectMode: "SINGLE", detected: false };
+  }
+  if (storedMode) {
+    return { projectMode: storedMode, detected: false };
+  }
+  return { projectMode: inferProjectMode(getDBFolderPath(), schemas), detected: true };
 }
 
 export function getDBFolderPath(): string {
