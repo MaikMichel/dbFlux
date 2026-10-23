@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { inferProjectMode } from '../../provider/AbstractBashTaskProvider';
+import { inferProjectMode, stripNumericPrefix } from '../../provider/AbstractBashTaskProvider';
 
 const multiSchemas = { appSchema: 'proj_app', logicSchema: 'proj_logic', dataSchema: 'proj_data' };
 
@@ -65,5 +65,22 @@ suite('Project mode inference', () => {
 
 	test('uses FLEX for any other number of schema folders', () => {
 		assert.strictEqual(inferProjectMode(createDbFolder(['one', 'two']), multiSchemas), 'FLEX');
+	});
+
+	test('uses MULTI without schema folders when three different schemas are configured', () => {
+		assert.strictEqual(inferProjectMode(path.join(tmpRoot, 'db'), multiSchemas), 'MULTI');
+		assert.strictEqual(inferProjectMode(createDbFolder(['_setup']), multiSchemas), 'MULTI');
+	});
+
+	test('uses SINGLE without schema folders when the configured schemas are incomplete or equal', () => {
+		assert.strictEqual(inferProjectMode(path.join(tmpRoot, 'db'), { appSchema: 'proj' }), 'SINGLE');
+		assert.strictEqual(inferProjectMode(path.join(tmpRoot, 'db'), { appSchema: 'proj', logicSchema: 'proj', dataSchema: 'proj' }), 'SINGLE');
+	});
+
+	test('matches schema folders like the connection user resolution', () => {
+		assert.strictEqual(stripNumericPrefix('010_data'), 'data');
+		assert.strictEqual(stripNumericPrefix('2024data'), '2024data');
+		assert.strictEqual(stripNumericPrefix('proj_app'), 'proj_app');
+		assert.strictEqual(inferProjectMode(createDbFolder(['2024proj']), { appSchema: 'proj' }), 'FLEX');
 	});
 });

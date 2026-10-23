@@ -520,6 +520,13 @@ function isNumeric(str:string):boolean {
   return check;
 }
 
+// "010_data" -> "data": only a numeric first segment followed by "_" is removed.
+// Shared by the connection user resolution and the project mode inference, so both see the same schema name.
+export function stripNumericPrefix(name: string): string {
+  const parts = name.split("_");
+  return parts.length > 1 && isNumeric(parts[0]) ? parts.slice(1).join("_") : name;
+}
+
 export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos, currentFilePath: string | undefined = undefined): string {
   let returnDBUser: string = ""; // sql File inside static or rest
   const wsRoot = getWorkspaceRootPath().toLowerCase()+path.posix.sep;
@@ -571,7 +578,7 @@ export function getDBUserFromPath(pathName: string, projectInfos: IProjectInfos,
 
 
   if (returnDBUser && (lowerPathParts[0] !== "_setup" && lowerPathParts[0] !== ".setup") && returnDBUser.split("_").length > 1) {
-    returnDBUser = isNumeric(returnDBUser.split("_")[0])?returnDBUser.split("_").slice(1).join("_"):returnDBUser;
+    returnDBUser = stripNumericPrefix(returnDBUser);
   }
 
   LoggingService.logDebug(`returning returnDBUser: ${returnDBUser}`);
@@ -606,19 +613,26 @@ export interface IConfiguredSchemas {
 // Used when no project mode is stored. SINGLE/MULTI only when the schema folders match the
 // configured schemas, otherwise FLEX. No (readable) db folder means a fresh project: SINGLE.
 export function inferProjectMode(dbFolder: string, schemas: IConfiguredSchemas = {}): string {
+  // no schema folders to look at (fresh project or unreadable db folder): decide by the configured schemas
+  const fallbackMode = () => {
+    const configured = [schemas.appSchema, schemas.logicSchema, schemas.dataSchema].map(schema => schema?.toLowerCase());
+    return configured.every(schema => !!schema) && new Set(configured).size === 3 ? "MULTI" : "SINGLE";
+  };
+
   let folders: string[];
   try {
     folders = getSchemaFolders(dbFolder);
   } catch (e) {
-    return "SINGLE";
+    LoggingService.logWarning(`could not read schema folders of ${dbFolder}, using the configured schemas to infer the project mode`);
+    return fallbackMode();
   }
 
-  // remove leading numbers with underscore, like SetSchemaPassword does
-  const folderNames = folders.map(folder => folder.replace(/^[\d_]+/, "").toLowerCase());
+  // remove a leading number with underscore, like the connection user resolution does
+  const folderNames = folders.map(folder => stripNumericPrefix(folder).toLowerCase());
   const matches = (schema?: string) => !!schema && folderNames.includes(schema.toLowerCase());
 
   if (folderNames.length === 0) {
-    return "SINGLE";
+    return fallbackMode();
   } else if (folderNames.length === 1 && matches(schemas.appSchema)) {
     return "SINGLE";
   } else if (folderNames.length === 3 && matches(schemas.appSchema) && matches(schemas.logicSchema) && matches(schemas.dataSchema)) {
