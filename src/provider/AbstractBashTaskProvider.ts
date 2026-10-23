@@ -668,14 +668,30 @@ export function setProjectContextKeys(projectInfos: IProjectInfos, context: Exte
 }
 
 // Reloads the shared projectInfos in place, so commands use the saved config without a window reload.
-// Returns false when no project was loaded at activation (commands are not registered yet).
+// All commands keep a reference to this one object and read its fields on each run, so updating it in place is enough.
+// Returns false when no project was loaded at activation (commands are not registered yet) or the reload failed.
+let refreshCounter = 0;
 export async function refreshActiveProjectInfos(context: ExtensionContext): Promise<boolean> {
   if (!activeProjectInfos) {
     return false;
   }
 
-  await ensureApplyEnvIgnored(getWorkspaceRootPath(), true);
-  const reloaded = await getProjectInfos(context);
+  const refreshId = ++refreshCounter;
+  let reloaded: IProjectInfos;
+  try {
+    await ensureApplyEnvIgnored(getWorkspaceRootPath(), true);
+    reloaded = await getProjectInfos(context);
+  } catch (e) {
+    LoggingService.logError(`could not reload the project configuration: ${e}`);
+    return false;
+  }
+
+  // a newer refresh was started meanwhile, so don't overwrite its result with this older one
+  if (refreshId !== refreshCounter) {
+    return true;
+  }
+
+  // no await between clearing and filling, so no other code can see the half-empty object
   for (const key of Object.keys(activeProjectInfos)) {
     delete (activeProjectInfos as any)[key];
   }
