@@ -5,7 +5,7 @@ import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunS
 import { registerExportAPEXCommand, registerExportAPEXPluginCommand } from "./provider/ExportTaskProvider";
 
 import { registerExportRESTCommand } from "./provider/RestTaskProvider";
-import { applyFileExists, getDBFlowMode, getProjectInfos, setActiveProjectInfos, setProjectContextKeys } from "./provider/AbstractBashTaskProvider";
+import { applyFileExists, ensureApplyEnvIgnored, getDBFlowMode, getProjectInfos, setActiveProjectInfos, setProjectContextKeys } from "./provider/AbstractBashTaskProvider";
 import { openCoverageResult, openTestResult, registerExecuteTestPackageCommand, registerExecuteTestPackageCommandWithCodeCoverage, registerExecuteTestsTaskCommand } from "./provider/TestTaskProvider";
 import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig } from "./helper/ConfigurationManager";
 import { DBFluxConfigPanel } from "./ui/DBFluxConfigPanel";
@@ -151,6 +151,9 @@ export async function activate(context: ExtensionContext) {
     } else {
       const applyFileName = join(workspace.workspaceFolders[0].uri.fsPath, "apply.env");
       const buildFileName = join(workspace.workspaceFolders[0].uri.fsPath, "build.env");
+
+      // apply.env may hold schema passwords and must never be committed
+      ensureApplyEnvIgnored(workspace.workspaceFolders[0].uri.fsPath);
 
       myStatusBarItem.tooltip = `dbFlux: configuration found (${basename(buildFileName)}/${basename(applyFileName)})`;
 

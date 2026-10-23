@@ -1,7 +1,8 @@
 import * as path from "path";
 import * as dotenv from "dotenv";
+import { execFileSync } from "child_process";
 import { appendFileSync, chmodSync, existsSync, PathLike, readFileSync, readdirSync } from "fs";
-import { getPassword, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
+import { findSchemaPwdKey, getPassword, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import { CompileTaskStore } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, Uri, window, workspace } from "vscode";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
@@ -207,7 +208,7 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
     }
 
     // check if there is a var with pattern: dbFlux_..._PWD,
-    if (projectInfos.dbPasses?.hasOwnProperty(`dbFlux_${dbUserFromPath}_PWD`)) {
+    if (findSchemaPwdKey(projectInfos.dbPasses, dbUserFromPath) !== undefined) {
       return `${dbUserFromPath}`;
     } else {
       // otherwise as usual
@@ -226,16 +227,27 @@ export function ensureApplyEnvIgnored(workspaceRoot: string): void {
     if (!existsSync(path.join(workspaceRoot, "apply.env")) || !existsSync(path.join(workspaceRoot, ".git"))) {
       return;
     }
+    try {
+      // exit code 0: already ignored (by .gitignore, a pattern like *.env, or a parent ignore)
+      execFileSync("git", ["check-ignore", "-q", "apply.env"], { cwd: workspaceRoot, stdio: "ignore" });
+      return;
+    } catch {
+      // not ignored (exit 1) or git is not available, so add the line
+    }
     const gitIgnore = path.join(workspaceRoot, ".gitignore");
     const content = existsSync(gitIgnore) ? readFileSync(gitIgnore, "utf8") : "";
-    const ignored = content.split(/\r?\n/).some(line => ["apply.env", "/apply.env", "**/apply.env"].includes(line.trim()));
-    if (!ignored) {
+    if (!content.split(/\r?\n/).some(line => ["apply.env", "/apply.env", "**/apply.env"].includes(line.trim()))) {
       appendFileSync(gitIgnore, `${content.length > 0 && !content.endsWith("\n") ? "\n" : ""}apply.env\n`);
       LoggingService.logInfo("apply.env added to .gitignore");
     }
   } catch (e) {
     LoggingService.logWarning(`could not add apply.env to .gitignore: ${e}`);
   }
+}
+
+// values starting with ! are base64 encoded
+function decodeEnvValue(value: string): string {
+  return value.startsWith("!") ? Buffer.from(value.substring(1), "base64").toString("utf8").replace("\n", "") : value;
 }
 
 export async function getProjectInfos(context: ExtensionContext) {
@@ -313,13 +325,11 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
       projectInfos.restWorkspace         = applyEnv.parsed.REST_WORKSPACE;
       projectInfos.restOauthTokenUrl     = applyEnv.parsed.REST_OAUTH_TOKEN_URL;
 
-      ensureApplyEnvIgnored(f);
-
       // schema passwords from apply.env, a secret with the same key overrides them below
       for (const [key, value] of Object.entries(applyEnv.parsed ?? {})) {
         if (key.startsWith("dbFlux_") && key.endsWith("_PWD") && value) {
           projectInfos.dbPasses = projectInfos.dbPasses || {};
-          projectInfos.dbPasses[key] = value;
+          projectInfos.dbPasses[key] = decodeEnvValue(value);
         }
       }
 
@@ -609,6 +619,7 @@ export async function refreshActiveProjectInfos(context: ExtensionContext): Prom
     return false;
   }
 
+  ensureApplyEnvIgnored(getWorkspaceRootPath());
   const reloaded = await getProjectInfos(context);
   for (const key of Object.keys(activeProjectInfos)) {
     delete (activeProjectInfos as any)[key];

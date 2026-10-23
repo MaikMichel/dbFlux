@@ -1,6 +1,6 @@
 import { ExtensionContext, window } from "vscode";
 import { getDBFlowMode, IProjectInfos } from "../provider/AbstractBashTaskProvider";
-import { getSchemaFromFile, getWorkspaceRootPath } from "../helper/utilities";
+import { findSchemaPwdKey, getSchemaFromFile, getWorkspaceRootPath } from "../helper/utilities";
 
 
 
@@ -110,7 +110,8 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
         schemaPWD = await context?.secrets.get(getWorkspaceRootPath() + `|dbFlux_${schemaName}_PWD`);
       }
       // schema password (e.g. from apply.env) always wins over the app password
-      schemaPWD = schemaPWD || projectInfosReloaded.dbPasses?.[`dbFlux_${schemaName}_PWD`];
+      const pwdKey = findSchemaPwdKey(projectInfosReloaded.dbPasses, schemaName);
+      schemaPWD = schemaPWD || (pwdKey ? projectInfosReloaded.dbPasses[pwdKey] : undefined);
      } catch (e) {
         // do nothing
      }

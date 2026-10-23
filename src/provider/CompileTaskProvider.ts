@@ -584,11 +584,14 @@ export function registerRunSQLcli(command: string, cli: string, context: Extensi
         }
       } else {
         connectionUser = buildConnectionUser(projectInfos, selectedSchemas[0], undefined);
-        await setAppPassword(projectInfos);
+        await setAppPassword(projectInfos, context, `${selectedSchemas[0]}/`);
         passWord = getPassword(projectInfos, connectionUser, (CompileTaskStore.getInstance().appPwd === undefined), context);
       }
 
-      if (passWord !== undefined) {
+      if (!passWord) {
+        // password prompt was cancelled or no password is known for this user
+        window.showErrorMessage(`dbFlux: No password available for ${connectionUser || "the connection user"}, ${cli} was not started.`);
+      } else {
         const termName = cli;
 
         // pass the connect string as $1, so bash doesn't interpret special chars in the password

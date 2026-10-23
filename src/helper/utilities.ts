@@ -348,14 +348,20 @@ export function showInformationProgress(msg:string, timeoutms:number = 3000) {
 
 
 
+  // schema passwords are stored as dbFlux_<schema>_PWD, the schema is matched case-insensitive
+  export function findSchemaPwdKey(dbPasses: { [key: string]: string } | undefined, schema: string): string | undefined {
+    const wanted = `dbFlux_${schema}_PWD`.toLowerCase();
+    return Object.keys(dbPasses ?? {}).find(key => key.toLowerCase() === wanted);
+  }
+
   export function getPassword(pInfos: IProjectInfos, pTargetUser: string, useDefaultPW: boolean, context: ExtensionContext): string {
     let passWord;
     const dbFluxMode = getDBFlowMode(context);
 
-    if (pTargetUser === pInfos.dbAdminUser) {
+    if (pInfos.dbAdminUser && pTargetUser.toLowerCase() === pInfos.dbAdminUser.toLowerCase()) {
       passWord = CompileTaskStore.getInstance().adminPwd!;
-    } else if (["dbFlux", "dbFlow"].includes(dbFluxMode!) && pInfos.dbPasses?.hasOwnProperty(`dbFlux_${pTargetUser}_PWD`)){
-      passWord = pInfos.dbPasses[`dbFlux_${pTargetUser}_PWD`];
+    } else if (["dbFlux", "dbFlow"].includes(dbFluxMode!) && findSchemaPwdKey(pInfos.dbPasses, pTargetUser) !== undefined){
+      passWord = pInfos.dbPasses[findSchemaPwdKey(pInfos.dbPasses, pTargetUser)!];
     } else {
       if (useDefaultPW) {
         passWord = pInfos.dbAppPwd!;
