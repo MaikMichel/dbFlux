@@ -583,8 +583,10 @@ export function registerRunSQLcli(command: string, cli: string, context: Extensi
         }
       } else {
         connectionUser = buildConnectionUser(projectInfos, selectedSchemas[0], undefined);
-        await setAppPassword(projectInfos, context, `${selectedSchemas[0]}/`);
-        passWord = getPassword(projectInfos, connectionUser, (CompileTaskStore.getInstance().appPwd === undefined), context);
+        // getPassword prefers a schema password and falls back to the app password
+        passWord = await setAppPassword(projectInfos, context, `${selectedSchemas[0]}/`)
+          ? getPassword(projectInfos, connectionUser, false, context)
+          : undefined;
       }
 
       if (!passWord) {

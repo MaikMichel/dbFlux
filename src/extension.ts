@@ -153,7 +153,7 @@ export async function activate(context: ExtensionContext) {
       const buildFileName = join(workspace.workspaceFolders[0].uri.fsPath, "build.env");
 
       // apply.env may hold schema passwords and must never be committed
-      ensureApplyEnvIgnored(workspace.workspaceFolders[0].uri.fsPath);
+      void ensureApplyEnvIgnored(workspace.workspaceFolders[0].uri.fsPath);
 
       myStatusBarItem.tooltip = `dbFlux: configuration found (${basename(buildFileName)}/${basename(applyFileName)})`;
 

@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as dotenv from "dotenv";
-import { execFileSync } from "child_process";
+import { execFile } from "child_process";
+import { promisify } from "util";
 import { appendFileSync, chmodSync, existsSync, PathLike, readFileSync, readdirSync } from "fs";
 import { findSchemaPwdKey, getPassword, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import { CompileTaskStore } from "../stores/CompileTaskStore";
@@ -189,6 +190,9 @@ export abstract class AbstractBashTaskProvider {
       throw new Error(message);
     }
 
+    // apply.env may have been created after activation
+    void ensureApplyEnvIgnored(getWorkspaceRootPath());
+
     runnerInfo.projectInfos   = projectInfos;
     runnerInfo.coloredOutput  = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
 
@@ -228,15 +232,32 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
   }
 }
 
-// apply.env may hold passwords (dbFlux_<SCHEMA>_PWD), so it must never be committed
-export function ensureApplyEnvIgnored(workspaceRoot: string): void {
+// apply.env may hold passwords (dbFlux_<SCHEMA>_PWD), so it must never be committed.
+// Once confirmed as ignored it is not checked again, unless forced (e.g. on config save).
+const execFileAsync = promisify(execFile);
+let applyEnvIgnoreCheck: Promise<void> | undefined;
+let applyEnvIgnoreConfirmed = false;
+
+export function ensureApplyEnvIgnored(workspaceRoot: string, force = false): Promise<void> {
+  if (applyEnvIgnoreConfirmed && !force) {
+    return Promise.resolve();
+  }
+  // concurrent calls share one check, otherwise each of them could append the line
+  applyEnvIgnoreCheck = (applyEnvIgnoreCheck ?? checkApplyEnvIgnored(workspaceRoot)).finally(() => {
+    applyEnvIgnoreCheck = undefined;
+  });
+  return applyEnvIgnoreCheck;
+}
+
+async function checkApplyEnvIgnored(workspaceRoot: string): Promise<void> {
   try {
     if (!existsSync(path.join(workspaceRoot, "apply.env")) || !existsSync(path.join(workspaceRoot, ".git"))) {
       return;
     }
     try {
       // exit code 0: already ignored (by .gitignore, a pattern like *.env, or a parent ignore)
-      execFileSync("git", ["check-ignore", "-q", "apply.env"], { cwd: workspaceRoot, stdio: "ignore" });
+      await execFileAsync("git", ["check-ignore", "-q", "apply.env"], { cwd: workspaceRoot });
+      applyEnvIgnoreConfirmed = true;
       return;
     } catch {
       // not ignored (exit 1) or git is not available, so add the line
@@ -247,6 +268,7 @@ export function ensureApplyEnvIgnored(workspaceRoot: string): void {
       appendFileSync(gitIgnore, `${content.length > 0 && !content.endsWith("\n") ? "\n" : ""}apply.env\n`);
       LoggingService.logInfo("apply.env added to .gitignore");
     }
+    applyEnvIgnoreConfirmed = true;
   } catch (e) {
     LoggingService.logWarning(`could not add apply.env to .gitignore: ${e}`);
   }
@@ -626,7 +648,7 @@ export async function refreshActiveProjectInfos(context: ExtensionContext): Prom
     return false;
   }
 
-  ensureApplyEnvIgnored(getWorkspaceRootPath());
+  await ensureApplyEnvIgnored(getWorkspaceRootPath(), true);
   const reloaded = await getProjectInfos(context);
   for (const key of Object.keys(activeProjectInfos)) {
     delete (activeProjectInfos as any)[key];
