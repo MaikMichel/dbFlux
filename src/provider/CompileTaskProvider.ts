@@ -557,11 +557,8 @@ async function isfileLockedByAnotherUser(projectName: string, relativeFileName: 
 }
 
 
-export function registerRunSQLcli(command: string, cli: string, context: ExtensionContext) {
+export function registerRunSQLcli(projectInfos: IProjectInfos, command: string, cli: string, context: ExtensionContext) {
   return commands.registerCommand(command, async () => {
-    // reload on each run, so changes from the config panel apply without a reload
-    const projectInfos = await getProjectInfos(context);
-
     const dbSchemaFolders = await getDBSchemaFolders();
     const schemaSelected: boolean = await selectSchema(dbSchemaFolders);
     const selectedSchemas = CompileTaskStore.getInstance().selectedSchemas;
