@@ -585,6 +585,18 @@ readdirSync(source, { withFileTypes: true })
 })
 .map((dirent) => dirent.name);
 
+// True when every schema folder has its own password, so no app password is needed.
+export function allSchemaFoldersHaveOwnPassword(projectInfos: IProjectInfos): boolean {
+  try {
+    const dbFolderName = ConfigurationManager.getDBFolderName();
+    const folders = getSchemaFolders(path.join(getWorkspaceRootPath(), dbFolderName));
+    return folders.length > 0 && folders.every(folder =>
+      findSchemaPwdKey(projectInfos.dbPasses, getDBUserFromPath(`${dbFolderName}/${folder}`, projectInfos)) !== undefined);
+  } catch (e) {
+    return false;
+  }
+}
+
 export interface IConfiguredSchemas {
   appSchema?:   string;
   logicSchema?: string;

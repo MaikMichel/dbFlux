@@ -1,5 +1,5 @@
 import { ExtensionContext, window } from "vscode";
-import { getDBFlowMode, IProjectInfos } from "../provider/AbstractBashTaskProvider";
+import { allSchemaFoldersHaveOwnPassword, getDBFlowMode, IProjectInfos } from "../provider/AbstractBashTaskProvider";
 import { findSchemaPwdKey, getSchemaFromFile, getWorkspaceRootPath } from "../helper/utilities";
 
 
@@ -122,7 +122,9 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
   // In SINGLE mode DB_APP_USER always connects, so a schema secret is not used there.
   // Otherwise getPassword reads the schema password from dbPasses, so only skip the prompt
   // and never store the schema password as app password (it would leak into later tasks).
-  if (schemaPWD && projectInfosReloaded.projectMode?.toUpperCase() !== "SINGLE" && !projectInfosReloaded.dbAppPwd) {
+  // Without a file any schema may be used later, so skip the prompt only when every schema has its own password.
+  const schemaPasswordApplies = relativeFileName ? !!schemaPWD : allSchemaFoldersHaveOwnPassword(projectInfosReloaded);
+  if (schemaPasswordApplies && projectInfosReloaded.projectMode?.toUpperCase() !== "SINGLE" && !projectInfosReloaded.dbAppPwd) {
     return true;
   }
 
