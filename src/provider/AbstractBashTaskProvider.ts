@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as dotenv from "dotenv";
-import { chmodSync, existsSync, PathLike, readFileSync, readdirSync } from "fs";
+import { appendFileSync, chmodSync, existsSync, PathLike, readFileSync, readdirSync } from "fs";
 import { getPassword, getWorkspaceRootPath, matchRuleShort } from "../helper/utilities";
 import { CompileTaskStore } from "../stores/CompileTaskStore";
 import { commands, ExtensionContext, QuickPickItem, Uri, window, workspace } from "vscode";
@@ -220,6 +220,24 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
   }
 }
 
+// apply.env may hold passwords (dbFlux_<SCHEMA>_PWD), so it must never be committed
+export function ensureApplyEnvIgnored(workspaceRoot: string): void {
+  try {
+    if (!existsSync(path.join(workspaceRoot, "apply.env")) || !existsSync(path.join(workspaceRoot, ".git"))) {
+      return;
+    }
+    const gitIgnore = path.join(workspaceRoot, ".gitignore");
+    const content = existsSync(gitIgnore) ? readFileSync(gitIgnore, "utf8") : "";
+    const ignored = content.split(/\r?\n/).some(line => ["apply.env", "/apply.env", "**/apply.env"].includes(line.trim()));
+    if (!ignored) {
+      appendFileSync(gitIgnore, `${content.length > 0 && !content.endsWith("\n") ? "\n" : ""}apply.env\n`);
+      LoggingService.logInfo("apply.env added to .gitignore");
+    }
+  } catch (e) {
+    LoggingService.logWarning(`could not add apply.env to .gitignore: ${e}`);
+  }
+}
+
 export async function getProjectInfos(context: ExtensionContext) {
   let projectInfos: IProjectInfos = {} as IProjectInfos;
   if (getDBFlowMode(context) === "dbFlux") {
@@ -294,6 +312,16 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
       projectInfos.restAppSchema         = applyEnv.parsed.REST_APP_SCHEMA;
       projectInfos.restWorkspace         = applyEnv.parsed.REST_WORKSPACE;
       projectInfos.restOauthTokenUrl     = applyEnv.parsed.REST_OAUTH_TOKEN_URL;
+
+      ensureApplyEnvIgnored(f);
+
+      // schema passwords from apply.env, a secret with the same key overrides them below
+      for (const [key, value] of Object.entries(applyEnv.parsed ?? {})) {
+        if (key.startsWith("dbFlux_") && key.endsWith("_PWD") && value) {
+          projectInfos.dbPasses = projectInfos.dbPasses || {};
+          projectInfos.dbPasses[key] = value;
+        }
+      }
 
       // get all keys with pattern dbFlux_..._PWD and store them in array
       const filteredKeys = context.workspaceState.keys().filter(key => key.startsWith("dbFlux_") && key.endsWith("_PWD")); // dbFlux as prefix because this is a dbFlux feature (not dbFlow)

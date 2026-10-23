@@ -568,15 +568,44 @@ export function registerRunSQLcli(command: string, cli: string, context: Extensi
     const selectedSchemas = CompileTaskStore.getInstance().selectedSchemas;
 
     if (schemaSelected && selectedSchemas) {
-      const connectionUser = buildConnectionUser(projectInfos, "", undefined);
-      await setAppPassword(projectInfos);
-      const passWord = getPassword(projectInfos, connectionUser, (CompileTaskStore.getInstance().appPwd === undefined) , context);
+      const schemaFolder = selectedSchemas[0].split("/")[1]?.toLowerCase();
+      // everything in the setup folder runs with admin user and admin password, never the app password
+      const insideSetup = schemaFolder === "_setup" || schemaFolder === ".setup";
+
+      let connectionUser: string;
+      let passWord: string | undefined;
+      if (insideSetup) {
+        await setAdminUserName(projectInfos);
+        await setAdminPassword(projectInfos);
+        connectionUser = CompileTaskStore.getInstance().adminUser ?? "";
+        passWord = CompileTaskStore.getInstance().adminPwd;
+        if (!connectionUser) {
+          passWord = undefined;
+        }
+      } else {
+        connectionUser = buildConnectionUser(projectInfos, selectedSchemas[0], undefined);
+        await setAppPassword(projectInfos);
+        passWord = getPassword(projectInfos, connectionUser, (CompileTaskStore.getInstance().appPwd === undefined), context);
+      }
 
       if (passWord !== undefined) {
         const termName = cli;
 
         // pass the connect string as $1, so bash doesn't interpret special chars in the password
-        const term = window.createTerminal(termName, 'bash', ['-cl', cli + ' "$1"', cli, `${connectionUser}/"${passWord}"@${projectInfos.dbTns}`]);
+        // a double quote can't be escaped inside the quoted password of a connect string,
+        // so treat such a password as missing and ask for one in VS Code
+        if (passWord.includes('"')) {
+          passWord = await window.showInputBox({ prompt: `dbFlux: The stored password contains a double quote and can't be used for ${cli}. Enter a password without one for ${connectionUser}@${projectInfos.dbTns}`, placeHolder: "Password", password: true });
+          if (!passWord) {
+            return;
+          }
+          if (passWord.includes('"')) {
+            window.showErrorMessage(`dbFlux: A password with a double quote can't be used for ${cli}.`);
+            return;
+          }
+        }
+        const connectString = `${connectionUser}/"${passWord}"@${projectInfos.dbTns}`;
+        const term = window.createTerminal(termName, 'bash', ['-cl', cli + ' "$1"', cli, connectString]);
 
           // listen only for this terminal and remove the listener once it is closed
           const closeListener = window.onDidCloseTerminal(event => {

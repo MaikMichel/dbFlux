@@ -109,6 +109,8 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
       if (getDBFlowMode(context!) === "dbFlux") {
         schemaPWD = await context?.secrets.get(getWorkspaceRootPath() + `|dbFlux_${schemaName}_PWD`);
       }
+      // schema password (e.g. from apply.env) always wins over the app password
+      schemaPWD = schemaPWD || projectInfosReloaded.dbPasses?.[`dbFlux_${schemaName}_PWD`];
      } catch (e) {
         // do nothing
      }
