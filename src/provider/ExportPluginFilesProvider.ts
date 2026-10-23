@@ -4,7 +4,7 @@ import * as path from "path";
 import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
-import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
+import { setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { getActiveFileUri, getRelativePartsFromFile, getWorkingFile, getWorkspaceRootPath, ltrim, matchRuleShort } from "../helper/utilities";
 import { existsSync } from "fs";
@@ -120,9 +120,7 @@ export function registerExportPluginFilesCommand(projectInfos: IProjectInfos, co
   return commands.registerCommand("dbFlux.exportPluginFiles", async () => {
 
     if (projectInfos.isValid) {
-      setAppPassword(projectInfos);
-
-      if (CompileTaskStore.getInstance().appPwd !== undefined) {
+      if (await setAppPassword(projectInfos)) {
         if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Plugin Files"))) {
           return;
         }
@@ -266,9 +264,7 @@ export function registerExportCurrentPluginFileCommand(projectInfos: IProjectInf
 
     if (insidePlugins) {
       if (projectInfos.isValid) {
-        setAppPassword(projectInfos);
-
-        if (CompileTaskStore.getInstance().appPwd !== undefined) {
+        if (await setAppPassword(projectInfos)) {
 
           if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Current Plugin File"))) {
             return;

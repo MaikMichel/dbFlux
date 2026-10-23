@@ -99,7 +99,9 @@ export async function setAdminPassword(projectInfosReloaded: IProjectInfos) {
   }
 }
 
-export async function setAppPassword(projectInfosReloaded: IProjectInfos, context: ExtensionContext | undefined = undefined, relativeFileName: string | undefined = undefined) {
+// Makes sure a password for the app connection is available (schema password, configured or entered one).
+// Returns false when none is available, e.g. the prompt was cancelled.
+export async function setAppPassword(projectInfosReloaded: IProjectInfos, context: ExtensionContext | undefined = undefined, relativeFileName: string | undefined = undefined): Promise<boolean> {
   const compTaskStoreInstance = CompileTaskStore.getInstance();
   let schemaPWD:string|undefined = undefined;
   if (relativeFileName) {
@@ -118,30 +120,24 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
   }
 
   // In SINGLE mode DB_APP_USER always connects, so a schema secret is not used there.
-  // Otherwise getPassword reads the schema secret from dbPasses, so only skip the prompt
+  // Otherwise getPassword reads the schema password from dbPasses, so only skip the prompt
   // and never store the schema password as app password (it would leak into later tasks).
   if (schemaPWD && projectInfosReloaded.projectMode?.toUpperCase() !== "SINGLE" && !projectInfosReloaded.dbAppPwd) {
-    if (compTaskStoreInstance.appPwd === undefined) {
-      compTaskStoreInstance.appPwd = "";
+    return true;
+  }
+
+  // if connConnMode is REST we look for an API key instead of a password
+  const prompt = projectInfosReloaded.dbConnMode === "REST" ?
+    `dbFlux: Enter API Key for connection ${projectInfosReloaded.restSqlUrl}` :
+    `dbFlux: Enter Password for connection ${projectInfosReloaded.dbAdminUser}@${projectInfosReloaded.dbTns}`;
+
+  if (!projectInfosReloaded.dbAppPwd) {
+    if (!compTaskStoreInstance.appPwd) {
+      compTaskStoreInstance.appPwd = await window.showInputBox({ prompt, placeHolder: projectInfosReloaded.dbConnMode === "REST" ? "API-Key" : "Password", password: true });
     }
   } else {
-
-    // if connConnMode is REST we look for an API key instead of a password
-    const prompt = projectInfosReloaded.dbConnMode === "REST" ?
-      `dbFlux: Enter API Key for connection ${projectInfosReloaded.restSqlUrl}` :
-      `dbFlux: Enter Password for connection ${projectInfosReloaded.dbAdminUser}@${projectInfosReloaded.dbTns}`;
-
-    if (!projectInfosReloaded.dbAppPwd) {
-      if (!compTaskStoreInstance.appPwd) {
-        compTaskStoreInstance.appPwd = await window.showInputBox({ prompt, placeHolder: projectInfosReloaded.dbConnMode === "REST" ? "API-Key" : "Password", password: true });
-      } else {
-        if (compTaskStoreInstance.appPwd?.length === 0) {
-          compTaskStoreInstance.appPwd = undefined;
-        }
-      }
-    } else {
-      // FIXME: if connMode is REST. we assgin the API key to appPwd
-      compTaskStoreInstance.appPwd = projectInfosReloaded.dbAppPwd;
-    }
+    // FIXME: if connMode is REST. we assgin the API key to appPwd
+    compTaskStoreInstance.appPwd = projectInfosReloaded.dbAppPwd;
   }
+  return !!compTaskStoreInstance.appPwd;
 }

@@ -366,7 +366,6 @@ export function showInformationProgress(msg:string, timeoutms:number = 3000) {
       if (useDefaultPW) {
         passWord = pInfos.dbAppPwd!;
       } else {
-        // an empty appPwd only marks "a schema password is used", it is never a real password
         passWord = CompileTaskStore.getInstance().appPwd || pInfos.dbAppPwd!;
       }
     }

@@ -4,7 +4,7 @@ import * as path from "path";
 import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, window, workspace } from "vscode";
-import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
+import { setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { getActiveFileUri, getRelativePartsFromFile, getWorkingFile, getWorkspaceRootPath, ltrim, matchRuleShort } from "../helper/utilities";
 import { existsSync } from "fs";
@@ -134,9 +134,7 @@ export function registerRemoveCurrentStaticFileCommand(projectInfos: IProjectInf
 
     if (insideStatic) {
       if (projectInfos.isValid) {
-        setAppPassword(projectInfos);
-
-        if (CompileTaskStore.getInstance().appPwd !== undefined) {
+        if (await setAppPassword(projectInfos)) {
 
           if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Remove Static File"))) {
             return;

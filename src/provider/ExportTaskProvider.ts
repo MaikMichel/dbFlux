@@ -6,7 +6,7 @@ import { ExportTaskStore } from "../stores/ExportTaskStore";
 import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
-import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
+import { setAppPassword } from "../stores/CompileTaskStore";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { LoggingService } from "../helper/LoggingService";
 
@@ -216,9 +216,7 @@ export function registerExportAPEXCommand(projectInfos: IProjectInfos, context: 
         ExportTaskStore.getInstance().expID = await ExportTaskStore.getInstance().getAppID(projectInfos, showWildCard);
 
         if (ExportTaskStore.getInstance().expID !== undefined) {
-          setAppPassword(projectInfos, context, ExportTaskStore.getInstance().expID);
-
-          if (CompileTaskStore.getInstance().appPwd !== undefined) {
+          if (await setAppPassword(projectInfos, context, ExportTaskStore.getInstance().expID)) {
             context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportTaskProvider(context)));
             await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportAPEX");
           }
@@ -249,9 +247,7 @@ export function registerExportAPEXPluginCommand(projectInfos: IProjectInfos, con
 
           if (ExportTaskStore.getInstance().expPlugin !== undefined) {
 
-            setAppPassword(projectInfos, context, ExportTaskStore.getInstance().expPlugin);
-
-            if (CompileTaskStore.getInstance().appPwd !== undefined) {
+            if (await setAppPassword(projectInfos, context, ExportTaskStore.getInstance().expPlugin)) {
               context.subscriptions.push(tasks.registerTaskProvider("dbFlux", new ExportTaskPluginProvider(context)));
               await commands.executeCommand("workbench.action.tasks.runTask", "dbFlux: exportAPEXPlugin");
             }

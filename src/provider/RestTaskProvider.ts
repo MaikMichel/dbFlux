@@ -6,7 +6,7 @@ import { AbstractBashTaskProvider, getProjectInfos, IBashInfos, IProjectInfos } 
 import { assertRestApiLevel } from "../helper/RestApiUtils";
 import { RestTaskStore } from "../stores/RestTaskStore";
 import { commands, ExtensionContext, ShellExecution, Task, TaskDefinition, TaskProvider, tasks, TaskScope, Uri, window, workspace } from "vscode";
-import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
+import { setAppPassword } from "../stores/CompileTaskStore";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const which = require('which');
@@ -104,9 +104,7 @@ export function registerExportRESTCommand(projectInfos: IProjectInfos, context: 
   return commands.registerCommand("dbFlux.exportREST", async () => {
 
     if (projectInfos.isValid) {
-      setAppPassword(projectInfos);
-
-      if (CompileTaskStore.getInstance().appPwd !== undefined) {
+      if (await setAppPassword(projectInfos)) {
         if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export REST Module"))) {
           return;
         }

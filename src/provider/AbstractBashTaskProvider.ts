@@ -182,6 +182,13 @@ export abstract class AbstractBashTaskProvider {
     }
     runnerInfo.connectionPass = getPassword(projectInfos, runnerInfo.connectionUser, false, this.context);
 
+    // setAppPassword only checks that some password is available, the one for this connection user may still be missing
+    if (!runnerInfo.connectionPass) {
+      const message = `dbFlux: No password available for ${runnerInfo.connectionUser || "the connection"}`;
+      window.showErrorMessage(message);
+      throw new Error(message);
+    }
+
     runnerInfo.projectInfos   = projectInfos;
     runnerInfo.coloredOutput  = "" + ConfigurationManager.getShowWarningsAndErrorsWithColoredOutput();
 

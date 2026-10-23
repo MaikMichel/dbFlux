@@ -112,9 +112,7 @@ export function registerExportDBSchemaCommand(projectInfos: IProjectInfos, conte
   return commands.registerCommand("dbFlux.exportSchema", async () => {
 
     if (projectInfos.isValid) {
-      setAppPassword(projectInfos);
-
-      if (CompileTaskStore.getInstance().appPwd !== undefined) {
+      if (await setAppPassword(projectInfos)) {
         if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Schema"))) {
           return;
         }
@@ -245,9 +243,7 @@ export function registerExportDBObjectCommand(projectInfos: IProjectInfos, conte
 
     if (insideDb) {
       if (projectInfos.isValid) {
-        setAppPassword(projectInfos);
-
-        if (CompileTaskStore.getInstance().appPwd !== undefined) {
+        if (await setAppPassword(projectInfos)) {
 
           if (projectInfos.dbConnMode === "REST" && !(await assertRestApiLevel(projectInfos, "Export Object"))) {
             return;

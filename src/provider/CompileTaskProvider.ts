@@ -221,9 +221,7 @@ export function registerCompileSchemasCommand(projectInfos: IProjectInfos, conte
   return commands.registerCommand("dbFlux.compileSchemas", async () => {
 
     if (projectInfos.isValid) {
-      setAppPassword(projectInfos);
-
-      if (CompileTaskStore.getInstance().appPwd !== undefined) {
+      if (await setAppPassword(projectInfos)) {
 
         let schemaSelected: boolean = false;
         const dbSchemaFolders = await getDBSchemaFolders();
@@ -314,20 +312,21 @@ export function registerCompileFileCommand(projectInfos: IProjectInfos, context:
       const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
 
       // Set password and userinfo to taskStore
+      let appPasswordAvailable = false;
       if (insideSetup) {
         LoggingService.logDebug(`inside setup, check admin pass`);
         await setAdminUserName(projectInfos);
         await setAdminPassword(projectInfos);
       } else {
         LoggingService.logDebug(`outside setup, check application pass`);
-        await setAppPassword(projectInfos, context, relativeFileName);
+        appPasswordAvailable = await setAppPassword(projectInfos, context, relativeFileName);
       }
 
       if ((insideSetup
         && (compTaskStoreInstance.adminPwd !== undefined
           && compTaskStoreInstance.adminUser !== undefined))
         || (!insideSetup
-          && (compTaskStoreInstance.appPwd !== undefined))) {
+          && appPasswordAvailable)) {
 
         const cliCheck: Promise<unknown> = projectInfos.dbConnMode === "REST"
           ? Promise.resolve()

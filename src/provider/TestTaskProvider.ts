@@ -7,7 +7,7 @@ import { getPassword, getWorkingFile, getWorkspaceRootPath, matchRuleShort } fro
 import { AbstractBashTaskProvider, getDBSchemaFolders, getDBUserFromPath, getProjectInfos, IBashInfos, IProjectInfos } from "./AbstractBashTaskProvider";
 import { ConfigurationManager } from "../helper/ConfigurationManager";
 import { TestTaskStore } from "../stores/TestTaskStore";
-import { CompileTaskStore, setAppPassword } from "../stores/CompileTaskStore";
+import { setAppPassword } from "../stores/CompileTaskStore";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 
 import { parse } from "junit2json";
@@ -147,10 +147,7 @@ export function registerExecuteTestPackageCommand(projectInfos: IProjectInfos, c
         }
 
       // now check connection infos
-      setAppPassword(projectInfos);
-
-
-      if (CompileTaskStore.getInstance().appPwd !== undefined) {
+      if (await setAppPassword(projectInfos)) {
         const insideTests = matchRuleShort(fileName, `*/${ConfigurationManager.getDBFolderName()}/*/tests/packages/*`);
         const fileExtension: string = "" + fileName.split('.').pop();
         const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
@@ -184,9 +181,7 @@ export function registerExecuteTestPackageCommandWithCodeCoverage(projectInfos: 
       const fileName = await getWorkingFile(context);
 
       // now check connection infos
-      setAppPassword(projectInfos);
-
-      if (CompileTaskStore.getInstance().appPwd !== undefined) {
+      if (await setAppPassword(projectInfos)) {
         const insideTests = matchRuleShort(fileName, `*/${ConfigurationManager.getDBFolderName()}/*/tests/packages/*`);
         const fileExtension: string = "" + fileName.split('.').pop();
         const extensionAllowed = ConfigurationManager.getKnownSQLFileExtensions();
@@ -218,9 +213,7 @@ export function registerExecuteTestPackageCommandWithCodeCoverage(projectInfos: 
 export function registerExecuteTestsTaskCommand(projectInfos: IProjectInfos, context: ExtensionContext) {
   return commands.registerCommand("dbFlux.executeTests", async () => {
     if (projectInfos.isValid) {
-      setAppPassword(projectInfos);
-
-      if (CompileTaskStore.getInstance().appPwd !== undefined) {
+      if (await setAppPassword(projectInfos)) {
 
         let schemaSelected: boolean = false;
         const dbSchemaFolders = await getDBSchemaFolders();
