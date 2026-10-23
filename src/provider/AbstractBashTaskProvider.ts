@@ -307,13 +307,15 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
 
     if (buildEnv.parsed) {
       projectInfos.projectName = buildEnv.parsed.PROJECT;
-      projectInfos.projectMode  = buildEnv.parsed.PROJECT_MODE;
-
       projectInfos.appSchema    = buildEnv.parsed.APP_SCHEMA;
       projectInfos.logicSchema  = buildEnv.parsed.LOGIC_SCHEMA;
       projectInfos.dataSchema   = buildEnv.parsed.DATA_SCHEMA;
 
-      projectInfos.isFlexMode  = (buildEnv.parsed.PROJECT_MODE?.toUpperCase() === "FLEX");
+      // REST projects are always SINGLE, like the dbFlow config panel enforces
+      projectInfos.projectMode  = buildEnv.parsed.PROJECT_MODE
+                               || (projectInfos.dbConnMode === "REST" ? "SINGLE" : inferProjectMode(getDBFolderPath(), projectInfos));
+
+      projectInfos.isFlexMode  = (projectInfos.projectMode?.toUpperCase() === "FLEX");
       projectInfos.workspace   = buildEnv.parsed.WORKSPACE;
     }
   }
@@ -516,22 +518,76 @@ readdirSync(source, { withFileTypes: true })
 })
 .map((dirent) => dirent.name);
 
-// used when no project mode is stored: 1 schema folder = SINGLE, 3 = MULTI, otherwise FLEX
-export function inferProjectMode(dbFolder: string): string {
-  if (!existsSync(dbFolder)) {
+export interface IConfiguredSchemas {
+  appSchema?:   string;
+  logicSchema?: string;
+  dataSchema?:  string;
+}
+
+// Used when no project mode is stored. SINGLE/MULTI only when the schema folders match the
+// configured schemas, otherwise FLEX. No (readable) db folder means a fresh project: SINGLE.
+export function inferProjectMode(dbFolder: string, schemas: IConfiguredSchemas = {}): string {
+  let folders: string[];
+  try {
+    folders = getSchemaFolders(dbFolder);
+  } catch (e) {
     return "SINGLE";
   }
 
-  const schemaCount = getSchemaFolders(dbFolder).length;
-  if (schemaCount <= 1) {
+  // remove leading numbers with underscore, like SetSchemaPassword does
+  const folderNames = folders.map(folder => folder.replace(/^[\d_]+/, "").toLowerCase());
+  const matches = (schema?: string) => !!schema && folderNames.includes(schema.toLowerCase());
+
+  if (folderNames.length === 0) {
     return "SINGLE";
+  } else if (folderNames.length === 1 && matches(schemas.appSchema)) {
+    return "SINGLE";
+  } else if (folderNames.length === 3 && matches(schemas.appSchema) && matches(schemas.logicSchema) && matches(schemas.dataSchema)) {
+    return "MULTI";
   }
-  return schemaCount === 3 ? "MULTI" : "FLEX";
+  return "FLEX";
+}
+
+export function getDBFolderPath(): string {
+  return path.join(getWorkspaceRootPath(), ConfigurationManager.getDBFolderName());
 }
 
 export function getStoredOrInferredProjectMode(context: ExtensionContext): string {
   return context.workspaceState.get<string>("dbFlux_PROJECT_MODE")
-      ?? inferProjectMode(path.join(getWorkspaceRootPath(), ConfigurationManager.getDBFolderName()));
+      ?? inferProjectMode(getDBFolderPath(), {
+           appSchema:   context.workspaceState.get<string>("dbFlux_APP_SCHEMA"),
+           logicSchema: context.workspaceState.get<string>("dbFlux_LOGIC_SCHEMA"),
+           dataSchema:  context.workspaceState.get<string>("dbFlux_DATA_SCHEMA"),
+         });
+}
+
+// projectInfos loaded at activation; all registered commands share this object
+let activeProjectInfos: IProjectInfos | undefined;
+
+export function setActiveProjectInfos(projectInfos: IProjectInfos): void {
+  activeProjectInfos = projectInfos;
+}
+
+export function setProjectContextKeys(projectInfos: IProjectInfos, context: ExtensionContext): void {
+  commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
+  commands.executeCommand("setContext", "isDBFluxMode", (getDBFlowMode(context) === "dbFlux"));
+  commands.executeCommand("setContext", "isSingleMode", projectInfos.projectMode === "SINGLE");
+}
+
+// Reloads the shared projectInfos in place, so commands use the saved config without a window reload.
+// Returns false when no project was loaded at activation (commands are not registered yet).
+export async function refreshActiveProjectInfos(context: ExtensionContext): Promise<boolean> {
+  if (!activeProjectInfos) {
+    return false;
+  }
+
+  const reloaded = await getProjectInfos(context);
+  for (const key of Object.keys(activeProjectInfos)) {
+    delete (activeProjectInfos as any)[key];
+  }
+  Object.assign(activeProjectInfos, reloaded);
+  setProjectContextKeys(activeProjectInfos, context);
+  return true;
 }
 
 export async function getDBSchemaFolders():Promise<QuickPickItem[]> {

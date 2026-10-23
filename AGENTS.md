@@ -8,6 +8,10 @@ dbFlux is a TypeScript VS Code extension for Oracle Database and APEX workflows.
 
 Most functionality is exposed as VS Code tasks of type `dbFlux`. Providers extend `AbstractBashTaskProvider`, call scripts in `dist/shell`, and pass `DBFLOW_*` environment variables. Project mode is resolved at startup: `dbFlux` uses VS Code `workspaceState` and `secrets`; `dbFlow` is detected from `build.env`. Schema resolution is path-sensitive: `db/_setup` uses the admin user, while `db/<schema>/...` targets that schema.
 
+Connection users depend on the project mode (`buildConnectionUser`). In SINGLE mode `DB_APP_USER` always wins: every schema folder connects as plain `DB_APP_USER` without a proxy, and per-schema secrets are ignored. In MULTI and FLEX mode a schema folder connects as `DB_APP_USER[schema]`, or directly as `schema` when a `dbFlux_[SCHEMA]_PWD` secret exists. Always look up the password for the connecting user, not the folder name. Known breaking change: older SINGLE projects that relied on a proxy (for example `deploy_user[myschema]`) now connect as plain `DB_APP_USER`, including dbFlux projects without a stored mode that are detected as SINGLE. This is intended.
+
+When no project mode is stored, `inferProjectMode` detects it from the schema folders under `db/` (one folder matching the APP schema = SINGLE, three folders matching DATA/LOGIC/APP = MULTI, no readable folder = SINGLE, otherwise FLEX). The detected mode is not saved automatically.
+
 ## Build, Test, and Development Commands
 
 - `npm install`: install dependencies from `package-lock.json`.

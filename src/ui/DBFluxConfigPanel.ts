@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as Handlebars from "handlebars";
 import * as path from "path";
 import { commands, ExtensionContext, ViewColumn, Webview, WebviewPanel, window } from "vscode";
-import { getStoredOrInferredProjectMode, IProjectInfos } from "../provider/AbstractBashTaskProvider";
+import { getStoredOrInferredProjectMode, IProjectInfos, refreshActiveProjectInfos } from "../provider/AbstractBashTaskProvider";
 import { getRestServerInfo } from "../helper/RestApiUtils";
 import { LoggingService } from "../helper/LoggingService";
 import { getWorkspaceRootPath } from "../helper/utilities";
@@ -59,6 +59,7 @@ export class DBFluxConfigPanel {
       projectModeIsSingle: projectMode === "SINGLE",
       projectModeIsMulti:  projectMode === "MULTI",
       projectModeIsFlex:   projectMode === "FLEX",
+      projectModeDetected: context.workspaceState.get<string>("dbFlux_PROJECT_MODE") === undefined,
       // REST
       restSqlUrl:        context.workspaceState.get<string>("dbFlux_REST_SQL_URL") ?? "",
       restOauthTokenUrl: context.workspaceState.get<string>("dbFlux_REST_OAUTH_TOKEN_URL") ?? "",
@@ -124,7 +125,8 @@ export class DBFluxConfigPanel {
       }
     }
 
-    const sel = await window.showInformationMessage("dbFlux: Configuration saved.", "Reload Window");
+    const applied = await refreshActiveProjectInfos(context);
+    const sel = await window.showInformationMessage(applied ? "dbFlux: Configuration saved and applied." : "dbFlux: Configuration saved.", "Reload Window");
     if (sel) {
       commands.executeCommand("workbench.action.reloadWindow");
     }

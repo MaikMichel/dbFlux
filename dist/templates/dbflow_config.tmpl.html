@@ -134,6 +134,7 @@
         <option value="MULTI" {{#if projectModeIsMulti}}selected{{/if}}>MultiSchema</option>
         <option value="FLEX" {{#if projectModeIsFlex}}selected{{/if}}>FlexSchema</option>
       </select>
+      {{#if projectModeDetected}}<div class="hint">Not saved yet: detected from the schema folders under db/. Check it and save to keep it.</div>{{/if}}
     </div>
     <div class="form-row">
       <label for="buildBranch">Build Branch</label>

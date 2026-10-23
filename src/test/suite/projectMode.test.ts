@@ -5,29 +5,65 @@ import * as path from 'path';
 
 import { inferProjectMode } from '../../provider/AbstractBashTaskProvider';
 
-function createDbFolder(schemaFolders: string[]): string {
-	const dbFolder = fs.mkdtempSync(path.join(os.tmpdir(), 'dbflux-db-'));
-	for (const folder of schemaFolders) {
-		fs.mkdirSync(path.join(dbFolder, folder));
-	}
-	return dbFolder;
-}
+const multiSchemas = { appSchema: 'proj_app', logicSchema: 'proj_logic', dataSchema: 'proj_data' };
 
 suite('Project mode inference', () => {
+	let tmpRoot: string;
+
+	setup(() => {
+		tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dbflux-mode-'));
+	});
+
+	teardown(() => {
+		fs.rmSync(tmpRoot, { recursive: true, force: true });
+	});
+
+	function createDbFolder(schemaFolders: string[], name = 'db'): string {
+		const dbFolder = path.join(tmpRoot, name);
+		fs.mkdirSync(dbFolder);
+		for (const folder of schemaFolders) {
+			fs.mkdirSync(path.join(dbFolder, folder));
+		}
+		return dbFolder;
+	}
+
 	test('uses SINGLE when the db folder does not exist', () => {
-		assert.strictEqual(inferProjectMode(path.join(os.tmpdir(), 'dbflux-missing-db-folder')), 'SINGLE');
+		assert.strictEqual(inferProjectMode(path.join(tmpRoot, 'db')), 'SINGLE');
 	});
 
-	test('uses SINGLE for one schema folder and ignores setup folders', () => {
-		assert.strictEqual(inferProjectMode(createDbFolder(['proj', '_setup', '.hooks'])), 'SINGLE');
+	test('uses SINGLE when the db folder is not readable as a directory', () => {
+		const dbFile = path.join(tmpRoot, 'db');
+		fs.writeFileSync(dbFile, '');
+
+		assert.strictEqual(inferProjectMode(dbFile), 'SINGLE');
 	});
 
-	test('uses MULTI for three schema folders', () => {
-		assert.strictEqual(inferProjectMode(createDbFolder(['proj_data', 'proj_logic', 'proj_app', '_setup'])), 'MULTI');
+	test('uses SINGLE when there are no schema folders yet', () => {
+		assert.strictEqual(inferProjectMode(createDbFolder(['_setup'])), 'SINGLE');
+	});
+
+	test('uses SINGLE for one schema folder matching the APP schema', () => {
+		assert.strictEqual(inferProjectMode(createDbFolder(['PROJ', '_setup', '.hooks']), { appSchema: 'proj' }), 'SINGLE');
+	});
+
+	test('uses FLEX for one schema folder not matching the APP schema', () => {
+		assert.strictEqual(inferProjectMode(createDbFolder(['hr']), { appSchema: 'proj' }), 'FLEX');
+		assert.strictEqual(inferProjectMode(createDbFolder(['hr'], 'db2')), 'FLEX');
+	});
+
+	test('uses MULTI for three schema folders matching the configured schemas', () => {
+		assert.strictEqual(inferProjectMode(createDbFolder(['proj_data', 'proj_logic', 'proj_app', '_setup']), multiSchemas), 'MULTI');
+	});
+
+	test('ignores leading numbers when matching schema folders', () => {
+		assert.strictEqual(inferProjectMode(createDbFolder(['1_proj_data', '2_proj_logic', '3_proj_app']), multiSchemas), 'MULTI');
+	});
+
+	test('uses FLEX for three schema folders not matching the configured schemas', () => {
+		assert.strictEqual(inferProjectMode(createDbFolder(['hr', 'sales', 'core']), multiSchemas), 'FLEX');
 	});
 
 	test('uses FLEX for any other number of schema folders', () => {
-		assert.strictEqual(inferProjectMode(createDbFolder(['one', 'two'])), 'FLEX');
-		assert.strictEqual(inferProjectMode(createDbFolder(['one', 'two', 'three', 'four'])), 'FLEX');
+		assert.strictEqual(inferProjectMode(createDbFolder(['one', 'two']), multiSchemas), 'FLEX');
 	});
 });

@@ -5,7 +5,7 @@ import { registerCompileFileCommand, registerCompileSchemasCommand, registerRunS
 import { registerExportAPEXCommand, registerExportAPEXPluginCommand } from "./provider/ExportTaskProvider";
 
 import { registerExportRESTCommand } from "./provider/RestTaskProvider";
-import { applyFileExists, getDBFlowMode, getProjectInfos} from "./provider/AbstractBashTaskProvider";
+import { applyFileExists, getDBFlowMode, getProjectInfos, setActiveProjectInfos, setProjectContextKeys } from "./provider/AbstractBashTaskProvider";
 import { openCoverageResult, openTestResult, registerExecuteTestPackageCommand, registerExecuteTestPackageCommandWithCodeCoverage, registerExecuteTestsTaskCommand } from "./provider/TestTaskProvider";
 import { ConfigurationManager, removeDBFluxConfig, rmDBFluxConfig, showConfig } from "./helper/ConfigurationManager";
 import { DBFluxConfigPanel } from "./ui/DBFluxConfigPanel";
@@ -90,15 +90,14 @@ export async function activate(context: ExtensionContext) {
 
 
     const projectInfos = await getProjectInfos(context);
+    setActiveProjectInfos(projectInfos);
     LoggingService.logInfo(`Mode is ${dbFluxMode} and FlexMode is ${projectInfos.isFlexMode}`);
 
 
     LoggingService.logDebug('Setting static Context Infos');
     commands.executeCommand("setContext", "inDbFlowProject", true);
     commands.executeCommand("setContext", "dbLockEnabled", ConfigurationManager.isDBLockEnabled());
-    commands.executeCommand("setContext", "isDbFlowFlexMode", projectInfos.isFlexMode);
-    commands.executeCommand("setContext", "isDBFluxMode", (dbFluxMode === "dbFlux"));
-    commands.executeCommand("setContext", "isSingleMode", projectInfos.projectMode === "SINGLE");
+    setProjectContextKeys(projectInfos, context);
 
     const updateContext = (editor?: TextEditor) => {
       LoggingService.logDebug('Setting dynamic Context Infos');

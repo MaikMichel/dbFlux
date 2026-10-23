@@ -4,6 +4,7 @@ import * as path from "path";
 import * as dotenv from "dotenv";
 import { commands, ExtensionContext, ViewColumn, Webview, WebviewPanel, window, workspace } from "vscode";
 import { getWorkspaceRootPath } from "../helper/utilities";
+import { getDBFolderPath, inferProjectMode, refreshActiveProjectInfos } from "../provider/AbstractBashTaskProvider";
 import type { State } from "../provider/GenerateDBFlowProjectProvider";
 
 const PWD_MASK = "••••••••";
@@ -58,6 +59,7 @@ export class DBFlowConfigPanel {
       projectModeIsSingle: state.projectType === "SINGLE",
       projectModeIsMulti: state.projectType === "MULTI",
       projectModeIsFlex: state.projectType === "FLEX",
+      projectModeDetected: state.connMode !== "REST" && fs.existsSync(this.buildEnvPath()) && !this.readEnvFile(this.buildEnvPath()).PROJECT_MODE,
       changelogEnabled: state.createChangelogs === "Yes",
       includeDefaultToolsEnabled: state.includeDefaultTools === "Yes",
       doNotClearEnabled: state.doNotClearSchemaOnInit === "YES",
@@ -98,7 +100,8 @@ export class DBFlowConfigPanel {
       return;
     }
 
-    const sel = await window.showInformationMessage("dbFlow configuration saved.", "Reload Window");
+    const applied = await refreshActiveProjectInfos(context);
+    const sel = await window.showInformationMessage(applied ? "dbFlow configuration saved and applied." : "dbFlow configuration saved.", "Reload Window");
     if (sel) {
       commands.executeCommand("workbench.action.reloadWindow");
     }
@@ -109,7 +112,12 @@ export class DBFlowConfigPanel {
     const apply = this.readEnvFile(this.applyEnvPath());
     const projectName = build.PROJECT || workspace.name || "myproject";
     const connMode = this.normalizeConnMode(apply.CONN_MODE || "SQLNET");
-    const projectType = connMode === "REST" ? "SINGLE" : this.normalizeProjectMode(build.PROJECT_MODE || "SINGLE");
+    // without a stored PROJECT_MODE, show the mode detected from the db/ folders (same as the loader)
+    const projectType = connMode === "REST" ? "SINGLE" : this.normalizeProjectMode(build.PROJECT_MODE || inferProjectMode(getDBFolderPath(), {
+      appSchema:   build.APP_SCHEMA,
+      logicSchema: build.LOGIC_SCHEMA,
+      dataSchema:  build.DATA_SCHEMA,
+    }));
     const restWorkspace = apply.REST_WORKSPACE || build.WORKSPACE || projectName;
     const restSqlUrl = apply.REST_SQL_URL || "";
     const restOauthTokenUrl = apply.REST_OAUTH_TOKEN_URL || "";

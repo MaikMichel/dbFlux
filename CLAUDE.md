@@ -42,7 +42,16 @@ Critical providers:
 
 ### Schema / Connection Resolution
 
-The active schema is inferred from the **file path** of the current editor document. A file at `db/MYSCHEMA/sources/packages/foo.pkb` connects as the app user proxying into `MYSCHEMA`. Files under `db/_setup/` use the admin user. Custom per-schema passwords are stored in secrets as `dbFlux_[SCHEMA]_PWD`.
+The active schema is inferred from the **file path** of the current editor document. Files under `db/_setup/` use the admin user. The connection user (`buildConnectionUser`) depends on the project mode:
+
+- **SINGLE**: `DB_APP_USER` always wins. Any schema folder connects as plain `DB_APP_USER` (no proxy), and per-schema secrets are ignored; the password is always the app password.
+- **MULTI / FLEX**: a file at `db/MYSCHEMA/...` connects as `DB_APP_USER[MYSCHEMA]` (proxy). If a secret `dbFlux_[SCHEMA]_PWD` exists, it connects directly as `MYSCHEMA` with that password (projects without a proxy user).
+
+The password always belongs to the connecting user (`getPassword(projectInfos, connectionUser, …)`); never look it up by folder name, and never store a schema secret in `CompileTaskStore.appPwd`.
+
+**Known breaking change:** older SINGLE projects that relied on a proxy (`DB_APP_USER` differs from the schema folder, e.g. `deploy_user[myschema]`) now connect as plain `DB_APP_USER`. This also applies to dbFlux projects without a stored `dbFlux_PROJECT_MODE` that are detected as SINGLE. This is intended; don't "fix" it.
+
+**Missing project mode:** when no mode is stored (`dbFlux_PROJECT_MODE` / `PROJECT_MODE` in `build.env`), `inferProjectMode` detects it from the schema folders under `db/`: SINGLE if the only folder matches the APP schema, MULTI if three folders match the DATA/LOGIC/APP schemas, SINGLE if there's no (readable) folder, otherwise FLEX. The detected mode is never saved automatically; the config panel shows a hint until the user saves it.
 
 Connection modes:
 - **SQLNET**: standard `user[schema]@tns` via `sqlplus`/`sqlcl`
