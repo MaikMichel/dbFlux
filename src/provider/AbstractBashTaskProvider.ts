@@ -512,8 +512,7 @@ async function validateProjectInfos(projectInfos: IProjectInfos) {
 }
 
 function isNumeric(str:string):boolean {
-  const check = !isNaN(+str);
-  return check;
+  return /^\d+$/.test(str);
 }
 
 // "010_data" -> "data": only a numeric first segment followed by "_" is removed.
@@ -607,12 +606,17 @@ export interface IConfiguredSchemas {
 }
 
 // Used when no project mode is stored. SINGLE/MULTI only when the schema folders match the
-// configured schemas, otherwise FLEX. No (readable) db folder means a fresh project: SINGLE.
+// configured schemas, otherwise FLEX. Without (readable) schema folders the configured schemas decide:
+// three different ones are MULTI, more than one is FLEX, otherwise SINGLE.
 export function inferProjectMode(dbFolder: string, schemas: IConfiguredSchemas = {}): string {
   // no schema folders to look at (fresh project or unreadable db folder): decide by the configured schemas
   const fallbackMode = () => {
-    const configured = [schemas.appSchema, schemas.logicSchema, schemas.dataSchema].map(schema => schema?.toLowerCase());
-    return configured.every(schema => !!schema) && new Set(configured).size === 3 ? "MULTI" : "SINGLE";
+    const configured = [schemas.appSchema, schemas.logicSchema, schemas.dataSchema].filter(schema => !!schema).map(schema => schema!.toLowerCase());
+    const distinct = new Set(configured).size;
+    if (distinct === 3) {
+      return "MULTI";
+    }
+    return distinct > 1 ? "FLEX" : "SINGLE";
   };
 
   let folders: string[];
@@ -641,7 +645,7 @@ export function inferProjectMode(dbFolder: string, schemas: IConfiguredSchemas =
 // REST is always SINGLE, otherwise the stored mode, otherwise the one inferred from the db folder.
 // "detected" is true when the mode is only inferred, i.e. not saved yet.
 export function resolveProjectMode(storedMode: string | undefined, connMode: string | undefined, schemas: IConfiguredSchemas = {}): { projectMode: string, detected: boolean } {
-  if (connMode === "REST") {
+  if (connMode?.trim().toUpperCase() === "REST") {
     return { projectMode: "SINGLE", detected: false };
   }
   if (storedMode) {
@@ -679,13 +683,30 @@ export function setProjectContextKeys(projectInfos: IProjectInfos, context: Exte
 // Reloads the shared projectInfos in place, so commands use the saved config without a window reload.
 // All commands keep a reference to this one object and read its fields on each run, so updating it in place is enough.
 // Returns false when no project was loaded at activation (commands are not registered yet) or the reload failed.
-let refreshCounter = 0;
+// Orders overlapping reloads: a result is applied unless a newer reload already applied its own.
+// If the newer reload fails or is still running, the older valid result is the latest one and gets applied.
+export function createRefreshGate(): { start: () => number, tryApply: (id: number) => boolean } {
+  let counter = 0;
+  let lastApplied = 0;
+  return {
+    start: () => ++counter,
+    tryApply: (id: number) => {
+      if (id < lastApplied) {
+        return false;
+      }
+      lastApplied = id;
+      return true;
+    },
+  };
+}
+
+const refreshGate = createRefreshGate();
 export async function refreshActiveProjectInfos(context: ExtensionContext): Promise<boolean> {
   if (!activeProjectInfos) {
     return false;
   }
 
-  const refreshId = ++refreshCounter;
+  const refreshId = refreshGate.start();
   let reloaded: IProjectInfos;
   try {
     await ensureApplyEnvIgnored(getWorkspaceRootPath(), true);
@@ -695,8 +716,8 @@ export async function refreshActiveProjectInfos(context: ExtensionContext): Prom
     return false;
   }
 
-  // a newer refresh was started meanwhile, so don't overwrite its result with this older one
-  if (refreshId !== refreshCounter) {
+  // a newer refresh already applied its result, so don't overwrite it with this older one
+  if (!refreshGate.tryApply(refreshId)) {
     return true;
   }
 

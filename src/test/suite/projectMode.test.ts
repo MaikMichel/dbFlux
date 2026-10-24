@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { inferProjectMode, resolveProjectMode, stripNumericPrefix } from '../../provider/AbstractBashTaskProvider';
+import { createRefreshGate, inferProjectMode, resolveProjectMode, stripNumericPrefix } from '../../provider/AbstractBashTaskProvider';
 
 const multiSchemas = { appSchema: 'proj_app', logicSchema: 'proj_logic', dataSchema: 'proj_data' };
 
@@ -72,21 +72,60 @@ suite('Project mode inference', () => {
 		assert.strictEqual(inferProjectMode(createDbFolder(['_setup']), multiSchemas), 'MULTI');
 	});
 
-	test('uses SINGLE without schema folders when the configured schemas are incomplete or equal', () => {
+	test('uses SINGLE without schema folders when at most one schema is configured', () => {
 		assert.strictEqual(inferProjectMode(path.join(tmpRoot, 'db'), { appSchema: 'proj' }), 'SINGLE');
-		assert.strictEqual(inferProjectMode(path.join(tmpRoot, 'db'), { appSchema: 'proj', logicSchema: 'proj', dataSchema: 'proj' }), 'SINGLE');
+		assert.strictEqual(inferProjectMode(path.join(tmpRoot, 'db'), { appSchema: 'proj', logicSchema: 'PROJ', dataSchema: 'proj' }), 'SINGLE');
+	});
+
+	test('uses FLEX without schema folders when two different schemas are configured', () => {
+		assert.strictEqual(inferProjectMode(path.join(tmpRoot, 'db'), { appSchema: 'proj_app', logicSchema: 'proj_logic' }), 'FLEX');
+		assert.strictEqual(inferProjectMode(createDbFolder(['_setup']), { appSchema: 'a', logicSchema: 'b', dataSchema: 'a' }), 'FLEX');
 	});
 
 	test('matches schema folders like the connection user resolution', () => {
 		assert.strictEqual(stripNumericPrefix('010_data'), 'data');
 		assert.strictEqual(stripNumericPrefix('2024data'), '2024data');
 		assert.strictEqual(stripNumericPrefix('proj_app'), 'proj_app');
+		assert.strictEqual(stripNumericPrefix('_data'), '_data');
+		assert.strictEqual(stripNumericPrefix('0x1_data'), '0x1_data');
+		assert.strictEqual(stripNumericPrefix('1e3_data'), '1e3_data');
 		assert.strictEqual(inferProjectMode(createDbFolder(['2024proj']), { appSchema: 'proj' }), 'FLEX');
 	});
 
 	test('resolves REST projects to SINGLE and keeps a stored mode without detection', () => {
 		assert.deepStrictEqual(resolveProjectMode('FLEX', 'REST'), { projectMode: 'SINGLE', detected: false });
+		assert.deepStrictEqual(resolveProjectMode('FLEX', 'rest'), { projectMode: 'SINGLE', detected: false });
 		assert.deepStrictEqual(resolveProjectMode(undefined, 'REST'), { projectMode: 'SINGLE', detected: false });
 		assert.deepStrictEqual(resolveProjectMode('MULTI', 'SQLNET'), { projectMode: 'MULTI', detected: false });
+	});
+});
+
+suite('Project infos refresh gate', () => {
+	test('applies a single refresh', () => {
+		const gate = createRefreshGate();
+		assert.strictEqual(gate.tryApply(gate.start()), true);
+	});
+
+	test('applies refreshes finishing in order', () => {
+		const gate = createRefreshGate();
+		const first = gate.start();
+		const second = gate.start();
+		assert.strictEqual(gate.tryApply(first), true);
+		assert.strictEqual(gate.tryApply(second), true);
+	});
+
+	test('drops an older refresh finishing after a newer one was applied', () => {
+		const gate = createRefreshGate();
+		const first = gate.start();
+		const second = gate.start();
+		assert.strictEqual(gate.tryApply(second), true);
+		assert.strictEqual(gate.tryApply(first), false);
+	});
+
+	test('applies the older refresh when the newer one fails and never applies', () => {
+		const gate = createRefreshGate();
+		const first = gate.start();
+		gate.start();
+		assert.strictEqual(gate.tryApply(first), true);
 	});
 });

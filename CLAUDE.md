@@ -51,7 +51,7 @@ The password always belongs to the connecting user (`getPassword(projectInfos, c
 
 **Known breaking change:** older SINGLE projects that relied on a proxy (`DB_APP_USER` differs from the schema folder, e.g. `deploy_user[myschema]`) now connect as plain `DB_APP_USER`. This also applies to dbFlux projects without a stored `dbFlux_PROJECT_MODE` that are detected as SINGLE. This is intended; don't "fix" it.
 
-**Missing project mode:** when no mode is stored (`dbFlux_PROJECT_MODE` / `PROJECT_MODE` in `build.env`), `inferProjectMode` detects it from the schema folders under `db/`: SINGLE if the only folder matches the APP schema, MULTI if three folders match the DATA/LOGIC/APP schemas, with no (readable) folder MULTI if three different DATA/LOGIC/APP schemas are configured, else SINGLE; otherwise FLEX. A leading numeric segment (`010_data`) is ignored when matching folders, like in the connection user resolution. The detected mode is never saved automatically; the config panel shows a hint until the user saves it.
+**Missing project mode:** when no mode is stored (`dbFlux_PROJECT_MODE` / `PROJECT_MODE` in `build.env`), `inferProjectMode` detects it from the schema folders under `db/`: SINGLE if the only folder matches the APP schema, MULTI if three folders match the DATA/LOGIC/APP schemas, with no (readable) folder MULTI if three different DATA/LOGIC/APP schemas are configured, FLEX if two different ones are, else SINGLE; otherwise FLEX. A leading numeric segment (`010_data`) is ignored when matching folders, like in the connection user resolution. The detected mode is never saved automatically; the config panel shows a hint until the user saves it.
 
 Connection modes:
 - **SQLNET**: standard `user[schema]@tns` via `sqlplus`/`sqlcl`
