@@ -11,6 +11,7 @@
   - Export REST Modules
 - New: Setting `dbFlux.restCompile.exportMaxTime` (curl --max-time for export downloads, default 600s)
 - Chg: dbFlux checks the server side rest_compile version (api_level) and offers the install guide when an upgrade is needed
+- Chg: Projects configured only with `xcl.yml` / `.xcl/env.yml` are no longer detected. Migrate them to dbFlow (`build.env` + `apply.env`) or initialize them as dbFlux project
 - Not supported in REST mode (by design): utPLSQL tests, dbLock, Run SQLcl/SQLplus terminal
 
 ## [5.7.0 - 2025-02-19]

@@ -28,7 +28,6 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 
 async function fetchAccessToken(projectInfos: IProjectInfos): Promise<string> {
   const tokenMaxMs = ConfigurationManager.getRestCompileTokenMaxTime() * 1000;
-  LoggingService.logDebug(projectInfos.restOauthTokenUrl!, projectInfos.dbAppPwd);
   const response = await withTimeout(
     fetch(projectInfos.restOauthTokenUrl!, {
       method: "POST",
@@ -41,7 +40,6 @@ async function fetchAccessToken(projectInfos: IProjectInfos): Promise<string> {
     tokenMaxMs,
     "OAuth token request"
   );
-  LoggingService.logDebug("Response", response);
   if (!response.ok) {
     throw new Error(`Token request failed with status ${response.status}`);
   }

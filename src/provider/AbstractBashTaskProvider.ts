@@ -235,9 +235,11 @@ export function buildConnectionUser(projectInfos: IProjectInfos, currentPath: st
 const execFileAsync = promisify(execFile);
 let applyEnvIgnoreCheck: Promise<void> | undefined;
 let applyEnvIgnoreConfirmed = false;
+let applyEnvIgnoreFailed = false;
 
 export function ensureApplyEnvIgnored(workspaceRoot: string, force = false): Promise<void> {
-  if (applyEnvIgnoreConfirmed && !force) {
+  // a failed attempt (no git, .gitignore not writable) is not repeated on every compile
+  if ((applyEnvIgnoreConfirmed || applyEnvIgnoreFailed) && !force) {
     return Promise.resolve();
   }
   // concurrent calls share one check, otherwise each of them could append the line
@@ -268,13 +270,14 @@ async function checkApplyEnvIgnored(workspaceRoot: string): Promise<void> {
     }
     applyEnvIgnoreConfirmed = true;
   } catch (e) {
+    applyEnvIgnoreFailed = true;
     LoggingService.logWarning(`could not add apply.env to .gitignore: ${e}`);
   }
 }
 
 // values starting with ! are base64 encoded
-function decodeEnvValue(value: string): string {
-  return value.startsWith("!") ? Buffer.from(value.substring(1), "base64").toString("utf8").replace("\n", "") : value;
+export function decodeEnvValue(value: string): string {
+  return value.startsWith("!") ? Buffer.from(value.substring(1), "base64").toString("utf8").replace(/(\r?\n)+$/, "") : value;
 }
 
 export async function getProjectInfos(context: ExtensionContext) {
@@ -331,18 +334,18 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
       projectInfos.dbConnMode  = applyEnv.parsed.CONN_MODE ?? "SQLNET";
 
       projectInfos.dbAppUser   = applyEnv.parsed.DB_APP_USER;
-      projectInfos.dbAppPwd    = projectInfos.dbConnMode === "SQLNET" ? applyEnv.parsed.DB_APP_PWD : `${applyEnv.parsed.REST_OAUTH_BASIC_B64}`;
+      projectInfos.dbAppPwd    = projectInfos.dbConnMode === "SQLNET" ? applyEnv.parsed.DB_APP_PWD : applyEnv.parsed.REST_OAUTH_BASIC_B64;
       projectInfos.dbAdminUser = applyEnv.parsed.DB_ADMIN_USER;
       projectInfos.dbAdminPwd  = applyEnv.parsed.DB_ADMIN_PWD;
       projectInfos.dbTns       = applyEnv.parsed.DB_TNS;
 
       // decode when starting with an !
       if (projectInfos.dbAppPwd && projectInfos.dbAppPwd.startsWith("!")) {
-        projectInfos.dbAppPwd = Buffer.from(projectInfos.dbAppPwd.substring(1), 'base64').toString('utf8').replace("\n", "");
+        projectInfos.dbAppPwd = decodeEnvValue(projectInfos.dbAppPwd);
       }
       // decode when starting with an !
       if (projectInfos.dbAdminPwd && projectInfos.dbAdminPwd.startsWith("!")) {
-        projectInfos.dbAdminPwd = Buffer.from(projectInfos.dbAdminPwd.substring(1), 'base64').toString('utf8').replace("\n", "");
+        projectInfos.dbAdminPwd = decodeEnvValue(projectInfos.dbAdminPwd);
       }
 
       // check restCompile
@@ -393,7 +396,7 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
   if (workspace.workspaceFolders !== undefined) {
 
       projectInfos.dbAppUser   = context.workspaceState.get("dbFlux_DB_APP_USER")!;
-      projectInfos.dbAppPwd    = await context.secrets.get(getWorkspaceRootPath()+"|dbFlux_DB_APP_PWD")+"";
+      projectInfos.dbAppPwd    = await context.secrets.get(getWorkspaceRootPath()+"|dbFlux_DB_APP_PWD");
       projectInfos.dbAdminUser = context.workspaceState.get("dbFlux_DB_ADMIN_USER");
       projectInfos.dbAdminPwd  = context.workspaceState.get("dbFlux_DB_ADMIN_PWD");
       projectInfos.dbTns       = context.workspaceState.get("dbFlux_DB_TNS")!;
@@ -414,7 +417,7 @@ async function getProjectInfosFromDBFlux(context: ExtensionContext):Promise<IPro
         projectInfos.restAppSchema     = context.workspaceState.get("dbFlux_REST_APP_SCHEMA");
         projectInfos.restSqlUrl        = context.workspaceState.get("dbFlux_REST_SQL_URL");
         projectInfos.restOauthTokenUrl = context.workspaceState.get("dbFlux_REST_OAUTH_TOKEN_URL");
-        projectInfos.dbAppPwd          = await context.secrets.get(getWorkspaceRootPath()+"|dbFlux_REST_OAUTH_BASIC_B64") + "";
+        projectInfos.dbAppPwd          = await context.secrets.get(getWorkspaceRootPath()+"|dbFlux_REST_OAUTH_BASIC_B64");
       }
 
       // get all keys with pattern dbFlux_..._PWD and store them in array
@@ -659,12 +662,15 @@ export function getDBFolderPath(): string {
 }
 
 export function getStoredOrInferredProjectMode(context: ExtensionContext): string {
-  return context.workspaceState.get<string>("dbFlux_PROJECT_MODE")
-      ?? inferProjectMode(getDBFolderPath(), {
-           appSchema:   context.workspaceState.get<string>("dbFlux_APP_SCHEMA"),
-           logicSchema: context.workspaceState.get<string>("dbFlux_LOGIC_SCHEMA"),
-           dataSchema:  context.workspaceState.get<string>("dbFlux_DATA_SCHEMA"),
-         });
+  return resolveProjectMode(
+    context.workspaceState.get<string>("dbFlux_PROJECT_MODE"),
+    context.workspaceState.get<string>("dbFlux_CONN_MODE"),
+    {
+      appSchema:   context.workspaceState.get<string>("dbFlux_APP_SCHEMA"),
+      logicSchema: context.workspaceState.get<string>("dbFlux_LOGIC_SCHEMA"),
+      dataSchema:  context.workspaceState.get<string>("dbFlux_DATA_SCHEMA"),
+    }
+  ).projectMode;
 }
 
 // projectInfos loaded at activation; all registered commands share this object

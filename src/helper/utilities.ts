@@ -369,6 +369,9 @@ export function showInformationProgress(msg:string, timeoutms:number = 3000) {
         passWord = CompileTaskStore.getInstance().appPwd || pInfos.dbAppPwd!;
       }
     }
-    passWord = pInfos.dbConnMode !== "REST" ? passWord : pInfos.dbAppPwd!;
+    if (pInfos.dbConnMode === "REST") {
+      // the API key comes from the stored credential, otherwise from the prompt
+      passWord = pInfos.dbAppPwd || CompileTaskStore.getInstance().appPwd!;
+    }
     return passWord;
   }

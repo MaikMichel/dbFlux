@@ -131,7 +131,7 @@ export async function setAppPassword(projectInfosReloaded: IProjectInfos, contex
   // if connConnMode is REST we look for an API key instead of a password
   const prompt = projectInfosReloaded.dbConnMode === "REST" ?
     `dbFlux: Enter API Key for connection ${projectInfosReloaded.restSqlUrl}` :
-    `dbFlux: Enter Password for connection ${projectInfosReloaded.dbAdminUser}@${projectInfosReloaded.dbTns}`;
+    `dbFlux: Enter Password for connection ${projectInfosReloaded.dbAppUser}@${projectInfosReloaded.dbTns}`;
 
   if (!projectInfosReloaded.dbAppPwd) {
     if (!compTaskStoreInstance.appPwd) {

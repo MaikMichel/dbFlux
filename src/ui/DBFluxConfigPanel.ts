@@ -135,10 +135,8 @@ export class DBFluxConfigPanel {
   private async testConnection(msg: any, context: ExtensionContext): Promise<void> {
     const prefix = getWorkspaceRootPath() + "|";
     let oauthB64 = msg.restOauthBasicB64;
-     LoggingService.logDebug("AAA: " + oauthB64);
     if (!oauthB64 || oauthB64 === PWD_MASK) {
       oauthB64 = await context.secrets.get(prefix + "dbFlux_REST_OAUTH_BASIC_B64");
-      LoggingService.logDebug("BBB: " + oauthB64);
     }
 
     const tempInfos = {
@@ -146,7 +144,6 @@ export class DBFluxConfigPanel {
       restOauthTokenUrl: msg.restOauthTokenUrl || context.workspaceState.get<string>("dbFlux_REST_OAUTH_TOKEN_URL"),
       dbAppPwd:          oauthB64,
     } as IProjectInfos;
-    LoggingService.logDebug("CCC", tempInfos);
     try {
       const info = await getRestServerInfo(tempInfos);
       const text = `REST API reachable — version: ${info.version ?? "pre 1.1.0"}, api_level: ${info.apiLevel}`;
