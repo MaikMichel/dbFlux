@@ -10,6 +10,26 @@
   - Export DB Schema and DB Object (dbms_metadata)
   - Export REST Modules
 - New: Setting `dbFlux.restCompile.exportMaxTime` (curl --max-time for export downloads, default 600s)
+- New: curl timeouts for REST compile are configurable via VS Code settings
+- New: REST connection mode is selectable in the dbFlux and dbFlow initialization wizards, including the REST compile install guide
+- New: REST compile shows the `log_results` table with ISO timestamps
+- New: Webview configuration panel for dbFlow projects (shows a hint when the project mode is not saved yet)
+- New: `VAR_LIST` substitutions are expanded during SQL compilation
+- New: Synonyms folder is created when initializing a dbFlux project
+- Chg: **Breaking** - SINGLE projects always connect as plain `DB_APP_USER` (no proxy) and per-schema secrets are ignored. Projects relying on a proxy (e.g. `deploy_user[myschema]`) now connect directly as `DB_APP_USER`. This also applies to dbFlux projects without a stored project mode that are detected as SINGLE
+- Chg: Missing project mode is inferred from the schema folders under `db/` and the configured schemas (never saved automatically)
+- Chg: Saved configuration is applied live and settings are reloaded on each SQL CLI run
+- Chg: App password prompt is skipped when every schema has its own password
+- Fix: Schema secrets no longer end up in the app password; schema passwords are resolved case-insensitively and take precedence
+- Fix: Files in `db/_setup` connect with the admin credentials
+- Fix: Saving the dbFlow config panel keeps hand-maintained settings
+- Fix: REST - HTTP errors without JSON body fail the run, `^NAME` is expanded longest first, the entered API key is used, no more `undefined` credentials and credentials are no longer logged
+- Fix: REST - Basic auth for the OAuth token flow, SQL compile payloads are sent as zip, SQL CLI check is skipped in REST mode
+- Fix: Connection config is validated in dbFlux project mode
+- Fix: #15 Button does not run the command when the file is not underneath db or static
+- Fix: Wrap log commands no longer fail without an active editor
+- Chg: Minimum required VS Code version is now 1.101.0
+- Chg: Updated dependencies and development toolchain: TypeScript 5, ESLint 10 (flat config), esbuild, `@types/node` 25, `@vscode/test-electron`; all `npm audit` vulnerabilities resolved
 - Chg: dbFlux checks the server side rest_compile version (api_level) and offers the install guide when an upgrade is needed
 - Chg: Projects configured only with `xcl.yml` / `.xcl/env.yml` are no longer detected. Migrate them to dbFlow (`build.env` + `apply.env`) or initialize them as dbFlux project
 - Not supported in REST mode (by design): utPLSQL tests, dbLock, Run SQLcl/SQLplus terminal
