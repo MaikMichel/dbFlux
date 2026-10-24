@@ -327,13 +327,23 @@ function rest_post_json() {
 
   print_rest_status_message "info" "Calling" "${REST_SQL_URL}/${endpoint}"
 
-  REST_LAST_RESPONSE=$(curl "${curl_args[@]}" "${REST_SQL_URL}/${endpoint}")
+  REST_LAST_RESPONSE=$(curl "${curl_args[@]}" -w $'\n%{http_code}' "${REST_SQL_URL}/${endpoint}")
   local curl_rc=$?
+  local http_code="${REST_LAST_RESPONSE##*$'\n'}"
+  REST_LAST_RESPONSE="${REST_LAST_RESPONSE%$'\n'*}"
 
   if [[ ${curl_rc} -ne 0 ]]; then
     [[ -z "${REST_LAST_RESPONSE}" ]] || echo "${REST_LAST_RESPONSE}"
     print_rest_status_message "error" "Error" "request to ${REST_SQL_URL}/${endpoint} failed"
     return ${curl_rc}
+  fi
+
+  # JSON error bodies are rendered by the caller, anything else (proxy or ORDS error page) is a failure
+  if [[ ! "${http_code}" =~ ^2[0-9][0-9]$ && ! "${REST_LAST_RESPONSE}" =~ ^[[:space:]]*\{ ]]; then
+    [[ -z "${REST_LAST_RESPONSE}" ]] || echo "${REST_LAST_RESPONSE}"
+    REST_ERRORS_FOUND=1
+    print_rest_status_message "error" "Error" "request to ${REST_SQL_URL}/${endpoint} failed with HTTP status ${http_code}"
+    return 1
   fi
 
   return 0

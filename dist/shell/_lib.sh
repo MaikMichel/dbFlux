@@ -107,6 +107,8 @@ function dbflow_expand_sql_file() {
   var_array=(VERSION MODE)
   IFS=':' read -r -a var_array <<< "${DBFLOW_VAR_LIST:-}"
   var_array=(VERSION MODE "${var_array[@]}")
+  # longest names first, so ^APP_NAME is not partly replaced by ^APP
+  IFS=$'\n' read -r -d '' -a var_array < <(printf '%s\n' "${var_array[@]}" | awk '{ print length($0) "\t" $0 }' | sort -rn | cut -f2- && printf '\0')
   : > "${target_file}" || return 1
 
   while IFS= read -r line || [[ -n "${line}" ]]; do

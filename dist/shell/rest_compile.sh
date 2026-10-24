@@ -128,8 +128,10 @@ function run_sql_file_rest() {
   print_rest_status_message "info" "...  on" "${REST_SQL_URL}/compile"
 
   local curl_response
-  curl_response=$(curl "${curl_args[@]}" --data-binary @"${payload_file}" "${REST_SQL_URL}/compile")
+  curl_response=$(curl "${curl_args[@]}" -w $'\n%{http_code}' --data-binary @"${payload_file}" "${REST_SQL_URL}/compile")
   local curl_rc=$?
+  local http_code="${curl_response##*$'\n'}"
+  curl_response="${curl_response%$'\n'*}"
 
   rm -rf "${payload_dir}"
 
@@ -158,6 +160,12 @@ function run_sql_file_rest() {
     print_rest_log_results_table "${curl_response}"
   else
     [[ -z "${curl_response}" ]] || echo "${curl_response}"
+    # a proxy or ORDS error page is no JSON, so it must not end as success
+    if [[ ! "${http_code}" =~ ^2[0-9][0-9]$ ]]; then
+      REST_ERRORS_FOUND=1
+      print_rest_status_message "error" "Error" "request to ${REST_SQL_URL}/compile failed with HTTP status ${http_code}"
+      return 1
+    fi
   fi
 
   return 0
