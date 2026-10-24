@@ -12,6 +12,46 @@ const PWD_MASK = "••••••••";
 type DBFlowEnv = Record<string, string>;
 type InitializeCallback = (state: State) => Promise<void>;
 
+// The templates only know a fixed set of settings. Everything the user maintains by hand in an
+// existing file is carried over: keys in `preserved` (written by the template with defaults)
+// take the existing line, all other keys that are not in `managed` are appended unchanged.
+export function mergeEnvFile(rendered: string, existing: string | undefined, managed: string[], preserved: string[]): string {
+  if (existing === undefined) {
+    return rendered;
+  }
+
+  const keyOf = (line: string) => /^\s*([A-Za-z_][A-Za-z0-9_]*)=/.exec(line)?.[1];
+  const oldLines = existing.split(/\r?\n/);
+  const lines = rendered.split("\n");
+  const renderedKeys = new Set(lines.map(keyOf).filter((k): k is string => !!k));
+  const extra: string[] = [];
+
+  for (const oldLine of oldLines) {
+    const key = keyOf(oldLine);
+    if (!key) {
+      continue;
+    }
+    if (preserved.includes(key)) {
+      const idx = lines.findIndex(l => keyOf(l) === key || new RegExp(`^#\\s*${key}=`).test(l));
+      if (idx >= 0) {
+        lines[idx] = oldLine;
+      } else {
+        extra.push(oldLine);
+      }
+    } else if (!managed.includes(key) && !renderedKeys.has(key)) {
+      extra.push(oldLine);
+    }
+  }
+
+  if (extra.length > 0) {
+    while (lines.length > 0 && lines[lines.length - 1] === "") {
+      lines.pop();
+    }
+    lines.push("", "# further settings kept from the previous file", ...extra, "");
+  }
+  return lines.join("\n");
+}
+
 export class DBFlowConfigPanel {
   private static currentPanel?: DBFlowConfigPanel;
   private readonly panel: WebviewPanel;
@@ -236,11 +276,31 @@ export class DBFlowConfigPanel {
     return undefined;
   }
 
+  private readFileIfExists(file: string): string | undefined {
+    return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : undefined;
+  }
+
   private writeEnvFiles(state: State, previous: State): void {
+    const flex = state.projectType === "FLEX";
     if (state.applyOnly !== "YES") {
-      fs.writeFileSync(this.buildEnvPath(), this.renderBuildEnv(state));
+      const buildManaged = ["PROJECT", "PROJECT_MODE", "WORKSPACE", "BUILD_BRANCH", "CHANGELOG_SCHEMA"];
+      if (!flex) {
+        buildManaged.push("APP_SCHEMA", "DATA_SCHEMA", "LOGIC_SCHEMA");
+      }
+      fs.writeFileSync(this.buildEnvPath(), mergeEnvFile(
+        this.renderBuildEnv(state),
+        this.readFileIfExists(this.buildEnvPath()),
+        buildManaged,
+        ["REMIND_ME", "INTENT_PREFIXES", "INTENT_NAMES", "INTENT_ELSE", "TICKET_MATCH", "TICKET_URL"]
+      ));
     }
-    fs.writeFileSync(this.applyEnvPath(), this.renderApplyEnv(state, previous));
+    fs.writeFileSync(this.applyEnvPath(), mergeEnvFile(
+      this.renderApplyEnv(state, previous),
+      this.readFileIfExists(this.applyEnvPath()),
+      ["CONN_MODE", "REST_SQL_URL", "REST_APP_SCHEMA", "REST_WORKSPACE", "REST_APP_ID_MAP", "REST_OAUTH_TOKEN_URL", "REST_OAUTH_BASIC_B64", "REST_USES_OAUTH",
+       "DB_TNS", "DB_APP_USER", "DB_APP_PWD", "DB_ADMIN_USER", "DB_ADMIN_PWD", "DEPOT_PATH", "STAGE", "SQLCLI", "DO_NOT_CLEAR_SCHEMA_ON_INIT", "LOG_PATH"],
+      ["APP_OFFSET", "TEAMS_WEBHOOK_URL", "REST_PROXY", "REST_CLIENT_TOKEN", "VAR_LIST"]
+    ));
   }
 
   private renderBuildEnv(state: State): string {
