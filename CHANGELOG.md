@@ -28,7 +28,7 @@
 - Fix: Connection config is validated in dbFlux project mode
 - Fix: #15 Button does not run the command when the file is not underneath db or static
 - Fix: Wrap log commands no longer fail without an active editor
-- Chg: Minimum required VS Code version is now 1.101.0
+- Chg: Minimum required VS Code version is now 1.120.0
 - Chg: Updated dependencies and development toolchain: TypeScript 5, ESLint 10 (flat config), esbuild, `@types/node` 25, `@vscode/test-electron`; all `npm audit` vulnerabilities resolved
 - Chg: dbFlux checks the server side rest_compile version (api_level) and offers the install guide when an upgrade is needed
 - Chg: Projects configured only with `xcl.yml` / `.xcl/env.yml` are no longer detected. Migrate them to dbFlow (`build.env` + `apply.env`) or initialize them as dbFlux project

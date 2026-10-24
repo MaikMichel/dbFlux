@@ -2,6 +2,7 @@ import fetch from "node-fetch";
 import { commands, window } from "vscode";
 import { IProjectInfos } from "../provider/AbstractBashTaskProvider";
 import { ConfigurationManager } from "./ConfigurationManager";
+import { CompileTaskStore } from "../stores/CompileTaskStore";
 import { LoggingService } from "./LoggingService";
 import { rtrim } from "./utilities";
 
@@ -27,12 +28,17 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 async function fetchAccessToken(projectInfos: IProjectInfos): Promise<string> {
+  // the stored credential wins, otherwise the API key entered at the prompt
+  const basicB64 = projectInfos.dbAppPwd || CompileTaskStore.getInstance().appPwd;
+  if (!basicB64) {
+    throw new Error("No API key available");
+  }
   const tokenMaxMs = ConfigurationManager.getRestCompileTokenMaxTime() * 1000;
   const response = await withTimeout(
     fetch(projectInfos.restOauthTokenUrl!, {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${projectInfos.dbAppPwd}`,
+        "Authorization": `Basic ${basicB64}`,
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: "grant_type=client_credentials"

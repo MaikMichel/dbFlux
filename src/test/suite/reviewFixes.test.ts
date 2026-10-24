@@ -6,10 +6,11 @@ import { AddressInfo } from 'net';
 import * as os from 'os';
 import * as path from 'path';
 
-import { IProjectInfos, decodeEnvValue } from '../../provider/AbstractBashTaskProvider';
+import { IProjectInfos, decodeEnvValue, getProjectInfosFromDBFlow } from '../../provider/AbstractBashTaskProvider';
 import { CompileTaskStore } from '../../stores/CompileTaskStore';
 import { getPassword } from '../../helper/utilities';
-import { mergeEnvFile } from '../../ui/DBFlowConfigPanel';
+import { buildEnvKeys, mergeEnvFile } from '../../ui/DBFlowConfigPanel';
+import { getRestServerInfo } from '../../helper/RestApiUtils';
 
 const shellDir = path.resolve(__dirname, '../../../dist/shell');
 
@@ -156,5 +157,116 @@ suite('getPassword in REST mode', () => {
 	test('falls back to the API key entered at the prompt', () => {
 		CompileTaskStore.getInstance().appPwd = 'typed';
 		assert.strictEqual(getPassword(restInfos(undefined), 'app', false, context), 'typed');
+	});
+});
+
+suite('REST token request', () => {
+	let savedPwd: string | undefined;
+	setup(() => { savedPwd = CompileTaskStore.getInstance().appPwd; });
+	teardown(() => { CompileTaskStore.getInstance().appPwd = savedPwd; });
+
+	// serves the token endpoint and GET /compile, records the Basic header of the token request
+	function startOAuthServer(): Promise<{ server: http.Server, url: string, auth: string[] }> {
+		return new Promise(resolve => {
+			const auth: string[] = [];
+			const server = http.createServer((req, res) => {
+				res.writeHead(200, { 'Content-Type': 'application/json' });
+				if (req.method === 'POST') {
+					auth.push(String(req.headers.authorization));
+					res.end(JSON.stringify({ access_token: 'tok' }));
+				} else {
+					res.end(JSON.stringify({ success: true, version: '1.1.0', api_level: 1 }));
+				}
+			});
+			server.listen(0, '127.0.0.1', () => {
+				const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+				resolve({ server, url, auth });
+			});
+		});
+	}
+
+	const infos = (url: string, dbAppPwd: string | undefined) => ({
+		dbConnMode: 'REST', dbAppPwd, restSqlUrl: `${url}/sql`, restOauthTokenUrl: `${url}/token`,
+	}) as unknown as IProjectInfos;
+
+	test('sends the stored credential', async () => {
+		const { server, url, auth } = await startOAuthServer();
+		try {
+			CompileTaskStore.getInstance().appPwd = 'typed';
+			await getRestServerInfo(infos(url, 'stored'));
+			assert.deepStrictEqual(auth, ['Basic stored']);
+		} finally { server.close(); }
+	});
+
+	test('sends the API key entered at the prompt when nothing is stored', async () => {
+		const { server, url, auth } = await startOAuthServer();
+		try {
+			CompileTaskStore.getInstance().appPwd = 'typed';
+			const info = await getRestServerInfo(infos(url, undefined));
+			assert.deepStrictEqual(auth, ['Basic typed']);
+			assert.strictEqual(info.apiLevel, 1);
+		} finally { server.close(); }
+	});
+
+	test('fails without a request when no API key is available', async () => {
+		const { server, url, auth } = await startOAuthServer();
+		try {
+			CompileTaskStore.getInstance().appPwd = undefined;
+			await assert.rejects(getRestServerInfo(infos(url, undefined)), /No API key available/);
+			assert.deepStrictEqual(auth, []);
+		} finally { server.close(); }
+	});
+});
+
+suite('build.env key ownership', () => {
+	test('keeps a hand-maintained WORKSPACE for FLEX projects', () => {
+		const { managed, preserved } = buildEnvKeys(true);
+		assert.ok(preserved.includes('WORKSPACE'));
+		assert.ok(!managed.includes('WORKSPACE'));
+		const merged = mergeEnvFile('PROJECT=demo\n', 'PROJECT=demo\nWORKSPACE=myws\n', managed, preserved);
+		assert.match(merged, /^WORKSPACE=myws$/m);
+	});
+
+	test('manages WORKSPACE for SINGLE and MULTI projects', () => {
+		const { managed, preserved } = buildEnvKeys(false);
+		assert.ok(managed.includes('WORKSPACE'));
+		assert.ok(!preserved.includes('WORKSPACE'));
+	});
+});
+
+suite('rest_compile.sh exit code', () => {
+	test('exits non-zero when the SQL file cannot be run', done => {
+		execFile('bash', [path.join(shellDir, 'rest_compile.sh')], {
+			env: { ...process.env, DBFLOW_FILE: 'missing.sql', DBFLOW_WSPACE: path.join(os.tmpdir(), 'dbflux-missing.sql') }
+		}, (error, stdout) => {
+			assert.ok(error, 'script must not report success');
+			assert.notStrictEqual((error as any).code, 0);
+			assert.match(stdout.toString(), /does not exist/);
+			done();
+		});
+	});
+});
+
+suite('dbFlow project infos without apply.env', () => {
+	const context = { workspaceState: { keys: () => [] }, secrets: { get: async () => undefined } } as any;
+	let dir: string;
+
+	setup(() => {
+		dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dbflux-projinfos-'));
+		fs.writeFileSync(path.join(dir, 'build.env'), 'PROJECT=demo\nPROJECT_MODE=SINGLE\nAPP_SCHEMA=demo\n');
+	});
+	teardown(() => { fs.rmSync(dir, { recursive: true, force: true }); });
+
+	test('defaults to SQLNET and flags the missing connection as invalid', async () => {
+		const infos = await getProjectInfosFromDBFlow(context, dir);
+		assert.strictEqual(infos.dbConnMode, 'SQLNET');
+		assert.strictEqual(infos.isValid, false);
+	});
+
+	test('is valid once apply.env provides user and TNS', async () => {
+		fs.writeFileSync(path.join(dir, 'apply.env'), 'DB_APP_USER=demo\nDB_TNS=localhost:1521/xepdb1\n');
+		const infos = await getProjectInfosFromDBFlow(context, dir);
+		assert.strictEqual(infos.dbConnMode, 'SQLNET');
+		assert.strictEqual(infos.isValid, true);
 	});
 });

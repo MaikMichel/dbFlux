@@ -314,11 +314,12 @@ export function applyFileExists() {
 }
 
 
-async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IProjectInfos> {
+// rootPath is only passed by tests, otherwise the first workspace folder is used
+export async function getProjectInfosFromDBFlow(context: ExtensionContext, rootPath?: string):Promise<IProjectInfos> {
   const projectInfos: IProjectInfos = {} as IProjectInfos;
 
-  if (workspace.workspaceFolders !== undefined) {
-    const f = workspace.workspaceFolders[0].uri.fsPath;
+  const f = rootPath ?? workspace.workspaceFolders?.[0].uri.fsPath;
+  if (f !== undefined) {
 
     const applyEnv = dotenv.config({
       path: path.join(f, "apply.env"),
@@ -330,8 +331,10 @@ async function getProjectInfosFromDBFlow(context: ExtensionContext):Promise<IPro
     });
 
 
+    // default also without a parsable apply.env, so validateProjectInfos still checks the connection
+    projectInfos.dbConnMode  = applyEnv.parsed?.CONN_MODE ?? "SQLNET";
+
     if (applyEnv.parsed) {
-      projectInfos.dbConnMode  = applyEnv.parsed.CONN_MODE ?? "SQLNET";
 
       projectInfos.dbAppUser   = applyEnv.parsed.DB_APP_USER;
       projectInfos.dbAppPwd    = projectInfos.dbConnMode === "SQLNET" ? applyEnv.parsed.DB_APP_PWD : applyEnv.parsed.REST_OAUTH_BASIC_B64;

@@ -176,9 +176,11 @@ print_rest_status_message "info" "Sourcefile" "${DBFLOW_WSPACE}"
 print_rest_status_message "info" "OS-Time" "${MDATE}"
 
 run_sql_file_rest "${REST_APP_SCHEMA}" "${DBFLOW_WSPACE}" false
-if [[ $? -eq 0 ]]; then
+REST_RC=$?
+if [[ ${REST_RC} -eq 0 ]]; then
   if [[ ${REST_ERRORS_FOUND} -eq 0 ]]; then
     echo
     print_rest_success_message
   fi
 fi
+exit ${REST_RC}

@@ -52,6 +52,19 @@ export function mergeEnvFile(rendered: string, existing: string | undefined, man
   return lines.join("\n");
 }
 
+// Keys of build.env the panel owns (rewritten) or keeps as the user maintains them.
+export function buildEnvKeys(flex: boolean): { managed: string[], preserved: string[] } {
+  const managed = ["PROJECT", "PROJECT_MODE", "BUILD_BRANCH", "CHANGELOG_SCHEMA"];
+  const preserved = ["REMIND_ME", "INTENT_PREFIXES", "INTENT_NAMES", "INTENT_ELSE", "TICKET_MATCH", "TICKET_URL"];
+  if (flex) {
+    // renderBuildEnv writes no WORKSPACE for FLEX, so keep a hand-maintained one
+    preserved.push("WORKSPACE");
+  } else {
+    managed.push("WORKSPACE", "APP_SCHEMA", "DATA_SCHEMA", "LOGIC_SCHEMA");
+  }
+  return { managed, preserved };
+}
+
 export class DBFlowConfigPanel {
   private static currentPanel?: DBFlowConfigPanel;
   private readonly panel: WebviewPanel;
@@ -283,15 +296,12 @@ export class DBFlowConfigPanel {
   private writeEnvFiles(state: State, previous: State): void {
     const flex = state.projectType === "FLEX";
     if (state.applyOnly !== "YES") {
-      const buildManaged = ["PROJECT", "PROJECT_MODE", "WORKSPACE", "BUILD_BRANCH", "CHANGELOG_SCHEMA"];
-      if (!flex) {
-        buildManaged.push("APP_SCHEMA", "DATA_SCHEMA", "LOGIC_SCHEMA");
-      }
+      const { managed: buildManaged, preserved: buildPreserved } = buildEnvKeys(flex);
       fs.writeFileSync(this.buildEnvPath(), mergeEnvFile(
         this.renderBuildEnv(state),
         this.readFileIfExists(this.buildEnvPath()),
         buildManaged,
-        ["REMIND_ME", "INTENT_PREFIXES", "INTENT_NAMES", "INTENT_ELSE", "TICKET_MATCH", "TICKET_URL"]
+        buildPreserved
       ));
     }
     fs.writeFileSync(this.applyEnvPath(), mergeEnvFile(
